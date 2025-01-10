@@ -13,8 +13,10 @@
 #define F_CPU 16000000UL
 //Wartefunktion von Atmel
 #include <util/delay.h>
-#include "SPI.h"
+
 #include "MonopolyTreiber.h"
+
+
 
 
 void PortInitialisierung(void)
@@ -36,11 +38,16 @@ uint8_t houses[14][8] =
     {0,0,0,0,0,0,0,0},{0,0,0,0,0,0,0,0},{0,0,0,0,0,0,0,0},{0,0,0,0,0,0,0,0},{0,0,0,0,0,0,0,0},
     {0,0,0,0,0,0,0,0},{0,0,0,0,0,0,0,0},{0,0,0,0,0,0,0,0},{0,1,0,0,0,0,0,0}
 };
+
 int main(void)
 {
     
     PortInitialisierung();
     SPI_init_all(9600);
+
+    setPropertyRgb(2,128,0,0);
+    setPropertyRgb(10,128,0,128);
+    setPropertyRgb(27,128,255,0);
     PORTE = 0b00010000;
     
     

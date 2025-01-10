@@ -8,3 +8,5 @@ MonopolyTreiber.c
 
 SPI.c
 
+ws2812.c
+

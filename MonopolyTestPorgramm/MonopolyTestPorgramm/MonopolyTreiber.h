@@ -38,8 +38,10 @@
 #include <util/delay.h>
 
 extern uint8_t houses[14][8];
+
 void writeHouse(uint8_t data[14][8]);
 void setHouse(uint8_t FeldNr, uint8_t anzahlHaus);
+void setPropertyRgb(uint8_t FeldNummer, uint8_t rot, uint8_t gruen, uint8_t blau);
 
 
 
