@@ -18,14 +18,15 @@
 
 
 
-
 void PortInitialisierung(void)
 {
     DDRA = 0xFF;		// Port A auf Ausgang initialisieren (alle Pins)
     DDRB = 0xFF;		// Port B auf Ausgang initialisieren (alle Pins)
     PORTB = 0b00100000; //Setzt Clear der Spieler Schieberegister auf 1
     DDRC = 0xFF;		// Port C auf Ausgang initialisieren (alle Pins)
+    PORTC = 0x00;
     DDRD = 0xFF;		// Port D auf Ausgang initialisieren (alle Pins)
+    PORTD = 0x00;
     DDRE = 0xFF;		// Port E auf Ausgang initialisieren (alle Pins)
     PORTE = 0b00010000; //Setzt Clear der Häuser schieberegister auf 1
     DDRF = 0xFE;		// Port F auf Ausgang initialisieren (alle Pins)
@@ -51,6 +52,8 @@ struct spielerStruct
     uint16_t geld;
     uint8_t position;
 };
+
+
 int main(void)
 {
     struct spielerStruct spieler1 = {1234,9};
@@ -74,6 +77,7 @@ int main(void)
     setGeld(spieler3.geld,3);
     setGeld(spieler4.geld,4);
     uint8_t tasteAlt, tasteNeu, positiveFlanke = 0;
+    PORTC = 0b11000000;
     while (1)
     {
         //setPlayerPosition(39,4);
