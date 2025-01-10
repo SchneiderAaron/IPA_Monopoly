@@ -56,5 +56,12 @@ int8_t spielerPosFehlerAusgleich(uint8_t spielerNummer);
 
 void setGeld(uint16_t geld, uint8_t spieler);
 
+uint8_t wuerfel(uint8_t zufallszahl);
+uint8_t sibensegmentWuerfel(void);
+
+
+void adm_ADC_init(void);
+uint16_t adm_ADC_read(uint8_t kanal);
+
 
 #endif /* MONOPOLYTREIBER_H_ */

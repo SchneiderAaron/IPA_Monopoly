@@ -28,10 +28,11 @@ void PortInitialisierung(void)
     DDRD = 0xFF;		// Port D auf Ausgang initialisieren (alle Pins)
     DDRE = 0xFF;		// Port E auf Ausgang initialisieren (alle Pins)
     PORTE = 0b00010000; //Setzt Clear der Häuser schieberegister auf 1
-    DDRF = 0xFF;		// Port F auf Ausgang initialisieren (alle Pins)
+    DDRF = 0xFE;		// Port F auf Ausgang initialisieren (alle Pins)
     DDRH = 0xFF;		// Port H auf Ausgang initialisieren (alle Pins)
     PORTH = 0x10;       //Setzt Clear der Siebensegmente schieberegister auf 1
     DDRJ = 0xFF;		// Port J auf Ausgang initialisieren (alle Pins)
+    PORTJ = 0x10;       //Setzt Clear der Würfel schieberegister auf 1
     DDRK = 0x00;		// Port K auf Eingang initialisieren (alle Pins)
     DDRL = 0x00;		// Port L auf Eingang initialisieren (alle Pins)
 }
@@ -58,7 +59,8 @@ int main(void)
     struct spielerStruct spieler4 = {3456,12};
     PortInitialisierung();
     SPI_init_all(9600);
-
+    adm_ADC_init();
+    srand(adm_ADC_read(0));
     setPropertyRgb(2,0,0,0);
     setPropertyRgb(10,0,0,0);
     setPropertyRgb(20,0,0,0);
@@ -71,6 +73,7 @@ int main(void)
     setGeld(spieler2.geld,2);
     setGeld(spieler3.geld,3);
     setGeld(spieler4.geld,4);
+    uint8_t tasteAlt, tasteNeu, positiveFlanke = 0;
     while (1)
     {
         //setPlayerPosition(39,4);
@@ -100,6 +103,13 @@ int main(void)
                 _delay_ms(10);
             }
         }*/
+        tasteAlt = tasteNeu;
+        tasteNeu = PINK;
+        positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
+        if (positiveFlanke & 0x01)
+        {
+            sibensegmentWuerfel();
+        }
     }
 }
 

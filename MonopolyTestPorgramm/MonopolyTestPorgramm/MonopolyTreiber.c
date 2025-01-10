@@ -262,3 +262,63 @@ void setGeld(uint16_t geld, uint8_t spieler)
     
     
 }
+
+
+uint8_t wuerfel(uint8_t zufallszahl)
+{
+    //srand(zufallszahl);
+    zufallszahl = (rand() % 6) + 1;
+    return zufallszahl;
+}
+
+uint8_t sibensegmentWuerfel(void)
+{
+    uint8_t zufallszahl1, zufallszahl2 = 0;
+    for(uint8_t i = 0; i < 75; i = i + 1)
+    {
+        zufallszahl1 = wuerfel(1);
+        zufallszahl2 = wuerfel(1);
+        USART_Transmit(3,ziffer[zufallszahl2]);
+        _delay_us(500);
+        USART_Transmit(3,ziffer[zufallszahl1]);
+        _delay_us(500);
+        //Latch
+        PORTJ = PORTJ | 0x08;
+        PORTJ = PORTJ & ~0x08;
+        _delay_ms(50);
+    }
+    
+    zufallszahl1 = wuerfel(1);
+    zufallszahl2 = wuerfel(1);
+    USART_Transmit(3,ziffer[zufallszahl2]);
+    _delay_us(500);
+    USART_Transmit(3,ziffer[zufallszahl1]);
+    _delay_us(500);
+    //Latch
+    PORTJ = PORTJ | 0x08;
+    PORTJ = PORTJ & ~0x08;
+}
+
+
+
+void adm_ADC_init(void)
+{
+    ADMUX  = 0x40;	//AVCC Als referenz
+    DIDR0  = 0x0F;	// IO pins von Potentiometer deaktivieren
+    // ADC einschalten, ADC clok = 16MHz / 128, Free runing mode
+    ADCSRA = 0b10000111;
+}
+
+uint16_t adm_ADC_read(uint8_t kanal)
+{
+    // Kanal definieren
+    ADMUX&=0xf0;
+    ADMUX|=kanal&0x07;		//write ls3b to ADMUX
+    ADCSRB&=~0x08;
+    ADCSRB|=kanal&0x08;		//write msb to ADCSRB
+    
+    ADCSRA |= _BV(ADSC);	 	// ADC Starten
+    while(ADCSRA & _BV(ADSC));// Warten bis Messung abgeschllossen
+    
+    return ADC;
+}
