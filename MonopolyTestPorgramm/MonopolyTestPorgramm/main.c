@@ -30,7 +30,7 @@ void PortInitialisierung(void)
     PORTE = 0b00010000; //Setzt Clear der Häuser schieberegister auf 1
     DDRF = 0xFF;		// Port F auf Ausgang initialisieren (alle Pins)
     DDRH = 0xFF;		// Port H auf Ausgang initialisieren (alle Pins)
-    PORTH = 0x10;
+    PORTH = 0x10;       //Setzt Clear der Siebensegmente schieberegister auf 1
     DDRJ = 0xFF;		// Port J auf Ausgang initialisieren (alle Pins)
     DDRK = 0x00;		// Port K auf Eingang initialisieren (alle Pins)
     DDRL = 0x00;		// Port L auf Eingang initialisieren (alle Pins)
@@ -43,6 +43,8 @@ uint8_t houses[14][8] =
 };
 uint8_t spieler[20][8] = {0};
 uint8_t spielerPos[4] = {0};
+
+uint8_t siebensegment[16] = {0};
 struct spielerStruct 
 {
     uint16_t geld;
@@ -50,10 +52,10 @@ struct spielerStruct
 };
 int main(void)
 {
-    struct spielerStruct spieler1 = {1500,9};
-    struct spielerStruct spieler2 = {1500,10};
-    struct spielerStruct spieler3 = {1500,11};
-    struct spielerStruct spieler4 = {1500,12};
+    struct spielerStruct spieler1 = {1234,9};
+    struct spielerStruct spieler2 = {5678,10};
+    struct spielerStruct spieler3 = {9012,11};
+    struct spielerStruct spieler4 = {3456,12};
     PortInitialisierung();
     SPI_init_all(9600);
 
@@ -64,6 +66,11 @@ int main(void)
     setPlayerPosition(spieler2.position,2);
     setPlayerPosition(spieler3.position,3);
     setPlayerPosition(spieler4.position,4);
+    
+    setGeld(spieler1.geld,1);
+    setGeld(spieler2.geld,2);
+    setGeld(spieler3.geld,3);
+    setGeld(spieler4.geld,4);
     while (1)
     {
         //setPlayerPosition(39,4);

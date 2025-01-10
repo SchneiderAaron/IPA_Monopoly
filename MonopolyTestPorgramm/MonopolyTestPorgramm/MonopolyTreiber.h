@@ -37,10 +37,14 @@
 #define F_CPU 16000000UL
 #include <util/delay.h>
 
+
+
+
+
 extern uint8_t houses[14][8];           //Globales Array zur Ausgabe der Immobilien
 extern uint8_t spieler[20][8];    //Globales Array zur Ausgabe der Spieler Position
 extern uint8_t spielerPos[4];     //Globales Array zur SpielerInformationen
-
+extern uint8_t siebensegment[16];
 
 void writeHouse(uint8_t data[14][8]);
 void setHouse(uint8_t FeldNr, uint8_t anzahlHaus);
@@ -49,6 +53,8 @@ void setPropertyRgb(uint8_t FeldNummer, uint8_t rot, uint8_t gruen, uint8_t blau
 
 void setPlayerPosition(uint8_t feld, uint8_t spielerNummer);
 int8_t spielerPosFehlerAusgleich(uint8_t spielerNummer);
+
+void setGeld(uint16_t geld, uint8_t spieler);
 
 
 #endif /* MONOPOLYTREIBER_H_ */

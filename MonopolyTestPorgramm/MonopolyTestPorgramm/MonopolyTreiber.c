@@ -214,3 +214,51 @@ int8_t spielerPosFehlerAusgleich(uint8_t spielerNummer)
     //gibt den korrektur Wert zurück
     return fehlerausgleich;
 }
+
+
+#define SEG_A       (1<<0)
+#define SEG_B       (1<<1)
+#define SEG_C       (1<<2)
+#define SEG_D       (1<<3)
+#define SEG_E       (1<<4)
+#define SEG_F       (1<<5)
+#define SEG_G       (1<<6)
+#define DOPPELPUNKT (1<<7)
+uint8_t ziffer[] =
+{
+    (SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F),                            //0
+    (SEG_B | SEG_C),                                                            //1
+    (SEG_A | SEG_B | SEG_G | SEG_E | SEG_D),                                    //2
+    (SEG_A | SEG_B | SEG_C | SEG_D | SEG_G),                                    //3
+    (SEG_F | SEG_G | SEG_B | SEG_C),                                            //4
+    (SEG_A | SEG_C | SEG_D | SEG_F | SEG_G),                                    //5
+    (SEG_F | SEG_G | SEG_C | SEG_D | SEG_E | SEG_A),                            //6
+    (SEG_A | SEG_B | SEG_C),                                                    //7
+    (SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F | SEG_G),                    //8
+    (SEG_A | SEG_B | SEG_C | SEG_F | SEG_G | SEG_D)                             //9
+};
+
+
+void setGeld(uint16_t geld, uint8_t spieler)
+{
+    uint8_t tausender,hunderter,zehner,einer,transmitdata = 0;
+    tausender   = (geld / 1000) % 10;
+    hunderter   = (geld / 100)  % 10;
+    zehner      = (geld / 10)   % 10;
+    einer       =  geld         % 10;
+    siebensegment[((spieler - 1) * 4)]      = ziffer[tausender];
+    siebensegment[((spieler - 1) * 4) + 1]  = ziffer[hunderter];
+    siebensegment[((spieler - 1) * 4) + 2]  = ziffer[zehner];
+    siebensegment[((spieler - 1) * 4) + 3]  = ziffer[einer];
+    //Ausgabe an siebensegment schieberegister
+    for(uint8_t i = 0; i < 17; i = i + 1)
+    {
+        USART_Transmit(2,siebensegment[16-i]);
+        _delay_us(500);
+        //latch
+        PORTH = PORTH | 0x08;
+        PORTH = PORTH & ~0x08;
+    }
+    
+    
+}
