@@ -23,11 +23,14 @@ void PortInitialisierung(void)
 {
     DDRA = 0xFF;		// Port A auf Ausgang initialisieren (alle Pins)
     DDRB = 0xFF;		// Port B auf Ausgang initialisieren (alle Pins)
+    PORTB = 0b00100000; //Setzt Clear der Spieler Schieberegister auf 1
     DDRC = 0xFF;		// Port C auf Ausgang initialisieren (alle Pins)
     DDRD = 0xFF;		// Port D auf Ausgang initialisieren (alle Pins)
     DDRE = 0xFF;		// Port E auf Ausgang initialisieren (alle Pins)
+    PORTE = 0b00010000; //Setzt Clear der Häuser schieberegister auf 1
     DDRF = 0xFF;		// Port F auf Ausgang initialisieren (alle Pins)
     DDRH = 0xFF;		// Port H auf Ausgang initialisieren (alle Pins)
+    PORTH = 0x10;
     DDRJ = 0xFF;		// Port J auf Ausgang initialisieren (alle Pins)
     DDRK = 0x00;		// Port K auf Eingang initialisieren (alle Pins)
     DDRL = 0x00;		// Port L auf Eingang initialisieren (alle Pins)
@@ -38,23 +41,33 @@ uint8_t houses[14][8] =
     {0,0,0,0,0,0,0,0},{0,0,0,0,0,0,0,0},{0,0,0,0,0,0,0,0},{0,0,0,0,0,0,0,0},{0,0,0,0,0,0,0,0},
     {0,0,0,0,0,0,0,0},{0,0,0,0,0,0,0,0},{0,0,0,0,0,0,0,0},{0,1,0,0,0,0,0,0}
 };
-
+uint8_t spieler[20][8] = {0};
+uint8_t spielerPos[4] = {0};
+struct spielerStruct 
+{
+    uint16_t geld;
+    uint8_t position;
+};
 int main(void)
 {
-    
+    struct spielerStruct spieler1 = {1500,9};
+    struct spielerStruct spieler2 = {1500,10};
+    struct spielerStruct spieler3 = {1500,11};
+    struct spielerStruct spieler4 = {1500,12};
     PortInitialisierung();
     SPI_init_all(9600);
 
-    setPropertyRgb(2,128,0,0);
-    setPropertyRgb(10,128,0,128);
-    setPropertyRgb(27,128,255,0);
-    PORTE = 0b00010000;
-    
-    
-    
+    setPropertyRgb(2,0,0,0);
+    setPropertyRgb(10,0,0,0);
+    setPropertyRgb(20,0,0,0);
+    setPlayerPosition(spieler1.position,1);
+    setPlayerPosition(spieler2.position,2);
+    setPlayerPosition(spieler3.position,3);
+    setPlayerPosition(spieler4.position,4);
     while (1)
     {
-        for (uint8_t i = 0; i <= 5; i = i + 1)
+        //setPlayerPosition(39,4);
+        /*for (uint8_t i = 0; i <= 5; i = i + 1)
         {
             for (uint8_t j = 0; j < 22; j = j + 1)
             {
@@ -71,7 +84,15 @@ int main(void)
                 _delay_ms(10);
                 writeHouse(houses);
             }
-        }
+        }*/
+        /*for (uint8_t j = 1; j < 5; j = j + 1)
+        {
+            for (uint8_t i = 0; i < 40; i = i + 1)
+            {
+                setPlayerPosition(i,j);
+                _delay_ms(10);
+            }
+        }*/
     }
 }
 
