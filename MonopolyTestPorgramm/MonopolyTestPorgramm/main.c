@@ -80,11 +80,7 @@ struct spielerStruct
     uint8_t position;
 };*/
 
-typedef struct {
-    char name[50];       // Name des Spielers
-    uint16_t geld;         //Kontostand des Spielers
-    uint8_t position;           //Position des spielers
-} Spieler;
+
 
 void initSpieler(Spieler spielerInfo[])
 {
@@ -95,20 +91,21 @@ void initSpieler(Spieler spielerInfo[])
     
     //Eigenschaften Spieler 2
     strcpy(spielerInfo[2].name, "Spieler 2");
-    spielerInfo[2].geld = 1500;
+    spielerInfo[2].geld = 1400;
     spielerInfo[2].position = 0;
     
     //Eigenschaften Spieler 3
     strcpy(spielerInfo[3].name, "Spieler 3");
-    spielerInfo[3].geld = 1500;
+    spielerInfo[3].geld = 1300;
     spielerInfo[3].position = 0;
     
     //Eigenschaften Spieler 4
     strcpy(spielerInfo[4].name, "Spieler 4");
-    spielerInfo[4].geld = 1500;
+    spielerInfo[4].geld = 248;
     spielerInfo[4].position = 0;
 }
 Spieler spielerInfo[5];
+
 typedef enum {
     STRASSE,
     EREIGNISFELD,
@@ -505,7 +502,6 @@ int main(void)
     initDisplay();
     Feld spielfeld[40];
     initialisiereSpielfeld(spielfeld);
-    
     initSpieler(spielerInfo);
     srand(adm_ADC_read(0));
     
@@ -542,11 +538,12 @@ int main(void)
     FeldTyp aktuellesFeld = FREIPARKEN;
     uint8_t aktuellePosition = 0;
     resetMonopoly();
-    setGeld(spielerInfo[1].geld,1);
-    setGeld(spielerInfo[2].geld,2);
-    setGeld(spielerInfo[3].geld,3);
-    setGeld(spielerInfo[4].geld,4);
+    /*setGeld(spielerInfo[1].geld,1,1);
+    setGeld(spielerInfo[2].geld,2,1);
+    setGeld(spielerInfo[3].geld,3,1);
+    setGeld(spielerInfo[4].geld,4,1);*/
     
+    updateKontostand(2,spielerInfo);
     /*setPlayerPosition(spielerInfo[1].position,1);
     setPlayerPosition(spielerInfo[2].position,2);
     setPlayerPosition(spielerInfo[3].position,3);
@@ -602,7 +599,7 @@ int main(void)
             
             if((positiveFlanke & TASTER11) && flagNextPlayer)
             {
-                spielerAmZug = (spielerAmZug % 4) + 1;
+                spielerAmZug = (spielerAmZug % 2) + 1;
                 flagNextPlayer = 0;
                 sprintf(buffer,"%u",spielerAmZug);
                 writeText(2,8,buffer);
@@ -628,7 +625,7 @@ int main(void)
                 if (spielerInfo[spielerAmZug].position + (wuerfelArray[0] + wuerfelArray[1]) >= 40 )
                 {
                     spielerInfo[spielerAmZug].geld += 200;
-                    setGeld(spielerInfo[spielerAmZug].geld,spielerAmZug);
+                    //setGeld(spielerInfo[spielerAmZug].geld,spielerAmZug,1);
                 }
                 
                 
@@ -646,16 +643,16 @@ int main(void)
                 
             }
             
-            setGeld(spielerInfo[1].geld,1);
-            setGeld(spielerInfo[2].geld,2);
-            setGeld(spielerInfo[3].geld,3);
-            setGeld(spielerInfo[4].geld,4);
+            /*setGeld(spielerInfo[1].geld,1,1);
+            setGeld(spielerInfo[2].geld,2,1);
+            setGeld(spielerInfo[3].geld,3,1);
+            setGeld(spielerInfo[4].geld,4,1);*/
             
             
             
         }
         
-        
+        updateKontostand(2,spielerInfo);
         
         
         
@@ -675,7 +672,7 @@ int main(void)
                     spielerInfo[spielerAmZug].geld = spielerInfo[spielerAmZug].geld - spielfeld[aktuellePosition].preis;
                     spielfeld[aktuellePosition].besitzer = spielerAmZug;
                     setPropertyRgb(spielfeld[aktuellePosition].rgbNummer,spielerAmZug);
-                    setGeld(spielerInfo[spielerAmZug].geld,spielerAmZug);
+                    //setGeld(spielerInfo[spielerAmZug].geld,spielerAmZug,1);
                 }
             }
             if (positiveFlanke & TASTER12)
@@ -697,7 +694,7 @@ int main(void)
                     spielerInfo[spielerAmZug].geld = spielerInfo[spielerAmZug].geld - spielfeld[aktuellePosition].preis;
                     spielfeld[aktuellePosition].besitzer = spielerAmZug;
                     setPropertyRgb(spielfeld[aktuellePosition].rgbNummer,spielerAmZug);
-                    setGeld(spielerInfo[spielerAmZug].geld,spielerAmZug);
+                    //setGeld(spielerInfo[spielerAmZug].geld,spielerAmZug,1);
                 }
             }
             break;
@@ -706,6 +703,7 @@ int main(void)
             break;
             case GEH_INS_GEFAENGNIS:
             abInsGefaengnis(spielerAmZug);
+            aktuellesFeld = GEFAENGNIS;
             break;
             case FREIPARKEN:
             break;
@@ -717,7 +715,7 @@ int main(void)
                     spielerInfo[spielerAmZug].geld = spielerInfo[spielerAmZug].geld - spielfeld[aktuellePosition].preis;
                     spielfeld[aktuellePosition].besitzer = spielerAmZug;
                     setPropertyRgb(spielfeld[aktuellePosition].rgbNummer,spielerAmZug);
-                    setGeld(spielerInfo[spielerAmZug].geld,spielerAmZug);
+                    //setGeld(spielerInfo[spielerAmZug].geld,spielerAmZug,1);
                 }
             }
             break;

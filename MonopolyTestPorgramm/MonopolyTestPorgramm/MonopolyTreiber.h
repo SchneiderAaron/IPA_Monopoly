@@ -38,7 +38,11 @@
 #define __DELAY_BACKWARD_COMPATIBLE__
 #include <util/delay.h>
 
-
+typedef struct {
+    char name[50];       // Name des Spielers
+    uint16_t geld;         //Kontostand des Spielers
+    uint8_t position;           //Position des spielers
+} Spieler;
 
 
 
@@ -48,18 +52,20 @@ extern uint8_t spieler[20][8];    //Globales Array zur Ausgabe der Spieler Posit
 extern uint8_t spielerPos[4];     //Globales Array zur SpielerInformationen
 extern uint8_t siebensegment[16];
 extern uint8_t wuerfelArray[2];
+extern Spieler spielerInfo[5];
 
 void resetMonopoly(void);
 
-void writeHouse(uint8_t data[14]);
-void setHouse(uint8_t FeldNr, uint8_t anzahlHaus);
+void writeHaus(uint8_t data[14]);
+void setHaus(uint8_t FeldNr, uint8_t anzahlHaus);
 
 void setPropertyRgb(uint8_t FeldNummer, uint8_t spielerNr);
 
 void setPlayerPosition(uint8_t feld, uint8_t spielerNummer);
 int8_t spielerPosFehlerAusgleich(uint8_t spielerNummer);
 
-void setGeld(uint16_t geld, uint8_t spieler);
+void setGeld(uint16_t geld, uint8_t spieler, uint8_t siebensegmentOnOff);
+void updateKontostand(uint8_t anzahlSpieler, Spieler spielerInfo[5]);
 
 uint8_t wuerfel(void);
 void sibensegmentWuerfel(void);
