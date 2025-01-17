@@ -32,11 +32,18 @@
 #include "MonopolyTreiber.h"
 #include "SPI.h"
 #include "ws2812.h"
+#include "LCD.h"
+
+#include <string.h>
+
+#include <stdlib.h>
+
+#include <stdio.h>
 rgb_color leds[LED_COUNT];
 #pragma GCC optimize 0
 void resetMonopoly(void)
 {
-    writeHouse(houses);
+    writeHouse(hausRegister);
     setPlayerPosition(0,1);
     setPlayerPosition(0,2);
     setPlayerPosition(0,3);
@@ -363,7 +370,7 @@ uint8_t wuerfel(void)
     return zufallszahl;
 }
 
-uint8_t sibensegmentWuerfel(void)
+void sibensegmentWuerfel(void)
 {
     
     char buffer[16];

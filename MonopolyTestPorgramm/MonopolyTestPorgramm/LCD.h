@@ -16,7 +16,7 @@ void clear(void);
 void home(void);
 void displayOnOff(uint8_t DisplayOn,uint8_t CursorOn, uint8_t BlinkOn);
 void shift(void);
-void writeText(uint8_t Zeile, uint8_t Spalte, uint8_t * Text);
+void writeText(uint8_t Zeile, uint8_t Spalte, const char *Text);
 
 
 

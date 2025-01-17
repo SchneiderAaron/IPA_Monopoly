@@ -15,6 +15,13 @@
 #define __DELAY_BACKWARD_COMPATIBLE__
 #include <util/delay.h>
 
+#include <string.h>
+
+#include <stdlib.h>
+
+#include <stdio.h>
+
+#include "SPI.h"
 #include "MonopolyTreiber.h"
 #include "LCD.h"
 
@@ -128,7 +135,7 @@ typedef enum {
 typedef struct {
     char name[50];       // Name des Feldes
     FeldTyp typ;         // Typ des Feldes
-    uint8_t preis;           // Kaufpreis (falls relevant)
+    uint16_t preis;           // Kaufpreis (falls relevant)
     uint16_t miete;           // Miete (falls relevant)
     uint8_t besitzer;        // Besitzer (Index des Spielers, 0 = unbesetzt)
     Farbe farbGruppe;

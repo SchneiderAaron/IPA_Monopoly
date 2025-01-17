@@ -74,7 +74,7 @@ void SPI_init_all_USART(uint8_t baud)
 	UBRR3 = baud;
 }
 
-void SPI_init_all(uint8_t baud)
+void SPI_init_all(uint16_t baud)
 {
 	SPI_init();
 	SPI_init_all_USART(baud);

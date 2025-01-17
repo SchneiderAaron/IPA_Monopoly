@@ -62,7 +62,7 @@ int8_t spielerPosFehlerAusgleich(uint8_t spielerNummer);
 void setGeld(uint16_t geld, uint8_t spieler);
 
 uint8_t wuerfel(void);
-uint8_t sibensegmentWuerfel(void);
+void sibensegmentWuerfel(void);
 
 
 void adm_ADC_init(void);

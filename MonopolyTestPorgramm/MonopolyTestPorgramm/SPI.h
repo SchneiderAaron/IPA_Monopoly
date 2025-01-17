@@ -37,7 +37,7 @@
 #define USART2 2
 #define USART3 3
 
-void SPI_init_all(uint8_t baud);
+void SPI_init_all(uint16_t baud);
 void Send2SPI (uint8_t wert);
 void USART_Transmit(uint8_t usart_wahl, uint8_t data);
 void USART0_Transmit(uint8_t data);

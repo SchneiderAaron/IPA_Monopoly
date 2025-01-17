@@ -101,7 +101,7 @@ void shift(void)
 
 
 
-void writeText(uint8_t Zeile, uint8_t Spalte, uint8_t * Text)
+void writeText(uint8_t Zeile, uint8_t Spalte, const char *Text)
 {
     CmdDisplay(CMD_SET_DDRAM_ADRESS + (0x10 * Zeile) + Spalte);
     uint8_t i = 0;
