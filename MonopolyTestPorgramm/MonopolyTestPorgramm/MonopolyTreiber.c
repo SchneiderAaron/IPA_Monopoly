@@ -33,8 +33,20 @@
 #include "SPI.h"
 #include "ws2812.h"
 rgb_color leds[LED_COUNT];
-
-
+#pragma GCC optimize 0
+void resetMonopoly(void)
+{
+    writeHouse(houses);
+    setPlayerPosition(0,1);
+    setPlayerPosition(0,2);
+    setPlayerPosition(0,3);
+    setPlayerPosition(0,4);
+    for (uint8_t i = 0; i < 28; i = i + 1)
+    {
+        setPropertyRgb(i,0);
+    }
+}
+/*
 void writeHouse(uint8_t data[14][8])
 {
     //initialisierung der VAriablen
@@ -51,6 +63,7 @@ void writeHouse(uint8_t data[14][8])
         USART_Transmit(0,transmitdata);
         //delay damit SPI funktiuniert
         _delay_us(500);
+        
     }
     //latch
     PORTE = PORTE | 0b00001000;
@@ -89,11 +102,89 @@ void setHouse(uint8_t FeldNr, uint8_t anzahlHaus)
         }
     }
     
+    writeHouse(houses);
+    
+}*/
+void setHouse(uint8_t FeldNr, uint8_t anzahlHaus)
+{
+    uint8_t anzahlLeds,startRegister,startLed = 0; // initialisierung der Variablen
+    uint8_t hausWert = 0;
+    anzahlLeds = FeldNr * 5;    //Berechnet wie viele leds/Bit bis zum gewünschten feld kommen
+    startRegister = anzahlLeds / 8;  //Berechnet über welches Schieberegister die Leds angesteuert werden
+    startLed = (anzahlLeds % 8);    //Berechnet welches bit im Schieberegister das erste Haus auf dem Feld ist
+    if (anzahlHaus == 5)
+    {
+        hausWert = 0x10;
+    }
+    else
+    {
+        hausWert = ~(0xFFE0 >> (5-anzahlHaus));
+    }
+    
+    if (startLed > 3)
+    {
+        hausRegister[startRegister] &= (~(0x1F << startLed));
+        hausRegister[startRegister + 1] &= ~0x1F >> (8 - startLed);
+        
+        hausRegister[startRegister] |= (uint8_t)(hausWert << startLed);
+        hausRegister[startRegister + 1] |= (uint8_t)(hausWert >> (8 - startLed));
+    }
+    else
+    {
+        hausRegister[startRegister] &= (~(0x1F << startLed));
+        hausRegister[startRegister] |= (uint8_t)(hausWert << startLed);
+    }
+    writeHouse(hausRegister);
     
 }
-//funktion um die RGB zu setzen um anzuzeigen wem die Immobilien gehören
-void setPropertyRgb(uint8_t FeldNummer, uint8_t rot, uint8_t gruen, uint8_t blau)
+void writeHouse(uint8_t data[14])
 {
+    //initialisierung der VAriablen
+    uint8_t transmitdata = 0;
+    //im for loop werden jeweils 8 Bit aus dem array gesendet
+    for(uint8_t i = 0; i < 15; i = i + 1)
+    {
+        transmitdata = data[14-i];
+        USART_Transmit(0,transmitdata);
+        //delay damit SPI funktiuniert
+        _delay_us(500);
+    }
+    //latch
+    PORTE = PORTE | 0b00001000;
+    PORTE = PORTE & ~0b00001000;
+}
+//funktion um die RGB zu setzen um anzuzeigen wem die Immobilien gehören
+void setPropertyRgb(uint8_t FeldNummer, uint8_t spielerNr)
+{
+    uint8_t rot,gruen,blau = 0;
+    switch (spielerNr)
+    {
+        case 0:
+        rot = 0;
+        gruen = 0;
+        blau = 0;
+        break;
+        case 1:
+        rot = 50;
+        gruen = 0;
+        blau = 0;
+    	break;
+        case 2:
+        rot = 30;
+        gruen = 50;
+        blau = 3;
+        break;
+        case 3:
+        rot = 50;
+        gruen = 20;
+        blau = 0;
+        break;
+        case 4:
+        rot = 0;
+        gruen = 0;
+        blau = 50;
+        break;
+    }
     leds[FeldNummer] = (rgb_color){rot,gruen,blau}; //Setzt die RGB werte im leds Array
     for (uint8_t i = 0; i < LED_COUNT; i = i + 1)   //die for loop übermittelt die Daten an die WS2812 RGB Leds
     {
@@ -255,17 +346,18 @@ void setGeld(uint16_t geld, uint8_t spieler)
     {
         USART_Transmit(2,siebensegment[16-i]);
         _delay_us(500);
-        //latch
-        PORTH = PORTH | 0x08;
-        PORTH = PORTH & ~0x08;
     }
+    //latch
+    PORTH = PORTH | 0x08;
+    PORTH = PORTH & ~0x08;
     
     
 }
 
 
-uint8_t wuerfel(uint8_t zufallszahl)
+uint8_t wuerfel(void)
 {
+    uint8_t zufallszahl = 0;
     //srand(zufallszahl);
     zufallszahl = (rand() % 6) + 1;
     return zufallszahl;
@@ -273,11 +365,17 @@ uint8_t wuerfel(uint8_t zufallszahl)
 
 uint8_t sibensegmentWuerfel(void)
 {
+    
+    char buffer[16];
     uint8_t zufallszahl1, zufallszahl2 = 0;
-    for(uint8_t i = 0; i < 75; i = i + 1)
+    for(uint8_t i = 0; i < 50; i = i + 1)
     {
-        zufallszahl1 = wuerfel(1);
-        zufallszahl2 = wuerfel(1);
+        zufallszahl1 = wuerfel();
+        zufallszahl2 = wuerfel();
+        sprintf(buffer,"%u",zufallszahl1);
+        writeText(0,9,buffer);
+        sprintf(buffer,"%u",zufallszahl2);
+        writeText(1,9,buffer);
         USART_Transmit(3,ziffer[zufallszahl2]);
         _delay_us(500);
         USART_Transmit(3,ziffer[zufallszahl1]);
@@ -285,11 +383,11 @@ uint8_t sibensegmentWuerfel(void)
         //Latch
         PORTJ = PORTJ | 0x08;
         PORTJ = PORTJ & ~0x08;
-        _delay_ms(50);
+        _delay_ms(15+i*3);
     }
     
-    zufallszahl1 = wuerfel(1);
-    zufallszahl2 = wuerfel(1);
+    zufallszahl1 = wuerfel();
+    zufallszahl2 = wuerfel();
     USART_Transmit(3,ziffer[zufallszahl2]);
     _delay_us(500);
     USART_Transmit(3,ziffer[zufallszahl1]);
@@ -297,6 +395,8 @@ uint8_t sibensegmentWuerfel(void)
     //Latch
     PORTJ = PORTJ | 0x08;
     PORTJ = PORTJ & ~0x08;
+    wuerfelArray[0] = zufallszahl1;
+    wuerfelArray[1] = zufallszahl2;
 }
 
 

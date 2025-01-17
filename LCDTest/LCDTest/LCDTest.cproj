@@ -12,9 +12,9 @@
     <OutputFileName>$(MSBuildProjectName)</OutputFileName>
     <OutputFileExtension>.elf</OutputFileExtension>
     <OutputDirectory>$(MSBuildProjectDirectory)\$(Configuration)</OutputDirectory>
-    <AssemblyName>MonopolyTestPorgramm</AssemblyName>
-    <Name>MonopolyTestPorgramm</Name>
-    <RootNamespace>MonopolyTestPorgramm</RootNamespace>
+    <AssemblyName>LCDTest</AssemblyName>
+    <Name>LCDTest</Name>
+    <RootNamespace>LCDTest</RootNamespace>
     <ToolchainFlavour>Native</ToolchainFlavour>
     <KeepTimersRunning>true</KeepTimersRunning>
     <OverrideVtor>false</OverrideVtor>
@@ -138,31 +138,13 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="LCD.c">
+    <Compile Include="AdvancedDriverMocca.c">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="LCD.h">
+    <Compile Include="AdvancedDriverMocca.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="main.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MonopolyTreiber.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MonopolyTreiber.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="SPI.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="SPI.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="ws2812.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="ws2812.h">
       <SubType>compile</SubType>
     </Compile>
   </ItemGroup>

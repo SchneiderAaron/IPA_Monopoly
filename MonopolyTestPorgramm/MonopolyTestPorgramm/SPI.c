@@ -52,12 +52,12 @@ void SPI_init_all_USART(uint8_t baud)
 	UCSR0B = (1<<RXEN0)|(1<<TXEN0);	
 	UBRR0 = baud;
 	
-	UBRR1 = 0;
-	/* Set MSPI mode of operation and SPI data mode 0. */
+	/*UBRR1 = 0;
+	/ * Set MSPI mode of operation and SPI data mode 0. * /
 	UCSR1C = (1<<UMSEL11)|(1<<UMSEL10)|(0<<2)|(0<<UCPOL1);
-	/* Enable receiver and transmitter. */
+	/ * Enable receiver and transmitter. * /
 	UCSR1B = (1<<RXEN1)|(1<<TXEN1);
-	UBRR1 = baud;
+	UBRR1 = baud;*/
 	
 	UBRR2 = 0;
 	/* Set MSPI mode of operation and SPI data mode 0. */
