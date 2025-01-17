@@ -91,17 +91,17 @@ void initSpieler(Spieler spielerInfo[])
     
     //Eigenschaften Spieler 2
     strcpy(spielerInfo[2].name, "Spieler 2");
-    spielerInfo[2].geld = 1400;
+    spielerInfo[2].geld = 1500;
     spielerInfo[2].position = 0;
     
     //Eigenschaften Spieler 3
     strcpy(spielerInfo[3].name, "Spieler 3");
-    spielerInfo[3].geld = 1300;
+    spielerInfo[3].geld = 1500;
     spielerInfo[3].position = 0;
     
     //Eigenschaften Spieler 4
     strcpy(spielerInfo[4].name, "Spieler 4");
-    spielerInfo[4].geld = 248;
+    spielerInfo[4].geld = 1500;
     spielerInfo[4].position = 0;
 }
 Spieler spielerInfo[5];
@@ -504,16 +504,7 @@ int main(void)
     initialisiereSpielfeld(spielfeld);
     initSpieler(spielerInfo);
     srand(adm_ADC_read(0));
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
     writeText(1,0,"1");
     SPI_init_all(9600);
     writeText(1,0,"2");
@@ -543,7 +534,7 @@ int main(void)
     setGeld(spielerInfo[3].geld,3,1);
     setGeld(spielerInfo[4].geld,4,1);*/
     
-    updateKontostand(2,spielerInfo);
+    updateKontostand(4,spielerInfo);
     /*setPlayerPosition(spielerInfo[1].position,1);
     setPlayerPosition(spielerInfo[2].position,2);
     setPlayerPosition(spielerInfo[3].position,3);
@@ -599,7 +590,7 @@ int main(void)
             
             if((positiveFlanke & TASTER11) && flagNextPlayer)
             {
-                spielerAmZug = (spielerAmZug % 2) + 1;
+                spielerAmZug = (spielerAmZug % 4) + 1;
                 flagNextPlayer = 0;
                 sprintf(buffer,"%u",spielerAmZug);
                 writeText(2,8,buffer);
@@ -652,7 +643,7 @@ int main(void)
             
         }
         
-        updateKontostand(2,spielerInfo);
+        updateKontostand(4,spielerInfo);
         
         
         
@@ -677,11 +668,11 @@ int main(void)
             }
             if (positiveFlanke & TASTER12)
             {
-                setHouse(spielfeld[aktuellePosition].hausnummer,5);
+                setHaus(spielfeld[aktuellePosition].hausnummer,5);
             }
             if (positiveFlanke & TASTER16)
             {
-                setHouse(spielfeld[aktuellePosition].hausnummer,0);
+                setHaus(spielfeld[aktuellePosition].hausnummer,0);
             }
             break;
             case STEUERFELD:
