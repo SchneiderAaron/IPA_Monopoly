@@ -514,12 +514,12 @@ void sibensegmentWuerfel(void)
         zufallszahl2 = wuerfel(); //Zweite Zufallszahl
         
         //Zeigt die erste Zufallszahl auf dem Display an
-        sprintf(buffer, "%u", zufallszahl1);
-        writeText(0, 9, buffer);
+        /*sprintf(buffer, "%u", zufallszahl1);
+        writeText(0, 9, buffer);*/
         
         //Zeigt die zweite Zufallszahl auf dem Display an
-        sprintf(buffer, "%u", zufallszahl2);
-        writeText(1, 9, buffer);
+        /*sprintf(buffer, "%u", zufallszahl2);
+        writeText(1, 9, buffer);*/
         
         //Sendet die zweite Zufallszahl an das Display
         USART_Transmit(3, ziffer[zufallszahl2]);

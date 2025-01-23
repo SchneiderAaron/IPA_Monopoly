@@ -520,8 +520,8 @@ int main(void)
     clear();
     home();
     displayOnOff(1,0,0);
-    writeText(0,0,"Zahl 1 = ");
-    writeText(1,0,"Zahl 2 = ");
+    writeText(0,0,"     Wuerfel    ");
+    writeText(1,0,"----------------");
     writeText(2,0,"Spieler ");
     char buffer[16];
     uint8_t spielerAmZug = 1;
@@ -599,10 +599,10 @@ int main(void)
             if ((positiveFlanke & TASTER10) && !flagNextPlayer)
             {
                 sibensegmentWuerfel();
-                sprintf(buffer,"%u",wuerfelArray[0]);
+                /*sprintf(buffer,"%u",wuerfelArray[0]);
                 writeText(0,9,buffer);
                 sprintf(buffer,"%u",wuerfelArray[1]);
-                writeText(1,9,buffer);
+                writeText(1,9,buffer);*/
                 if (wuerfelArray[0] == wuerfelArray[1])
                 {
                     flagPasch = 1;
