@@ -51,6 +51,8 @@
 #define MIN_ANZAHL_SPIELER 2
 #define MAX_ANZAHL_SPIELER 4
 
+#define SIEBENSEGMENT_OFF 10
+
 //Taster an PORT K
 #define TASTE1     (1<<0)
 #define TASTE2     (1<<1)
@@ -113,7 +115,7 @@ typedef struct {
     uint8_t rgbNummer;
 } Feld;
 
-typedef enum {SPIELERAUSWAHL, SPIEL, RESERVE} zustand_t;
+typedef enum {SPIELERAUSWAHL, wuerfelStart, RESERVE,} zustand_t;
 /*--- Globale Konstanten ----------------------------------------------------*/
 /*--- Globale Variablen -----------------------------------------------------*/
 
@@ -127,6 +129,8 @@ uint8_t wuerfelArray[2] = {0};
     
 /*--- Modullokale Konstanten ------------------------------------------------*/
 /*--- Modullokale Variablen -------------------------------------------------*/
+uint8_t xTasten[4] = {TASTE2, TASTE3, TASTE6, TASTE8};
+uint8_t ersterSpieler = 1;
 /*--- Prototypen modullokaler Funktionen ------------------------------------*/
 /*--- Funktionsdefinitionen -------------------------------------------------*/
 
@@ -543,7 +547,7 @@ int main(void)
     //wuerfel();
     uint8_t spielerSetup = 0;
     uint8_t anzahlSpieler = 2;
-    uint16_t startgeld[16] = {500,500,100,100,100,100,50,20,10,10,5,1,1,1,1,1};
+    uint8_t flagFertigGewuerfelt, flagWuerfel1, flagWuerfel2 = 0;
     while (1) 
     {
         tasteAlt = tasteNeu;
@@ -592,20 +596,61 @@ int main(void)
                 writeText(0,4,lcdBuffer);
                 writeText(1,0,"   Startgeld    ");
                 writeText(2,0," wird verteilt  ");
-                zustand = SPIEL;
+                startGeldAnimation(anzahlSpieler);
+                zustand = wuerfelStart;
             }
         	break;
-            case SPIEL:
-            for (uint8_t i = 0; i < 16; i = i + 1)
+            case wuerfelStart:
+            //Geldanzeige aller Spieler auschalten
+            for (uint8_t i = 1; i <= anzahlSpieler; i = i + 1)
             {
-                for (uint8_t j = 1; j <= anzahlSpieler; j = j + 1)
+                //Schaltet den Output aller Geld Siebensegmente aus
+                setGeld(1500,i,SIEBENSEGMENT_OFF);
+            }
+            for (uint8_t i = 1; i <= anzahlSpieler; i = i + 1)
+            {
+                writeText(0,0,"   Spieler X    ");
+                sprintf(lcdBuffer,"%u",i);
+                writeText(0,11,lcdBuffer);
+                writeText(1,0,"    wuerfelt    ");
+                writeText(2,0,"  X = wuerfeln  ");
+                
+                while (!(flagWuerfel1 & flagWuerfel2))
                 {
-                    spielerInfo[j].geld = spielerInfo[j].geld + startgeld[i];
-                    _delay_ms(75);
-                    updateKontostand(anzahlSpieler,spielerInfo);
+                    tasteAlt = tasteNeu;
+                    tasteNeu = 0;
+                    tasteNeu = (PINL << 8) | PINK;
+                    positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
+                    if (positiveFlanke & TASTE9)
+                    {
+                        wuerfelAB(1);
+                        flagWuerfel1 = 1;
+                    }
+                    else if (positiveFlanke & TASTE10)
+                    {
+                        wuerfelAB(2);
+                        flagWuerfel2 = 1;
+                    }
+                }
+                flagWuerfel1 = 0;
+                flagWuerfel2 = 0;
+                spielerInfo[i].geld = wuerfelArray[0] + wuerfelArray[1];
+                if (spielerInfo[i].geld > spielerInfo[ersterSpieler].geld)
+                {
+                    ersterSpieler = i;
+                }
+                if((spielerInfo[4].geld == spielerInfo[ersterSpieler].geld) && !(spielerInfo[ersterSpieler].geld == 12))
+                {
                     
                 }
-               _delay_ms(50);
+                
+                
+                
+                
+                
+                updateKontostand(i,spielerInfo);
+                
+                
             }
             zustand = RESERVE;
             break;

@@ -72,6 +72,7 @@ void updateKontostand(uint8_t anzahlSpieler, Spieler spielerInfo[5]);
 
 uint8_t zufallsGenerator(void);
 void wuerfel(void);
+void wuerfelAB(uint8_t wuerfelNummer);
 void wuerfelTransmit(uint8_t zahl1, uint8_t zahl2);
 
 void adm_ADC_init(void);
@@ -80,5 +81,7 @@ uint16_t adm_ADC_read(uint8_t kanal);
 void abInsGefaengnis(uint8_t Spieler);
 
 void PortInitialisierung(void);
+
+void startGeldAnimation(uint8_t anzahlSpieler);
 
 #endif /* MONOPOLYTREIBER_H_ */
