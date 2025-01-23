@@ -599,10 +599,6 @@ int main(void)
             if ((positiveFlanke & TASTER10) && !flagNextPlayer)
             {
                 sibensegmentWuerfel();
-                /*sprintf(buffer,"%u",wuerfelArray[0]);
-                writeText(0,9,buffer);
-                sprintf(buffer,"%u",wuerfelArray[1]);
-                writeText(1,9,buffer);*/
                 if (wuerfelArray[0] == wuerfelArray[1])
                 {
                     flagPasch = 1;
