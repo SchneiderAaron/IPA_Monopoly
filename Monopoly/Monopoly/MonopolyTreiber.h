@@ -72,7 +72,7 @@ void updateKontostand(uint8_t anzahlSpieler, Spieler spielerInfo[5]);
 
 uint8_t zufallsGenerator(void);
 void wuerfel(void);
-void wuerfelAB(uint8_t wuerfelNummer);
+void wuerfelAB(uint8_t wuerfelNummer, uint8_t flagWuerfel1, uint8_t flagWuerfel2);
 void wuerfelTransmit(uint8_t zahl1, uint8_t zahl2);
 
 void adm_ADC_init(void);

@@ -563,70 +563,57 @@ void wuerfel(void)
     wuerfelArray[0] = zufallszahl1;
     wuerfelArray[1] = zufallszahl2;
 }
-void wuerfelAB(uint8_t wuerfelNummer)
+void wuerfelAB(uint8_t wuerfelNummer, uint8_t flagWuerfel1, uint8_t flagWuerfel2)
 {
-    uint8_t zufallszahl1, zufallszahl2 = 0;
-    if (wuerfelNummer == 1)
+    uint8_t zufallszahl1, zufallszahl2 = 10;
+    if((wuerfelNummer == 1) && flagWuerfel2)
     {
         //Simuliert mehrere Würfeln-Animationen
         for (uint8_t i = 0; i < 50; i = i + 1)
         {
-            
             zufallszahl1 = zufallsGenerator(); //Erste Zufallszahl
-            //Sendet die zweite Zufallszahl an das Display
             wuerfelTransmit(zufallszahl1,wuerfelArray[1]);
             //Verzögert den nächsten Durchgang
             _delay_ms(15 + i * 2);
         }
-        
-        //Würfeln der finalen Zufallszahlen
-        zufallszahl1 = zufallsGenerator();
-        if (wuerfelArray[1] > 0)
-        {
-            wuerfelTransmit(zufallszahl1, wuerfelArray[1]);
-            //Speichert die finalen Zufallszahlen im Array
-            wuerfelArray[0] = zufallszahl1;
-        }
-        else
-        {
-            wuerfelTransmit(zufallszahl1, wuerfelArray[1]);
-            //Speichert die finalen Zufallszahlen im Array
-            wuerfelArray[0] = zufallszahl1;
-        }
-        
+        wuerfelArray[0] = zufallszahl1;
     }
-    if (wuerfelNummer == 2)
+    else if((wuerfelNummer == 1) && !flagWuerfel2)
     {
         //Simuliert mehrere Würfeln-Animationen
         for (uint8_t i = 0; i < 50; i = i + 1)
         {
-            zufallszahl2 = zufallsGenerator(); //Zweite Zufallszahl
-            //Sendet die zweite Zufallszahl an das Display
-            wuerfelTransmit(wuerfelArray[0],zufallszahl2);
-
+            zufallszahl1 = zufallsGenerator(); //Erste Zufallszahl
+            wuerfelTransmit(zufallszahl1,SIEBENSEGMENT_OFF);
             //Verzögert den nächsten Durchgang
             _delay_ms(15 + i * 2);
         }
-        
-        //Würfeln der finalen Zufallszahlen
-        zufallszahl2 = zufallsGenerator();
-        
-        if (wuerfelArray[0] > 0)
-        {
-            wuerfelTransmit(wuerfelArray[0], zufallszahl2);
-            //Speichert die finalen Zufallszahlen im Array
-            wuerfelArray[1] = zufallszahl2;
-        }
-        else
-        {
-            wuerfelTransmit(wuerfelArray[0], zufallszahl2);
-            //Speichert die finalen Zufallszahlen im Array
-            wuerfelArray[1] = zufallszahl2;
-        }
+        wuerfelArray[0] = zufallszahl1;
     }
-    //Speichert die finalen Zufallszahlen im Array
-    wuerfelArray[0] = zufallszahl1;
-    wuerfelArray[1] = zufallszahl2;
+    else if((wuerfelNummer == 2) && flagWuerfel1)
+    {
+        //Simuliert mehrere Würfeln-Animationen
+        for (uint8_t i = 0; i < 50; i = i + 1)
+        {
+            zufallszahl2 = zufallsGenerator(); //Erste Zufallszahl
+            wuerfelTransmit(wuerfelArray[0],zufallszahl2);
+            //Verzögert den nächsten Durchgang
+            _delay_ms(15 + i * 2);
+        }
+        wuerfelArray[1] = zufallszahl2;
+    }
+    else if((wuerfelNummer == 2) && !flagWuerfel1)
+    {
+        //Simuliert mehrere Würfeln-Animationen
+        for (uint8_t i = 0; i < 50; i = i + 1)
+        {
+            zufallszahl2 = zufallsGenerator(); //Erste Zufallszahl
+            wuerfelTransmit(SIEBENSEGMENT_OFF,zufallszahl2);
+            //Verzögert den nächsten Durchgang
+            _delay_ms(15 + i * 2);
+        }
+        wuerfelArray[1] = zufallszahl2;
+    }
 }
 
 void wuerfelTransmit(uint8_t zahl1, uint8_t zahl2)

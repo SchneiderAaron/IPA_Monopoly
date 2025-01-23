@@ -130,7 +130,7 @@ uint8_t wuerfelArray[2] = {0};
 /*--- Modullokale Konstanten ------------------------------------------------*/
 /*--- Modullokale Variablen -------------------------------------------------*/
 uint8_t xTasten[4] = {TASTE2, TASTE3, TASTE6, TASTE8};
-uint8_t ersterSpieler = 1;
+uint8_t ersterSpieler = 0;
 /*--- Prototypen modullokaler Funktionen ------------------------------------*/
 /*--- Funktionsdefinitionen -------------------------------------------------*/
 
@@ -536,6 +536,7 @@ int main(void)
     SPI_init_all(9600);
     resetMonopoly();
     //random Seed setzen
+    adm_ADC_init();
     srand(adm_ADC_read(0));
     
     
@@ -547,59 +548,72 @@ int main(void)
     //wuerfel();
     uint8_t spielerSetup = 0;
     uint8_t anzahlSpieler = 2;
-    uint8_t flagFertigGewuerfelt, flagWuerfel1, flagWuerfel2 = 0;
+    uint8_t flagFertigGewuerfelt, flagWuerfel1, flagWuerfel2, letzterWuerfel = 0;
     while (1) 
     {
+        //Flankenerkennung
         tasteAlt = tasteNeu;
         tasteNeu = 0;
         tasteNeu = (PINL << 8) | PINK;
         positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
         
+        //verarbeitung verschiedener zustände
         switch (zustand)
         {
             case SPIELERAUSWAHL:
             if (!spielerSetup)
             {
+                //LCD ausgabe
                 writeText(0,0," Anzahl Spieler ");
                 writeText(1,1,"- 2 Spieler  +");
                 displayCharacterAt(1,0,ARROW_L);
                 displayCharacterAt(1,15,ARROW_R);
                 writeText(2,0,"weiter Taste S ");
+                //schaltet nicht benötigte siebensegmente aus
                 updateKontostand(anzahlSpieler,spielerInfo);
-                spielerSetup = 1;
+                spielerSetup = 1; //setzt Flag um erneutes ausführen zu verhindern
             }
             //Anzahl Spieler verkleinern
             if ((positiveFlanke & TASTE14) && anzahlSpieler > MIN_ANZAHL_SPIELER)
             {
                 anzahlSpieler = anzahlSpieler - 1;
+                //Ausgabe anzahl spieler auf LCD
                 sprintf(lcdBuffer,"%u",anzahlSpieler);
                 writeText(1,3,lcdBuffer);
+                //Aktive spieler an Konto LCD anzeigen
                 updateKontostand(anzahlSpieler,spielerInfo);
             }
-            //anzuahlspieler vergrössern
+            //anzahlspieler vergrössern
             if ((positiveFlanke & TASTE15) && anzahlSpieler < MAX_ANZAHL_SPIELER)
             {
                 anzahlSpieler = anzahlSpieler + 1;
+                //Ausgabe anzahl spieler auf LCD
                 sprintf(lcdBuffer,"%u",anzahlSpieler);
                 writeText(1,3,lcdBuffer);
+                //Aktive spieler an Konto LCD anzeigen
                 updateKontostand(anzahlSpieler,spielerInfo);
             }
             //anzahl spieler bestätigen
             if (positiveFlanke & TASTE13)
             {
+                //Setzt das Geld der Spieler auf 0
                 for (uint8_t i = 1; i <= anzahlSpieler; i = i + 1)
                 {
                     spielerInfo[i].geld = 0;
                 }
+                //Aktive spieler an Konto LCD anzeigen
                 updateKontostand(anzahlSpieler,spielerInfo);
+                //Ausgabe bestätigte anzahl spieler auf LCD
                 writeText(0,0,"      Spieler   ");
                 writeText(0,4,lcdBuffer);
+                //Ausgabe, startgeld wird verteilt auf LCD
                 writeText(1,0,"   Startgeld    ");
                 writeText(2,0," wird verteilt  ");
-                startGeldAnimation(anzahlSpieler);
-                zustand = wuerfelStart;
+                startGeldAnimation(anzahlSpieler); //Startgeld wird ausgeteilt
+                zustand = wuerfelStart; //wechselt den Zustand
             }
         	break;
+            //in diesem Zustand wird bestimmt wer zuerst würfelt
             case wuerfelStart:
             //Geldanzeige aller Spieler auschalten
             for (uint8_t i = 1; i <= anzahlSpieler; i = i + 1)
@@ -607,47 +621,82 @@ int main(void)
                 //Schaltet den Output aller Geld Siebensegmente aus
                 setGeld(1500,i,SIEBENSEGMENT_OFF);
             }
+            //lässt jeden spieler würfeln
             for (uint8_t i = 1; i <= anzahlSpieler; i = i + 1)
             {
+                //LCD Ausgabe
                 writeText(0,0,"   Spieler X    ");
                 sprintf(lcdBuffer,"%u",i);
                 writeText(0,11,lcdBuffer);
                 writeText(1,0,"    wuerfelt    ");
                 writeText(2,0,"  X = wuerfeln  ");
                 
-                while (!(flagWuerfel1 & flagWuerfel2))
+                //wartet bis mit beiden Würfel gewürfelt wurde
+                while (!(flagWuerfel1 && flagWuerfel2)) 
                 {
+                    //flankenerkennung
                     tasteAlt = tasteNeu;
                     tasteNeu = 0;
                     tasteNeu = (PINL << 8) | PINK;
                     positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
-                    if (positiveFlanke & TASTE9)
+                    //würfelt würfel 1 nur wenn taste9 betätigt wurde
+                    //und würfel 1 noch nicht gewürfelt wurde
+                    if ((positiveFlanke & TASTE9) && !flagWuerfel1)
                     {
-                        wuerfelAB(1);
+                        wuerfelAB(1,flagWuerfel1,flagWuerfel2);
                         flagWuerfel1 = 1;
                     }
-                    else if (positiveFlanke & TASTE10)
+                    //würfelt würfel 2 nur wenn taste9 betätigt wurde
+                    //und würfel 2 noch nicht gewürfelt wurde
+                    else if ((positiveFlanke & TASTE10) && !flagWuerfel2)
                     {
-                        wuerfelAB(2);
+                        wuerfelAB(2,flagWuerfel1,flagWuerfel2);
                         flagWuerfel2 = 1;
                     }
+                    //prüfft welche würfel als 2. verwendet wurde
+                    if (flagWuerfel1 && !letzterWuerfel)
+                    {
+                        letzterWuerfel = 2; //würfel 2 wird als letztes verwendet
+                    }
+                    if (flagWuerfel2 && !letzterWuerfel)
+                    {
+                        letzterWuerfel = 1; //würfel 1 wird als letztes verwendet
+                    }
                 }
-                flagWuerfel1 = 0;
-                flagWuerfel2 = 0;
+                
+                //Setzt das geld des Spielers auf die Summe der Würfel
                 spielerInfo[i].geld = wuerfelArray[0] + wuerfelArray[1];
+                
+                //falls der aktuelle Spieler die gleiche Summe wie Platz 1 hat
+                if (spielerInfo[i].geld == spielerInfo[ersterSpieler].geld)
+                {
+                    //Wenn 2. würfelzahl > 1, dann wird die zahl um 1 verkleinert
+                    if (wuerfelArray[letzterWuerfel-1] > 1) 
+                    {
+                        //verkleinert die 2. gewürfelte zahl
+                        wuerfelArray[letzterWuerfel-1] = wuerfelArray[letzterWuerfel-1] - 1;
+                    }
+                    else
+                    {
+                        //ansonsten wird die 2. Zahl um 1 erhöht
+                        wuerfelArray[letzterWuerfel-1] = wuerfelArray[letzterWuerfel-1] + 1;
+                    }
+                    //neuer Wert wird gespeichert
+                    spielerInfo[i].geld = wuerfelArray[0] + wuerfelArray[1];
+                    //neue zahlen werden an die Würfel siebensegmente ausgegeben
+                    wuerfelTransmit(wuerfelArray[0],wuerfelArray[1]); 
+                }
+                
+                //wenn der aktuelle Spieler eine grössere zahl hat als platz 1
+                //dann wird deraktuelle spieler zu platz 1
                 if (spielerInfo[i].geld > spielerInfo[ersterSpieler].geld)
                 {
                     ersterSpieler = i;
                 }
-                if((spielerInfo[4].geld == spielerInfo[ersterSpieler].geld) && !(spielerInfo[ersterSpieler].geld == 12))
-                {
-                    
-                }
                 
-                
-                
-                
-                
+                flagWuerfel1 = 0;
+                flagWuerfel2 = 0;
+                letzterWuerfel = 0;
                 updateKontostand(i,spielerInfo);
                 
                 
