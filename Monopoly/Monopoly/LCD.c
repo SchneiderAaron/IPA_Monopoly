@@ -80,6 +80,7 @@ void DataDisplay(uint8_t Data)
 void clear(void)
 {
     CmdDisplay(CMD_CLEAR_DISPLAY);
+    _delay_ms(1);
 }
 
 void home(void)

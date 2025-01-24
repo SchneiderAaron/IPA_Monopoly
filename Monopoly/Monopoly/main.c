@@ -48,10 +48,11 @@
 #include "MonopolyTreiber.h"
 #include "LCD.h"
 /*--- #define-Konstanten und Makros -----------------------------------------*/
-#define MIN_ANZAHL_SPIELER 2
-#define MAX_ANZAHL_SPIELER 4
+#define MIN_ANZAHL_SPIELER  2
+#define MAX_ANZAHL_SPIELER  4
 
-#define SIEBENSEGMENT_OFF 10
+#define SIEBENSEGMENT_ON    0
+#define SIEBENSEGMENT_OFF   10
 
 //Taster an PORT K
 #define TASTE1     (1<<0)
@@ -138,7 +139,7 @@ typedef struct {
     uint8_t rgbNummer;
 } Feld;
 
-typedef enum {SPIELERAUSWAHL, wuerfelStart, SPIEL, RESERVE,} zustand_t;
+typedef enum {SPIELERAUSWAHL, wuerfelStart, SPIEL, VERSTEIGERUNG} zustand_t;
 /*--- Globale Konstanten ----------------------------------------------------*/
 /*--- Globale Variablen -----------------------------------------------------*/
 
@@ -216,7 +217,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[4].preis = 200;
     
     //Eigenschaften des Feldes: Zeughausstrasse
-    strcpy(spielfeld[4].name, "Zeughausstrasse");
+    strcpy(spielfeld[5].name, "Zeughausstrasse");
     spielfeld[5].typ = HALTESTELLE;
     spielfeld[5].preis = 200;
     spielfeld[5].miete = 200;
@@ -225,7 +226,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[5].rgbNummer = 2;
     
     //Eigenschaften des Feldes: Raucherzelt
-    strcpy(spielfeld[3].name, "Raucherzelt");
+    strcpy(spielfeld[6].name, "Raucherzelt");
     spielfeld[6].typ = STRASSE;
     spielfeld[6].preis = 100;
     spielfeld[6].miete = 2;
@@ -280,7 +281,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[11].rgbNummer = 6;
     
     //Eigenschaften des Feldes: Informatikdienst
-    strcpy(spielfeld[11].name, "Informatikdienst");
+    strcpy(spielfeld[12].name, "Informatikdienst");
     spielfeld[12].typ = WERK;
     spielfeld[12].preis = 150;
     spielfeld[12].miete = 2;
@@ -542,20 +543,28 @@ int main(void)
     uint8_t flagNextPlayer, flagPasch = 0;
     uint8_t flagWeiter = 1;
     uint8_t aktuellePosition = 0;
-    uint8_t xTasten[4] = {TASTE2, TASTE3, TASTE6, TASTE8};
+    uint8_t xTasten[4] = {TASTE_X1, TASTE_X2, TASTE_X3, TASTE_X4};
+    uint8_t yTasten[4] = {TASTE_Y1, TASTE_Y2, TASTE_Y3, TASTE_Y4};
+    uint8_t bieter[6] = {0};//0-3 Bieter 4 anz. spieler raus 5 höchstbieter
     uint8_t ersterSpieler = 0;
     
     uint8_t spielerSetup = 0;
     uint8_t anzahlSpieler = 2;
     uint8_t flagFertigGewuerfelt, flagWuerfel1, flagWuerfel2, letzterWuerfel = 0;
     
+    uint8_t flagKaufAbgechlossen, flagVersteigert = 0;
+    
+    uint8_t updateLCD = 0;
+    
     //16-Bit Variabeln
     uint16_t tasteAlt, tasteNeu, positiveFlanke = 0; //Variabeln Flankenerkennung
+    uint16_t geldZwischenspeicher[5] = {0};
+    uint16_t aktuellesGebot = 0;
     //Eigene Datentypen
     Feld spielfeld[40];
     FeldTyp aktuellesFeld = FREIPARKEN;
     zustand_t zustand = SPIELERAUSWAHL;
-    uint8_t updateLCD = 0;
+    
     
     /*--- Prototypen modullokaler Funktionen ------------------------------------*/
     /*--- Funktionsdefinitionen -------------------------------------------------*/
@@ -627,6 +636,7 @@ int main(void)
                 updateKontostand(anzahlSpieler,spielerInfo);
                 //Ausgabe bestätigte anzahl spieler auf LCD
                 writeText(0,0,"      Spieler   ");
+                sprintf(lcdBuffer,"%u",anzahlSpieler);
                 writeText(0,4,lcdBuffer);
                 //Ausgabe, startgeld wird verteilt auf LCD
                 writeText(1,0,"   Startgeld    ");
@@ -739,21 +749,43 @@ int main(void)
             zustand = SPIEL;
             break;
             case SPIEL:
-            if((positiveFlanke & TASTE11) && flagFertigGewuerfelt)
+            //nach einer Versteigerung info an lcd anzeigen
+            if (flagVersteigert)
             {
+                clear();//lcd leeren
+                //spieler am zug anzeigen
+                writeText(0,0,"   Spieler      "); 
+                sprintf(lcdBuffer,"%u",spielerAmZug);
+                writeText(0,11,lcdBuffer);
+                writeText(1,0," wšrfeln A / B ");
+                writeText(2,0,"    weiter C    ");
+                flagVersteigert = 0;
+            }
+            //Spielzug abschliessen
+            if((positiveFlanke & TASTE_C) && flagFertigGewuerfelt)
+            {
+                //würfel Siebensegmente ausschalten
                 wuerfelTransmit(SIEBENSEGMENT_OFF,SIEBENSEGMENT_OFF);
+                //nächster spieler
                 spielerAmZug = (spielerAmZug % anzahlSpieler) + 1;
+                //spieler am zug anzeigen
                 writeText(0,0,"   Spieler      ");
                 sprintf(lcdBuffer,"%u",spielerAmZug);
                 writeText(0,11,lcdBuffer);
                 writeText(1,0," wšrfeln A / B ");
                 writeText(2,0,"    weiter C    ");
+                //flags zurücksetzten
                 flagFertigGewuerfelt = 0;
+                flagKaufAbgechlossen = 0;
+                //Schaltet das Blaulicht aus
+                PORTC &= ~0xC0;
             }
+            //ermöglicht es dem spieler bei Pasch zu kaufen
             if ((positiveFlanke & TASTE_C) && !flagWeiter)
             {
+                //Würfel Siebensegmente ausschalten
                 wuerfelTransmit(SIEBENSEGMENT_OFF,SIEBENSEGMENT_OFF);
-                flagWeiter = 1;
+                flagWeiter = 1; //Flag setzen
             }
             //lässt den Spieler einmal würfel
             //Wenn flagWeiter nicht gesetzt ist, kann man nicht würfeln das
@@ -772,6 +804,7 @@ int main(void)
                     //und würfel 1 noch nicht gewürfelt wurde
                     if ((positiveFlanke & TASTE_A) && !flagWuerfel1)
                     {
+                        //mit 1. würfel würfeln
                         wuerfelAB(1,flagWuerfel1,flagWuerfel2);
                         flagWuerfel1 = 1;
                     }
@@ -779,6 +812,7 @@ int main(void)
                     //und würfel 2 noch nicht gewürfelt wurde
                     else if ((positiveFlanke & TASTE_B) && !flagWuerfel2)
                     {
+                        //mit 2. würfel würfeln
                         wuerfelAB(2,flagWuerfel1,flagWuerfel2);
                         flagWuerfel2 = 1;
                         
@@ -791,25 +825,28 @@ int main(void)
                     //beide würfel flags zurücksetzen
                     flagWuerfel1 = 0;
                     flagWuerfel2 = 0;
-                    switch (flagPasch)
+                    switch (flagPasch) //schaltet LEDs ein bei Pasch
                     {
                         case 1:
-                        PORTC |= 0x40;
+                        PORTC |= 0x40; //eine LED
                     	break;
                         case 2:
-                        PORTC |= 0x80;
+                        PORTC |= 0x80; //zwei LEDs
                         break;
                         case 3:
-                        PORTC &= ~0xC0;
+                        PORTC &= ~0xC0; //Schaltet beide LEDs aus
+                        //würfelzahlen zurücksetzen
                         wuerfelArray[0] = 0;
                         wuerfelArray[1] = 0;
+                        //flags zurücksetzen
                         flagWuerfel1 = 0;
                         flagWuerfel2 = 0;
                         flagPasch = 0;
                         flagWeiter = 1;
                         flagFertigGewuerfelt = 1;
                         flagWeiter = 1;
-                        abInsGefaengnis(spielerAmZug);
+                        //nach 3. pasch landet man im Gefängnis
+                        abInsGefaengnis(spielerAmZug); 
                         aktuellesFeld = GEFAENGNIS;
                         break;
                     }
@@ -844,54 +881,63 @@ int main(void)
             }
             flagWuerfel1 = 0;
             flagWuerfel2 = 0;
-            
+            //kontostand aktualisieren
             updateKontostand(anzahlSpieler,spielerInfo);
            
             
-            switch (aktuellesFeld)
+            switch (aktuellesFeld) //verarbeitung aktuelles feld
             {
                 case EREIGNISFELD:
                 break;
                 case STRASSE:
-                if (!updateLCD)
+                //Feld kann gekauft werden wenn es niemandem gehört
+                if (!flagKaufAbgechlossen && (spielfeld[aktuellePosition].besitzer == 0))
                 {
-                    writeText(0,0,"   Spieler      ");
-                    sprintf(lcdBuffer,"%u",spielerAmZug);
-                    writeText(0,11,lcdBuffer);
-                    sprintf(lcdBuffer, "%c", spielfeld[aktuellePosition].name)
-                    writeText(1,0,lcdBuffer);
-                    writeText(2,0,"kaufen? <=N >=J");
-                    updateLCD = 1;
-                }
-                if (positiveFlanke & TASTE_R)
-                {
-                    if((spielerInfo[spielerAmZug].geld >= (spielfeld[aktuellePosition].preis)) && (spielfeld[aktuellePosition].besitzer == 0))
+                    if (!updateLCD) //LCD 1 mal aktualisieren
                     {
-                        spielerInfo[spielerAmZug].geld = spielerInfo[spielerAmZug].geld - spielfeld[aktuellePosition].preis;
-                        spielfeld[aktuellePosition].besitzer = spielerAmZug;
-                        setPropertyRgb(spielfeld[aktuellePosition].rgbNummer,spielerAmZug);
-                        updateKontostand(anzahlSpieler,spielerInfo);
-                        //setGeld(spielerInfo[spielerAmZug].geld,spielerAmZug,1);
+                        clear();
+                        _delay_ms(100);
+                        writeText(0,0,"   Spieler      ");
+                        sprintf(lcdBuffer,"%u",spielerAmZug);
+                        writeText(0,11,lcdBuffer);
+                        writeText(1,0,spielfeld[aktuellePosition].name);
+                        writeText(2,0,"kaufen? <=N >=J");
+                        updateLCD = 1;
+                    }
+                    if (positiveFlanke & TASTE_R)//kaufen
+                    {
+                        //wenn das feld noch nicht verkauft ist und der Spieler genug geld hat, kann er es kaufen
+                        if((spielerInfo[spielerAmZug].geld >= (spielfeld[aktuellePosition].preis)) && (spielfeld[aktuellePosition].besitzer == 0))
+                        {
+                            //zieht den betrag vom Konto des spielers ab
+                            spielerInfo[spielerAmZug].geld = spielerInfo[spielerAmZug].geld - spielfeld[aktuellePosition].preis;
+                            //besitz wird umgeschrieben
+                            spielfeld[aktuellePosition].besitzer = spielerAmZug;
+                            //Besitz RGB setzen
+                            setPropertyRgb(spielfeld[aktuellePosition].rgbNummer,spielerAmZug);
+                            //konto aktualisieren
+                            updateKontostand(anzahlSpieler,spielerInfo);
+                            //flag setzen
+                            flagKaufAbgechlossen = 1;
+                            //LCD leeren und neu beschreiben
+                            clear();
+                            _delay_ms(1);
+                            writeText(0,0,"   Spieler      ");
+                            sprintf(lcdBuffer,"%u",spielerAmZug);
+                            writeText(0,11,lcdBuffer);
+                            writeText(1,0," wšrfeln A / B ");
+                            writeText(2,0,"    weiter C    ");
+                            updateLCD = 0;
+                        }
+                    }
+                    else if (positiveFlanke & TASTE_L)//nicht Kaufen
+                    {
+                        zustand = VERSTEIGERUNG; //bei nicht kauf wird versteigert
+                        //flags setzen
+                        updateLCD = 0;
+                        flagKaufAbgechlossen = 1;
                     }
                 }
-                 /*if (positiveFlanke & TASTE_L)
-                 {
-                     if((spielerInfo[spielerAmZug].geld >= (spielfeld[aktuellePosition].preis)) && (spielfeld[aktuellePosition].besitzer == 0))
-                     {
-                         spielerInfo[spielerAmZug].geld = spielerInfo[spielerAmZug].geld - spielfeld[aktuellePosition].preis;
-                         spielfeld[aktuellePosition].besitzer = spielerAmZug;
-                         setPropertyRgb(spielfeld[aktuellePosition].rgbNummer,spielerAmZug);
-                         //setGeld(spielerInfo[spielerAmZug].geld,spielerAmZug,1);
-                     }
-                 }
-                 if (positiveFlanke & TASTE_S)
-                 {
-                     setHaus(spielfeld[aktuellePosition].hausnummer,5);
-                 }
-                 if (positiveFlanke & TASTE_R)
-                 {
-                     setHaus(spielfeld[aktuellePosition].hausnummer,0);
-                 }*/
                 break;
                 case STEUERFELD:
                 break;
@@ -929,7 +975,108 @@ int main(void)
                 break;
             }
             break;
-            case RESERVE:
+            case VERSTEIGERUNG:
+            //LCD aktualisieren
+            if (!updateLCD)
+            {
+                clear();
+                writeText(0,0," VERSTEIGERUNG  ");
+                writeText(1,0,spielfeld[aktuellePosition].name);
+                writeText(2,0,"bieten X sonst Y");
+                aktuellesGebot = 9; //startgebot
+                updateLCD = 1; //LCD nicht mehr aktualisiern
+                for (uint8_t i = 1; i <= anzahlSpieler; i = i + 1)
+                {
+                    //Speichert den aktuellen kontostand der Spieler
+                    geldZwischenspeicher[i] = spielerInfo[i].geld;
+                    //Geld Siebensegmente ausschalten
+                    setGeld(0,i,0);
+                }
+            }
+            //verarbeitet tasten eingaben der spieler
+            for (uint8_t i = 0; i < anzahlSpieler; i = i + 1)
+            {
+                //Gebot wird abgegeben, wenn der spieler noch dabei ist und er genug geld hat
+                if (((positiveFlanke & xTasten[i]) && !bieter[i]) && (spielerInfo[i+1].geld > (aktuellesGebot + 1))) 
+                {
+                    aktuellesGebot = aktuellesGebot + 1; //aktuelles Gebot erhöhen
+                    for (uint8_t j = 1; j <= anzahlSpieler; j = j + 1)
+                    {
+                        setGeld(0,j,0); //Geld Siebensegmente ausschalten
+                    }
+                    //Geld Siebensegmente vom höchstbieter einschalten
+                    setGeld(aktuellesGebot,i + 1,1); 
+                    bieter[5] = i + 1; //Speichert Spieler Nummer vom Höchstbieter
+                }
+                //wenn ein spieler die Taste Y betätigt bietet er nicht mehr mit
+                if ((positiveFlanke & yTasten[i]) && !bieter[i])
+                {
+                    bieter[i] = 1; //schliesst spieler aus auktion aus
+                    bieter[4] = bieter[4] + 1; //erhöht anzahl zurückgezogene spieler
+                }
+            }
+            if (bieter[4] == anzahlSpieler) //wenn alle Spieler aus der Auktion zurückgetretn sind
+            {
+                if (!(bieter[5] == 0)) //wenn jemand die Auktion gewonnen hat
+                {
+                    //LCD Leeren und neu beschreiben
+                    clear();
+                    _delay_ms(10);
+                    writeText(0,0," VERSTEIGERT an ");
+                    writeText(1,0,"   Spieler      ");
+                    sprintf(lcdBuffer,"%u",bieter[5]);
+                    writeText(1,11,lcdBuffer);
+                    _delay_ms(4000); //delay um Spieler zeit zu lassen LCD zu lesen
+                    //Geld aus Zwischenspeicher zurück auf Spielerkonto
+                    for (uint8_t i = 1; i <= anzahlSpieler; i = i + 1)
+                    {
+                        spielerInfo[i].geld = geldZwischenspeicher[i];
+                    }
+                    //kontostand aktualisieren
+                    updateKontostand(anzahlSpieler,spielerInfo);
+                    //kontostand von Höchstbieter um gebot verkleinern
+                    spielerInfo[bieter[5]].geld = (spielerInfo[bieter[5]].geld - aktuellesGebot);
+                    //besitz überschreiben
+                    spielfeld[aktuellePosition].besitzer = bieter[5];
+                    //beitz RGB einschalten
+                    setPropertyRgb(spielfeld[aktuellePosition].rgbNummer,bieter[5]);
+                    //bieter array zurücksetzen
+                    for (uint8_t i = 0; i < 6; i = i + 1)
+                    {
+                        bieter[i] = 0;
+                    }
+                    //flags setzen
+                    updateLCD = 0;
+                    flagVersteigert = 1;
+                    //zum spiel zurückkehren
+                    zustand = SPIEL;
+                }
+                else
+                {
+                    //LCD Leeren und neu beschreiben
+                    clear();
+                    writeText(0,0,"     nicht     ");
+                    writeText(1,0,"   VERSTEIGERT  ");
+                    _delay_ms(4000);
+                    //Geld aus Zwischenspeicher zurück auf Spielerkonto
+                    for (uint8_t i = 1; i <= anzahlSpieler; i = i + 1)
+                    {
+                        spielerInfo[i].geld = geldZwischenspeicher[i];
+                    }
+                    //kontostand aktualisieren
+                    updateKontostand(anzahlSpieler,spielerInfo);
+                    //bieter array zurücksetzen
+                    for (uint8_t i = 0; i < 6; i = i + 1)
+                    {
+                        bieter[i] = 0;
+                    }
+                    //flags setzen
+                    updateLCD = 0;
+                    flagVersteigert = 1;
+                    //zum spiel zurückkehren
+                    zustand = SPIEL;
+                }
+            }
             break;
             default:
             break;
