@@ -48,7 +48,7 @@
 #define SPIELER_START_FELD 0
 #define ANZAHL_GRUNDSTUEKE 28
 #define SIEBENSEGMENT_OFF 10
-#define SIEBENSEGMENT_OFF 0
+//#define SIEBENSEGMENT_OFF 0
 /*--- Datentypen (typedef) --------------------------------------------------*/
 rgb_color leds[LED_COUNT];
 /*--- Globale Konstanten ----------------------------------------------------*/
@@ -581,7 +581,7 @@ void wuerfelAB(uint8_t wuerfelNummer, uint8_t flagWuerfel1, uint8_t flagWuerfel2
     else if((wuerfelNummer == 1) && !flagWuerfel2)
     {
         //Simuliert mehrere Würfeln-Animationen
-        for (uint8_t i = 0; i < 50; i = i + 1)
+        for (uint8_t i = 0; i < 25; i = i + 1)
         {
             zufallszahl1 = zufallsGenerator(); //Erste Zufallszahl
             wuerfelTransmit(zufallszahl1,SIEBENSEGMENT_OFF);
@@ -593,12 +593,12 @@ void wuerfelAB(uint8_t wuerfelNummer, uint8_t flagWuerfel1, uint8_t flagWuerfel2
     else if((wuerfelNummer == 2) && flagWuerfel1)
     {
         //Simuliert mehrere Würfeln-Animationen
-        for (uint8_t i = 0; i < 50; i = i + 1)
+        for (uint8_t i = 0; i < 25; i = i + 1)
         {
             zufallszahl2 = zufallsGenerator(); //Erste Zufallszahl
             wuerfelTransmit(wuerfelArray[0],zufallszahl2);
             //Verzögert den nächsten Durchgang
-            _delay_ms(15 + i * 2);
+            _delay_ms(15 + i * 3);
         }
         wuerfelArray[1] = zufallszahl2;
     }

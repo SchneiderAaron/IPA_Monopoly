@@ -1,9 +1,40 @@
+/*********************************************************************************\
+*
+* MMMMMMMMMMMMMMMMMM   SSSSSSSSSSSSSSSSSS   WWWW   WWWW   WWWW
+* MMMMMMMMMMMMMMMMMM   SSSSSSSSSSSSSSSSSS   WWWW   WWWW   WWWW   MECHATRONIK
+* MMMMMMMMMMMMMMMMMM   SSSSS                WWWW   WWWW   WWWW
+* MMMM   MMMM   MMMM   SSSSSSSSSSSSSSSSSS   WWWW   WWWW   WWWW   SCHULE
+* MMMM   MMMM   MMMM   SSSSSSSSSSSSSSSSSS   WWWW   WWWW   WWWW
+* MMMM   MMMM   MMMM                SSSSS   WWWWWWWWWWWWWWWWWW   WINTERTHUR
+* MMMM   MMMM   MMMM   SSSSSSSSSSSSSSSSSS   WWWWWWWWWWWWWWWWWW
+* MMMM   MMMM   MMMM   SSSSSSSSSSSSSSSSSS   WWWWWWWWWWWWWWWWWW   www.msw.ch
+*
+*
+* Dateiname: LCD.h
+*
+* Projekt  : IPA_Monopoly
+* Hardware : Monopoly-Board, ATmega2560v von Atmel
+*
+*
+* Copyright: MSW, AE3
+*
+* Beschreibung:
+* =============
+* Treiber zur ansteuerung des LCDs auf der Monopoly Hardware
+* um den buchstben ü zu schreiben muss das zeichen š verwendet werden
+* Verlauf:
+* ========
+* Datum:      Autor:         Version   Grund der Änderung:
+* 10.01.2025  A.Schneider    V1.0      Neuerstellung
+*
+\*********************************************************************************/
 /*
- * LCD.h
- *
- * Created: 16.01.2025 10:12:54
- *  Author: e1Schnei
- */ 
+„ = ä
+Ž = Ä
+” = ö
+™ = Ö
+š = ü
+*/
 
 
 #ifndef LCD_H_

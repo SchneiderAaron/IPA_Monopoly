@@ -73,6 +73,29 @@
 #define TASTE15    (1<<14)
 #define TASTE16    (1<<15)
 
+
+#define TASTE_A TASTE9  //Taste A
+#define TASTE_B TASTE10 //Taste B
+#define TASTE_C TASTE11 //Taste C
+
+#define TASTE_U TASTE12 //Taste Hoch
+#define TASTE_S TASTE13 //Taste Select
+#define TASTE_D TASTE16 //Taste Runter
+#define TASTE_L TASTE14 //Taste Links
+#define TASTE_R TASTE15 //Taste Rechts
+
+#define TASTE_X1 TASTE2 //Taste X Spieler 1
+#define TASTE_X2 TASTE3 //Taste X Spieler 2
+#define TASTE_X3 TASTE6 //Taste X Spieler 3
+#define TASTE_X4 TASTE8 //Taste X Spieler 4
+
+#define TASTE_Y1 TASTE1 //Taste Y Spieler 1
+#define TASTE_Y2 TASTE4 //Taste Y Spieler 2
+#define TASTE_Y3 TASTE5 //Taste Y Spieler 3
+#define TASTE_Y4 TASTE7 //Taste Y Spieler 4
+
+
+//LCD Pfeile
 #define ARROW_R 126
 #define ARROW_L 8
 #define ARROW_T 0
@@ -115,11 +138,11 @@ typedef struct {
     uint8_t rgbNummer;
 } Feld;
 
-typedef enum {SPIELERAUSWAHL, wuerfelStart, RESERVE,} zustand_t;
+typedef enum {SPIELERAUSWAHL, wuerfelStart, SPIEL, RESERVE,} zustand_t;
 /*--- Globale Konstanten ----------------------------------------------------*/
 /*--- Globale Variablen -----------------------------------------------------*/
 
-uint8_t houses[14][8] = {0};
+//uint8_t houses[14][8] = {0};
 uint8_t hausRegister[14] = {0};
 uint8_t spieler[20][8] = {0};
 uint8_t spielerPos[4] = {0};
@@ -127,12 +150,7 @@ uint8_t spielerPos[4] = {0};
 uint8_t siebensegment[16] = {0};
 uint8_t wuerfelArray[2] = {0};
     
-/*--- Modullokale Konstanten ------------------------------------------------*/
-/*--- Modullokale Variablen -------------------------------------------------*/
-uint8_t xTasten[4] = {TASTE2, TASTE3, TASTE6, TASTE8};
-uint8_t ersterSpieler = 0;
-/*--- Prototypen modullokaler Funktionen ------------------------------------*/
-/*--- Funktionsdefinitionen -------------------------------------------------*/
+
 
 void initSpieler(Spieler spielerInfo[])
 {
@@ -515,19 +533,34 @@ void initialisiereSpielfeld(Feld spielfeld[])
 
 int main(void)
 {
-    //Variabeln
+    /*--- Modullokale Konstanten ------------------------------------------------*/
+    /*--- Modullokale Variablen -------------------------------------------------*/
     //char
     char lcdBuffer[16];
     //8-Bit Variabeln
     uint8_t spielerAmZug = 1;
     uint8_t flagNextPlayer, flagPasch = 0;
+    uint8_t flagWeiter = 1;
     uint8_t aktuellePosition = 0;
+    uint8_t xTasten[4] = {TASTE2, TASTE3, TASTE6, TASTE8};
+    uint8_t ersterSpieler = 0;
+    
+    uint8_t spielerSetup = 0;
+    uint8_t anzahlSpieler = 2;
+    uint8_t flagFertigGewuerfelt, flagWuerfel1, flagWuerfel2, letzterWuerfel = 0;
+    
     //16-Bit Variabeln
     uint16_t tasteAlt, tasteNeu, positiveFlanke = 0; //Variabeln Flankenerkennung
     //Eigene Datentypen
     Feld spielfeld[40];
     FeldTyp aktuellesFeld = FREIPARKEN;
     zustand_t zustand = SPIELERAUSWAHL;
+    uint8_t updateLCD = 0;
+    
+    /*--- Prototypen modullokaler Funktionen ------------------------------------*/
+    /*--- Funktionsdefinitionen -------------------------------------------------*/
+    
+    
     //Initialisierung
     PortInitialisierung();
     lcdInitAll();
@@ -538,17 +571,6 @@ int main(void)
     //random Seed setzen
     adm_ADC_init();
     srand(adm_ADC_read(0));
-    
-    
-    
-    //LCD ausgabe Testen
-    /*writeText(0,0,"     Wuerfel    ");
-    writeText(1,0,"----------------");
-    writeText(2,0,"Spieler ");*/
-    //wuerfel();
-    uint8_t spielerSetup = 0;
-    uint8_t anzahlSpieler = 2;
-    uint8_t flagFertigGewuerfelt, flagWuerfel1, flagWuerfel2, letzterWuerfel = 0;
     while (1) 
     {
         //Flankenerkennung
@@ -628,8 +650,8 @@ int main(void)
                 writeText(0,0,"   Spieler X    ");
                 sprintf(lcdBuffer,"%u",i);
                 writeText(0,11,lcdBuffer);
-                writeText(1,0,"    wuerfelt    ");
-                writeText(2,0,"  X = wuerfeln  ");
+                writeText(1,0,"    wšrfelt    ");
+                writeText(2,0," wuerfeln A / B ");
                 
                 //wartet bis mit beiden Würfel gewürfelt wurde
                 while (!(flagWuerfel1 && flagWuerfel2)) 
@@ -694,14 +716,218 @@ int main(void)
                     ersterSpieler = i;
                 }
                 
+                //setzt die flags wieder auf 0
                 flagWuerfel1 = 0;
                 flagWuerfel2 = 0;
                 letzterWuerfel = 0;
+                //ausgabe der gewürfelten Summe
                 updateKontostand(i,spielerInfo);
-                
-                
             }
-            zustand = RESERVE;
+            spielerAmZug = ersterSpieler;
+            _delay_ms(1000);
+            for (uint8_t i = 1; i <= anzahlSpieler; i = i + 1)
+            {
+                spielerInfo[i].geld = 1500;
+            }
+            updateKontostand(anzahlSpieler,spielerInfo);
+            writeText(0,0,"   Spieler      ");
+            sprintf(lcdBuffer,"%u",spielerAmZug);
+            writeText(0,11,lcdBuffer);
+            writeText(1,0," wšrfeln A / B ");
+            writeText(2,0,"    weiter C    ");
+            
+            zustand = SPIEL;
+            break;
+            case SPIEL:
+            if((positiveFlanke & TASTE11) && flagFertigGewuerfelt)
+            {
+                wuerfelTransmit(SIEBENSEGMENT_OFF,SIEBENSEGMENT_OFF);
+                spielerAmZug = (spielerAmZug % anzahlSpieler) + 1;
+                writeText(0,0,"   Spieler      ");
+                sprintf(lcdBuffer,"%u",spielerAmZug);
+                writeText(0,11,lcdBuffer);
+                writeText(1,0," wšrfeln A / B ");
+                writeText(2,0,"    weiter C    ");
+                flagFertigGewuerfelt = 0;
+            }
+            if ((positiveFlanke & TASTE_C) && !flagWeiter)
+            {
+                wuerfelTransmit(SIEBENSEGMENT_OFF,SIEBENSEGMENT_OFF);
+                flagWeiter = 1;
+            }
+            //lässt den Spieler einmal würfel
+            //Wenn flagWeiter nicht gesetzt ist, kann man nicht würfeln das
+            //flag braucht es, da man ansonsten bei einem pasch nichts kaufen kann
+            if (!flagFertigGewuerfelt && flagWeiter) 
+            {
+                //wartet bis mit beiden Würfel gewürfelt wurde
+                while (!(flagWuerfel1 && flagWuerfel2))
+                {
+                    //flankenerkennung
+                    tasteAlt = tasteNeu;
+                    tasteNeu = 0;
+                    tasteNeu = (PINL << 8) | PINK;
+                    positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
+                    //würfelt würfel 1 nur wenn taste9 betätigt wurde
+                    //und würfel 1 noch nicht gewürfelt wurde
+                    if ((positiveFlanke & TASTE_A) && !flagWuerfel1)
+                    {
+                        wuerfelAB(1,flagWuerfel1,flagWuerfel2);
+                        flagWuerfel1 = 1;
+                    }
+                    //würfelt würfel 2 nur wenn taste9 betätigt wurde
+                    //und würfel 2 noch nicht gewürfelt wurde
+                    else if ((positiveFlanke & TASTE_B) && !flagWuerfel2)
+                    {
+                        wuerfelAB(2,flagWuerfel1,flagWuerfel2);
+                        flagWuerfel2 = 1;
+                        
+                    }
+                }
+                if (wuerfelArray[0] == wuerfelArray[1]) //Pasch
+                {   
+                    flagWeiter = 0; //bei einem Pasch wird flagWeiter = 0 gesetzt
+                    flagPasch = flagPasch + 1; //flagPasch erhöhen
+                    //beide würfel flags zurücksetzen
+                    flagWuerfel1 = 0;
+                    flagWuerfel2 = 0;
+                    switch (flagPasch)
+                    {
+                        case 1:
+                        PORTC |= 0x40;
+                    	break;
+                        case 2:
+                        PORTC |= 0x80;
+                        break;
+                        case 3:
+                        PORTC &= ~0xC0;
+                        wuerfelArray[0] = 0;
+                        wuerfelArray[1] = 0;
+                        flagWuerfel1 = 0;
+                        flagWuerfel2 = 0;
+                        flagPasch = 0;
+                        flagWeiter = 1;
+                        flagFertigGewuerfelt = 1;
+                        flagWeiter = 1;
+                        abInsGefaengnis(spielerAmZug);
+                        aktuellesFeld = GEFAENGNIS;
+                        break;
+                    }
+                }
+                else
+                {
+                    //flag setzen erlaubt es den spielzug abzuschliessen
+                    flagFertigGewuerfelt = 1; 
+                    flagPasch = 0; //flagPasch zurücksetzen
+                }
+                 //wenn die aktuelle spition des Spielers + wüfelsumme grösser gleich 40 is
+                 // erhält der spieler 200 CHF
+                 if (spielerInfo[spielerAmZug].position + (wuerfelArray[0] + wuerfelArray[1]) >= 40 )
+                 {
+                     spielerInfo[spielerAmZug].geld += 200; //konntostand wird um 200 erhöht
+                     updateKontostand(anzahlSpieler,spielerInfo);
+                 }
+                 //animiert die fortbewegung des spielers
+                 for (uint8_t i = spielerInfo[spielerAmZug].position; i < (spielerInfo[spielerAmZug].position + (wuerfelArray[0] + wuerfelArray[1])); i = i + 1)
+                 {
+                     setPlayerPosition(i % 40,spielerAmZug);
+                     _delay_ms(100); //delay dient zu animationszwecken
+                 }
+                 //addiert die würfelsumme zur aktuellen position dazu
+                 spielerInfo[spielerAmZug].position = (spielerInfo[spielerAmZug].position + (wuerfelArray[0] + wuerfelArray[1])) % 40;
+                 //setzt den spieler auf das richtige Feld
+                 setPlayerPosition(spielerInfo[spielerAmZug].position,spielerAmZug);
+                 //speichert den aktuellen Feld typ
+                 aktuellesFeld = spielfeld[spielerInfo[spielerAmZug].position].typ;
+                 //speichert die aktuelle position
+                 aktuellePosition = spielerInfo[spielerAmZug].position;
+            }
+            flagWuerfel1 = 0;
+            flagWuerfel2 = 0;
+            
+            updateKontostand(anzahlSpieler,spielerInfo);
+           
+            
+            switch (aktuellesFeld)
+            {
+                case EREIGNISFELD:
+                break;
+                case STRASSE:
+                if (!updateLCD)
+                {
+                    writeText(0,0,"   Spieler      ");
+                    sprintf(lcdBuffer,"%u",spielerAmZug);
+                    writeText(0,11,lcdBuffer);
+                    sprintf(lcdBuffer, "%c", spielfeld[aktuellePosition].name)
+                    writeText(1,0,lcdBuffer);
+                    writeText(2,0,"kaufen? <=N >=J");
+                    updateLCD = 1;
+                }
+                if (positiveFlanke & TASTE_R)
+                {
+                    if((spielerInfo[spielerAmZug].geld >= (spielfeld[aktuellePosition].preis)) && (spielfeld[aktuellePosition].besitzer == 0))
+                    {
+                        spielerInfo[spielerAmZug].geld = spielerInfo[spielerAmZug].geld - spielfeld[aktuellePosition].preis;
+                        spielfeld[aktuellePosition].besitzer = spielerAmZug;
+                        setPropertyRgb(spielfeld[aktuellePosition].rgbNummer,spielerAmZug);
+                        updateKontostand(anzahlSpieler,spielerInfo);
+                        //setGeld(spielerInfo[spielerAmZug].geld,spielerAmZug,1);
+                    }
+                }
+                 /*if (positiveFlanke & TASTE_L)
+                 {
+                     if((spielerInfo[spielerAmZug].geld >= (spielfeld[aktuellePosition].preis)) && (spielfeld[aktuellePosition].besitzer == 0))
+                     {
+                         spielerInfo[spielerAmZug].geld = spielerInfo[spielerAmZug].geld - spielfeld[aktuellePosition].preis;
+                         spielfeld[aktuellePosition].besitzer = spielerAmZug;
+                         setPropertyRgb(spielfeld[aktuellePosition].rgbNummer,spielerAmZug);
+                         //setGeld(spielerInfo[spielerAmZug].geld,spielerAmZug,1);
+                     }
+                 }
+                 if (positiveFlanke & TASTE_S)
+                 {
+                     setHaus(spielfeld[aktuellePosition].hausnummer,5);
+                 }
+                 if (positiveFlanke & TASTE_R)
+                 {
+                     setHaus(spielfeld[aktuellePosition].hausnummer,0);
+                 }*/
+                break;
+                case STEUERFELD:
+                break;
+                case HALTESTELLE:
+                if (positiveFlanke & TASTE_L)
+                {
+                    if((spielerInfo[spielerAmZug].geld >= (spielfeld[aktuellePosition].preis)) && (spielfeld[aktuellePosition].besitzer == 0))
+                    {
+                        spielerInfo[spielerAmZug].geld = spielerInfo[spielerAmZug].geld - spielfeld[aktuellePosition].preis;
+                        spielfeld[aktuellePosition].besitzer = spielerAmZug;
+                        setPropertyRgb(spielfeld[aktuellePosition].rgbNummer,spielerAmZug);
+                        //setGeld(spielerInfo[spielerAmZug].geld,spielerAmZug,1);
+                    }
+                }
+                break;
+                case GEFAENGNIS:
+                break;
+                case GEH_INS_GEFAENGNIS:
+                abInsGefaengnis(spielerAmZug);
+                aktuellesFeld = GEFAENGNIS;
+                break;
+                case FREIPARKEN:
+                break;
+                case WERK:
+                if (positiveFlanke & TASTE_L)
+                {
+                    if((spielerInfo[spielerAmZug].geld >= (spielfeld[aktuellePosition].preis)) && (spielfeld[aktuellePosition].besitzer == 0))
+                    {
+                        spielerInfo[spielerAmZug].geld = spielerInfo[spielerAmZug].geld - spielfeld[aktuellePosition].preis;
+                        spielfeld[aktuellePosition].besitzer = spielerAmZug;
+                        setPropertyRgb(spielfeld[aktuellePosition].rgbNummer,spielerAmZug);
+                        //setGeld(spielerInfo[spielerAmZug].geld,spielerAmZug,1);
+                    }
+                }
+                break;
+            }
             break;
             case RESERVE:
             break;
