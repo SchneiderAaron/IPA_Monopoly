@@ -39,13 +39,55 @@
 #include <util/delay.h>
 /*--- #includes der Form "..." -----------------------------------------------*/
 /*--- #define-Konstanten und Makros ------------------------------------------*/
-
+#define UE "š"
 /*--- Datentypen (typedef) ---------------------------------------------------*/
 typedef struct {
     char name[50];       // Name des Spielers
     uint16_t geld;         //Kontostand des Spielers
     uint8_t position;           //Position des spielers
 } Spieler;
+
+typedef enum {
+    STRASSE,
+    EREIGNISFELD,
+    STEUERFELD,
+    FREIPARKEN,
+    GEFAENGNIS,
+    GEH_INS_GEFAENGNIS,
+    WERK,
+    HALTESTELLE
+} FeldTyp;
+
+typedef enum {
+    BRAUN,
+    HELLBLAU,
+    ROSA,
+    ORANGE,
+    ROT,
+    GELB,
+    GRUEN,
+    BLAU,
+    FARBLOS
+} Farbe;
+
+
+
+typedef struct {
+    char name[50];       // Name des Feldes
+    FeldTyp typ;         // Typ des Feldes
+    uint16_t preis;           // Kaufpreis (falls relevant)
+    //uint16_t miete;
+    uint16_t mieten[7];
+    uint8_t besitzer;        // Besitzer (Index des Spielers, 0 = unbesetzt)
+    Farbe farbGruppe;
+    uint8_t hausnummer;
+    uint8_t anzahlHaeuser;
+    uint8_t rgbNummer;
+    uint8_t kostenHaus;
+    uint8_t feldBelastet;
+    uint8_t hypothek;
+    uint8_t hypothekAufloesen;
+} Feld;
 /*--- Globale Konstanten (extern) --------------------------------------------*/
 /*--- Globale Variablen (extern) ---------------------------------------------*/
 extern uint8_t houses[14][8];           //Globales Array zur Ausgabe der Immobilien
@@ -79,9 +121,12 @@ void adm_ADC_init(void);
 uint16_t adm_ADC_read(uint8_t kanal);
 
 void abInsGefaengnis(uint8_t Spieler);
+void blaulicht(uint8_t delay, uint8_t anzahlWiederholungen);
 
 void PortInitialisierung(void);
 
 void startGeldAnimation(uint8_t anzahlSpieler);
+
+void initialisiereSpielfeld(Feld spielfeld[]);
 
 #endif /* MONOPOLYTREIBER_H_ */
