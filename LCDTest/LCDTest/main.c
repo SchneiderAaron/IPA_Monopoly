@@ -136,15 +136,6 @@ void shift(void)
 void writeText(uint8_t Zeile, uint8_t Spalte, uint8_t * Text)
 {
     CmdDisplay(CMD_SET_DDRAM_ADRESS + (0x10 * Zeile) + Spalte);
-    /*if (Zeile)
-    {
-        CmdDisplay(CMD_SET_DDRAM_ADRESS + 0x10 + Spalte);
-    }
-    else
-    {
-        CmdDisplay(CMD_SET_DDRAM_ADRESS + Spalte);
-    }*/
-    
     uint8_t i = 0;
     while(Text[i])
     {

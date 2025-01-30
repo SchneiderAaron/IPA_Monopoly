@@ -119,6 +119,8 @@ uint8_t spielerPos[4] = {0};
 
 uint8_t siebensegment[16] = {0};
 uint8_t wuerfelArray[2] = {0};
+    
+uint8_t spielerImGefaengnis[5] = {0};
 
 uint16_t tasteAlt, tasteNeu, positiveFlanke = 0; //Variabeln Flankenerkennung
 
@@ -127,6 +129,7 @@ zustand_t zustand = SPIELERAUSWAHL;
 uint8_t anzahlSpieler = 2;
 
 uint8_t globalUpdateLCD = 0;
+
 
 void initSpieler(Spieler spielerInfo[])
 {
@@ -169,6 +172,8 @@ int main(void)
     uint8_t bieter[6] = {0};//0-3 Bieter 4 anz. spieler raus 5 höchstbieter
     uint8_t ersterSpieler = 0;
     
+    
+    
     uint8_t spielerSetup = 0;
     
     uint8_t flagFertigGewuerfelt, flagWuerfel1, flagWuerfel2, letzterWuerfel = 0;
@@ -189,6 +194,7 @@ int main(void)
     Feld spielfeld[40];
     FeldTyp aktuellesFeld = FREIPARKEN;
     
+    uint8_t flagGefaengnis = 0;
     
     /*--- Prototypen modullokaler Funktionen ------------------------------------*/
     uint8_t feldKaufen(uint8_t feldNummer, Feld spielfeld[40], uint8_t spielerAmZug);
@@ -400,15 +406,22 @@ int main(void)
                 writeText(0,0,"   Spieler      ");
                 sprintf(lcdBuffer,"%u",spielerAmZug);
                 writeText(0,11,lcdBuffer);
-                writeText(1,0," wšrfeln A / B ");
+                writeText(1,0," w"UE"rfeln A / B ");
                 writeText(2,0,"    weiter C    ");
                 //flags zurücksetzten
                 flagFertigGewuerfelt = 0;
                 flagKaufAbgechlossen = 0;
+                globalUpdateLCD = 0;
                 //Schaltet das Blaulicht aus
                 PORTC &= ~0xC0;
                 updateLCD = 0;
                 bezahlStatus = 0;
+                aktuellesFeld = spielfeld[spielerInfo[spielerAmZug].position].typ;
+                if ((aktuellesFeld == GEFAENGNIS) && spielerImGefaengnis[spielerAmZug])
+                {
+                    flagGefaengnis = 1;
+                    flagFertigGewuerfelt = 1;
+                }
             }
             //ermöglicht es dem spieler bei Pasch zu kaufen
             if ((positiveFlanke & TASTE_C) && !flagWeiter)
@@ -476,7 +489,6 @@ int main(void)
                         flagPasch = 0;
                         flagWeiter = 1;
                         flagFertigGewuerfelt = 1;
-                        flagWeiter = 1;
                         //nach 3. pasch landet man im Gefängnis
                         abInsGefaengnis(spielerAmZug); 
                         aktuellesFeld = GEFAENGNIS;
@@ -597,7 +609,7 @@ int main(void)
                     if (positiveFlanke & xTasten[spielerAmZug - 1])
                     {
                         //geld an die Bank überweisen
-                        bezahlStatus = geldUeberweisen(spielerAmZug,feldBesitzer,zahlBetrag);
+                        bezahlStatus = geldUeberweisen(spielerAmZug,0,zahlBetrag);
                         if (bezahlStatus == 1)
                         {
                             updateLCD = 0;
@@ -647,7 +659,7 @@ int main(void)
                     }
                     
                     //spieler am zug muss Taste X drücken um zu bezahlen
-                    if (positiveFlanke & xTasten[spielerAmZug])
+                    if (positiveFlanke & xTasten[spielerAmZug - 1])
                     {
                         bezahlStatus = geldUeberweisen(spielerAmZug,feldBesitzer,zahlBetrag);
                         if (bezahlStatus == 1)
@@ -659,8 +671,18 @@ int main(void)
                 }
                 break;
                 case GEFAENGNIS://~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                if (spielerImGefaengnis[spielerAmZug] && flagGefaengnis)
+                {
+                    writeText(0,0,"   Spieler      ");
+                    sprintf(lcdBuffer,"%u",spielerAmZug);
+                    writeText(0,11,lcdBuffer);
+                    writeText(1,0,"   Du bist im   ");
+                    writeText(2,0,"    Workshop    ");
+                    flagGefaengnis = 0;
+                }
                 break;
                 case GEH_INS_GEFAENGNIS://~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                
                 abInsGefaengnis(spielerAmZug);
                 aktuellesFeld = GEFAENGNIS;
                 break;

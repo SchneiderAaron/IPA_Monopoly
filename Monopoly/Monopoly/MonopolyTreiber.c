@@ -704,6 +704,7 @@ uint16_t adm_ADC_read(uint8_t kanal)
 \******************************************************************************/
 void abInsGefaengnis(uint8_t spielerNr)
 {
+    spielerImGefaengnis[spielerNr] = 1;
     blaulicht(100,20);
     spielerInfo[spielerNr].position = 10;
     setPlayerPosition(10,spielerNr);
@@ -1093,7 +1094,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[22].typ = EREIGNISFELD;
     
     //Eigenschaften des Feldes: Produkton Automatiker
-    strcpy(spielfeld[23].name, "Prod. AU");
+    strcpy(spielfeld[23].name, "Produktion AU");
     spielfeld[23].typ = STRASSE;
     spielfeld[23].preis = 220;
     spielfeld[23].mieten[0] = 18;   //Feld einzeln

@@ -99,6 +99,7 @@ extern uint8_t siebensegment[16];
 extern uint8_t wuerfelArray[2];
 extern Spieler spielerInfo[5];
 extern uint8_t anzahlSpieler;
+extern uint8_t spielerImGefaengnis[5];
 /*--- Prototypen globaler Funktionen -----------------------------------------*/
 
 void resetMonopoly(void);
