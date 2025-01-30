@@ -926,7 +926,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[9].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
     //Eigenschaften des Feldes: Gefängnis
-    strcpy(spielfeld[10].name, "Gef„ngnis");
+    strcpy(spielfeld[10].name, "Gef"AE"ngnis");
     spielfeld[10].typ = GEFAENGNIS;
     
     
@@ -1009,7 +1009,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[15].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
     //Eigenschaften des Feldes: BFS Polimechaniker
-    strcpy(spielfeld[16].name, "BFS Polymechaniker");
+    strcpy(spielfeld[16].name, "BFS PM");
     spielfeld[16].typ = STRASSE;
     spielfeld[16].preis = 180;
     spielfeld[16].mieten[0] = 14;   //Feld einzeln
@@ -1031,7 +1031,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[17].typ = EREIGNISFELD;
     
     //Eigenschaften des Feldes: BFS Automatiker
-    strcpy(spielfeld[18].name, "BFS Automatiker");
+    strcpy(spielfeld[18].name, "BFS AU");
     spielfeld[18].typ = STRASSE;
     spielfeld[18].preis = 180;
     spielfeld[18].mieten[0] = 14;   //Feld einzeln
@@ -1049,7 +1049,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[18].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
     //Eigenschaften des Feldes: BFS Elektroniker
-    strcpy(spielfeld[19].name, "BFS Elektroniker");
+    strcpy(spielfeld[19].name, "BFS EK");
     spielfeld[19].typ = STRASSE;
     spielfeld[19].preis = 200;
     spielfeld[19].mieten[0] = 16;   //Feld einzeln
@@ -1071,7 +1071,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[20].typ = FREIPARKEN;
     
     //Eigenschaften des Feldes: Grundausbildung Automatiker
-    strcpy(spielfeld[21].name, "Grundausbildung Automatiker");
+    strcpy(spielfeld[21].name, "GA AU");
     spielfeld[21].typ = STRASSE;
     spielfeld[21].preis = 220;
     spielfeld[21].mieten[0] = 18;   //Feld einzeln
@@ -1093,7 +1093,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[22].typ = EREIGNISFELD;
     
     //Eigenschaften des Feldes: Produkton Automatiker
-    strcpy(spielfeld[23].name, "Produktion Automatiker");
+    strcpy(spielfeld[23].name, "Prod. AU");
     spielfeld[23].typ = STRASSE;
     spielfeld[23].preis = 220;
     spielfeld[23].mieten[0] = 18;   //Feld einzeln
@@ -1111,7 +1111,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[23].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
     //Eigenschaften des Feldes: Mechatronik Labor
-    strcpy(spielfeld[24].name, "Mechatronik Labor");
+    strcpy(spielfeld[24].name, "Mechatr. Labor");
     spielfeld[24].typ = STRASSE;
     spielfeld[24].preis = 240;
     spielfeld[24].mieten[0] = 20;   //Feld einzeln
@@ -1142,7 +1142,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[25].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
     //Eigenschaften des Feldes: Lager Polymechaniker
-    strcpy(spielfeld[26].name, "Lager Polymechaniker");
+    strcpy(spielfeld[26].name, "Lager PM");
     spielfeld[26].typ = STRASSE;
     spielfeld[26].preis = 260;
     spielfeld[26].mieten[0] = 22;   //Feld einzeln
@@ -1160,7 +1160,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[26].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
     //Eigenschaften des Feldes: Lager Automatiker
-    strcpy(spielfeld[27].name, "Lager Automatiker");
+    strcpy(spielfeld[27].name, "Lager AU");
     spielfeld[27].typ = STRASSE;
     spielfeld[27].preis = 260;
     spielfeld[27].mieten[0] = 22;   //Feld einzeln
@@ -1187,7 +1187,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[28].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
     //Eigenschaften des Feldes: Lager Elektroniker
-    strcpy(spielfeld[29].name, "Lager Elektroniker");
+    strcpy(spielfeld[29].name, "Lager EK");
     spielfeld[29].typ = STRASSE;
     spielfeld[29].preis = 280;
     spielfeld[29].mieten[0] = 24;   //Feld einzeln
@@ -1209,7 +1209,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[30].typ = GEH_INS_GEFAENGNIS;
     
     //Eigenschaften des Feldes: Grundausbildung Elektroniker
-    strcpy(spielfeld[31].name, "Grundausbildung Elektroniker");
+    strcpy(spielfeld[31].name, "GA EK");
     spielfeld[31].typ = STRASSE;
     spielfeld[31].preis = 300;
     spielfeld[31].mieten[0] = 26;   //Feld einzeln
@@ -1227,7 +1227,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[31].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
     //Eigenschaften des Feldes: Produktion Elektroniker
-    strcpy(spielfeld[32].name, "Produktion Elektroniker");
+    strcpy(spielfeld[32].name, "Produktion EK");
     spielfeld[32].typ = STRASSE;
     spielfeld[32].preis = 300;
     spielfeld[32].mieten[0] = 26;   //Feld einzeln
@@ -1249,7 +1249,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[33].typ = EREIGNISFELD;
     
     //Eigenschaften des Feldes: Entwicklung Elektroniker
-    strcpy(spielfeld[34].name, "Entwicklung Elektroniker");
+    strcpy(spielfeld[34].name, "Entwicklung EK");
     spielfeld[34].typ = STRASSE;
     spielfeld[34].preis = 320;
     spielfeld[34].mieten[0] = 28;   //Feld einzeln
@@ -1284,7 +1284,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[36].typ = EREIGNISFELD;
     
     //Eigenschaften des Feldes: Grundausbildung Polymechaniker
-    strcpy(spielfeld[37].name, "Grundausbildung Polymechaniker");
+    strcpy(spielfeld[37].name, "GA PM");
     spielfeld[37].typ = STRASSE;
     spielfeld[37].preis = 350;
     spielfeld[37].mieten[0] = 35;   //Feld einzeln
@@ -1302,12 +1302,12 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[37].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
     //Eigenschaften des Feldes: Schulmaterialkosten
-    strcpy(spielfeld[38].name, "Schulmaterialkosten");
+    strcpy(spielfeld[38].name, "Schulmaterial");
     spielfeld[38].typ = STEUERFELD;
     spielfeld[38].preis = 100;
     
     //Eigenschaften des Feldes: Produktion Polymechaniker
-    strcpy(spielfeld[39].name, "Produktion Polimechaniker");
+    strcpy(spielfeld[39].name, "Produktion PM");
     spielfeld[39].typ = STRASSE;
     spielfeld[39].preis = 400;
     spielfeld[39].mieten[0] = 50;   //Feld einzeln
@@ -1323,4 +1323,46 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[39].anzahlHaeuser = 0;
     spielfeld[39].rgbNummer = 27;
     spielfeld[39].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+}
+
+
+
+uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag)
+{
+    if (empfaenger) //wenn der empfänger nicht spieler 0 ist
+    {
+        //wenn der Zahlende Spieler genug geld hat
+        if (spielerInfo[zahler].geld >= betrag)
+        {
+            for (uint16_t i = 0; i < betrag; i = i + 1)
+            {
+                spielerInfo[zahler].geld -= 1;
+                spielerInfo[empfaenger].geld += 1;
+                updateKontostand(anzahlSpieler,spielerInfo);
+            }
+            return 1; //zahlung erfolgreich
+        }
+        else //wenn es sich der Spieler nicht leisten kann
+        {
+            return 2; //zahlung fehlgeschlagen
+        }
+    }
+    else //wenn spieler 0 eingegeben wurde, wird an die Bank überwiesen
+    {
+        //wenn der Zahlende Spieler genug geld hat
+        if (spielerInfo[zahler].geld >= betrag)
+        {
+            for (uint16_t i = 0; i < betrag; i = i + 1)
+            {
+                spielerInfo[zahler].geld -= 1;
+                updateKontostand(anzahlSpieler,spielerInfo);
+            }
+            return 1; //zahlung erfolgreich
+        }
+        else //wenn es sich der Spieler nicht leisten kann
+        {
+            return 2; //zahlung fehlgeschlagen
+        }
+    }
+    
 }

@@ -177,14 +177,17 @@ int main(void)
     
     uint8_t updateLCD = 0;
     
-    //16-Bit Variabeln
+    uint8_t feldBesitzer = 0;
+    uint8_t bezahlStatus = 0;
+    uint8_t flagZahlungAbgeschlossen = 0;
+    uint16_t zahlBetrag = 0;
     
+    //16-Bit Variabeln
     uint16_t geldZwischenspeicher[5] = {0};
     uint16_t aktuellesGebot = 0;
     //Eigene Datentypen
     Feld spielfeld[40];
     FeldTyp aktuellesFeld = FREIPARKEN;
-    
     
     
     /*--- Prototypen modullokaler Funktionen ------------------------------------*/
@@ -374,19 +377,20 @@ int main(void)
             break;
             case SPIEL://~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             //nach einer Versteigerung info an lcd anzeigen
-            if (flagVersteigert)
+            if (flagVersteigert || flagZahlungAbgeschlossen)
             {
                 clear();//lcd leeren
                 //spieler am zug anzeigen
                 writeText(0,0,"   Spieler      "); 
                 sprintf(lcdBuffer,"%u",spielerAmZug);
                 writeText(0,11,lcdBuffer);
-                writeText(1,0," wšrfeln A / B ");
+                writeText(1,0," w"UE"rfeln A / B ");
                 writeText(2,0,"    weiter C    ");
                 flagVersteigert = 0;
+                flagZahlungAbgeschlossen = 0;
             }
-            //Spielzug abschliessen
-            if((positiveFlanke & TASTE_C) && flagFertigGewuerfelt)
+            //Spielzug abschliessen alles zurücksetzen
+            if(((positiveFlanke & TASTE_C) && flagFertigGewuerfelt))
             {
                 //würfel Siebensegmente ausschalten
                 wuerfelTransmit(SIEBENSEGMENT_OFF,SIEBENSEGMENT_OFF);
@@ -404,6 +408,7 @@ int main(void)
                 //Schaltet das Blaulicht aus
                 PORTC &= ~0xC0;
                 updateLCD = 0;
+                bezahlStatus = 0;
             }
             //ermöglicht es dem spieler bei Pasch zu kaufen
             if ((positiveFlanke & TASTE_C) && !flagWeiter)
@@ -411,6 +416,8 @@ int main(void)
                 //Würfel Siebensegmente ausschalten
                 wuerfelTransmit(SIEBENSEGMENT_OFF,SIEBENSEGMENT_OFF);
                 flagWeiter = 1; //Flag setzen
+                flagKaufAbgechlossen = 0;
+                bezahlStatus = 0;
             }
             //lässt den Spieler einmal würfel
             //Wenn flagWeiter nicht gesetzt ist, kann man nicht würfeln das
@@ -530,23 +537,124 @@ int main(void)
                         break;
                         case 2://Das Feld wurde nicht gekauft
                         flagKaufAbgechlossen = 1;
+                        //bezahlstatus auf 1 setzen, ansonsten müsste spieler auf feld nach auktion miete bezahlen
+                        bezahlStatus = 1;
+                        zustand = VERSTEIGERUNG;
+                        break;
+                    }
+                }
+                 //wenn das Aktuelle feld einem spieler gehört muss man bezahlen, ausser es gehört einem selbst
+                if((spielfeld[aktuellePosition].besitzer && !(spielfeld[aktuellePosition].besitzer == spielerAmZug)) && !(bezahlStatus == 1))
+                {
+                    flagZahlungAbgeschlossen = 0;
+                    if (!updateLCD)
+                    {
+                        //besitzer des feldes aus array auslesen
+                        feldBesitzer = spielfeld[aktuellePosition].besitzer;
+                        //miete anhand von anzahl häuser aus array auslesen
+                        zahlBetrag = spielfeld[aktuellePosition].mieten[spielfeld[aktuellePosition].anzahlHaeuser];
+                        writeText(0,0,"   Spieler      ");
+                        sprintf(lcdBuffer,"%u",spielerAmZug);
+                        writeText(0,11,lcdBuffer);
+                        writeText(1,0,"  bezahle       ");
+                        sprintf(lcdBuffer,"%u",zahlBetrag);
+                        writeText(1,10,lcdBuffer);
+                        writeText(2,0,"an Spieler   =>X");
+                        sprintf(lcdBuffer,"%u",feldBesitzer);
+                        writeText(2,11,lcdBuffer);
+                    }
+                    
+                    //spieler am zug muss Taste X drücken um zu bezahlen
+                    if (positiveFlanke & xTasten[spielerAmZug - 1])
+                    {
+                        bezahlStatus = geldUeberweisen(spielerAmZug,feldBesitzer,zahlBetrag);
+                        if (bezahlStatus == 1)
+                        {
+                            updateLCD = 0;
+                            flagZahlungAbgeschlossen = 1;
+                        }
+                    }
+                }
+                break;
+                case STEUERFELD://~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                if(!(bezahlStatus == 1))
+                {
+                    flagZahlungAbgeschlossen = 0;
+                    if (!updateLCD)
+                    {
+                        //miete aus array auslesen
+                        zahlBetrag = spielfeld[aktuellePosition].preis;
+                        writeText(0,0,"   Spieler      ");
+                        sprintf(lcdBuffer,"%u",spielerAmZug);
+                        writeText(0,11,lcdBuffer);
+                        writeText(1,0,"  bezahle       ");
+                        sprintf(lcdBuffer,"%u",zahlBetrag);
+                        writeText(1,10,lcdBuffer);
+                        writeText(2,0,"an die Bank  =>X");
+                    }
+                        
+                    //spieler am zug muss Taste X drücken um zu bezahlen
+                    if (positiveFlanke & xTasten[spielerAmZug - 1])
+                    {
+                        //geld an die Bank überweisen
+                        bezahlStatus = geldUeberweisen(spielerAmZug,feldBesitzer,zahlBetrag);
+                        if (bezahlStatus == 1)
+                        {
+                            updateLCD = 0;
+                            flagZahlungAbgeschlossen = 1;
+                        }
+                    }
+                }
+                break;
+                case HALTESTELLE://~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                if (!flagKaufAbgechlossen && (spielfeld[aktuellePosition].besitzer == 0))
+                {
+                    verkaufSpielerEingabe = feldKaufen(aktuellePosition,spielfeld,spielerAmZug);
+                    switch (verkaufSpielerEingabe)
+                    {
+                        case 0://es wurde noch keine Eingabe getätigt
+                        break;
+                        case 1://Der Spieler hat das Feld gekauft
+                        flagKaufAbgechlossen = 1;
+                        break;
+                        case 2://Das Feld wurde nicht gekauft
+                        flagKaufAbgechlossen = 1;
+                        //bezahlstatus auf 1 setzen, ansonsten müsste spieler auf feld nach auktion miete bezahlen
+                        bezahlStatus = 1;
                         zustand = VERSTEIGERUNG;
                         break;
                     }
                 }
                 
-                break;
-                case STEUERFELD://~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                break;
-                case HALTESTELLE://~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                if (positiveFlanke & TASTE_L)
+                if((spielfeld[aktuellePosition].besitzer && !(spielfeld[aktuellePosition].besitzer == spielerAmZug)) && !(bezahlStatus == 1))
                 {
-                    if((spielerInfo[spielerAmZug].geld >= (spielfeld[aktuellePosition].preis)) && (spielfeld[aktuellePosition].besitzer == 0))
+                    flagZahlungAbgeschlossen = 0;
+                    if (!updateLCD)
                     {
-                        spielerInfo[spielerAmZug].geld = spielerInfo[spielerAmZug].geld - spielfeld[aktuellePosition].preis;
-                        spielfeld[aktuellePosition].besitzer = spielerAmZug;
-                        setPropertyRgb(spielfeld[aktuellePosition].rgbNummer,spielerAmZug);
-                        //setGeld(spielerInfo[spielerAmZug].geld,spielerAmZug,1);
+                        //besitzer des feldes aus array auslesen
+                        feldBesitzer = spielfeld[aktuellePosition].besitzer;
+                        //miete aus array auslesen
+                        zahlBetrag = spielfeld[aktuellePosition].mieten[0];
+                        writeText(0,0,"   Spieler      ");
+                        sprintf(lcdBuffer,"%u",spielerAmZug);
+                        writeText(0,11,lcdBuffer);
+                        writeText(1,0,"  bezahle       ");
+                        sprintf(lcdBuffer,"%u",zahlBetrag);
+                        writeText(1,10,lcdBuffer);
+                        writeText(2,0,"an Spieler   =>X");
+                        sprintf(lcdBuffer,"%u",feldBesitzer);
+                        writeText(2,11,lcdBuffer);
+                    }
+                    
+                    //spieler am zug muss Taste X drücken um zu bezahlen
+                    if (positiveFlanke & xTasten[spielerAmZug])
+                    {
+                        bezahlStatus = geldUeberweisen(spielerAmZug,feldBesitzer,zahlBetrag);
+                        if (bezahlStatus == 1)
+                        {
+                            updateLCD = 0;
+                            flagZahlungAbgeschlossen = 1;
+                        }
                     }
                 }
                 break;
@@ -559,16 +667,57 @@ int main(void)
                 case FREIPARKEN://~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 break;
                 case WERK://~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                if (positiveFlanke & TASTE_L)
+                if (!flagKaufAbgechlossen && (spielfeld[aktuellePosition].besitzer == 0))
                 {
-                    if((spielerInfo[spielerAmZug].geld >= (spielfeld[aktuellePosition].preis)) && (spielfeld[aktuellePosition].besitzer == 0))
+                    verkaufSpielerEingabe = feldKaufen(aktuellePosition,spielfeld,spielerAmZug);
+                    switch (verkaufSpielerEingabe)
                     {
-                        spielerInfo[spielerAmZug].geld = spielerInfo[spielerAmZug].geld - spielfeld[aktuellePosition].preis;
-                        spielfeld[aktuellePosition].besitzer = spielerAmZug;
-                        setPropertyRgb(spielfeld[aktuellePosition].rgbNummer,spielerAmZug);
-                        //setGeld(spielerInfo[spielerAmZug].geld,spielerAmZug,1);
+                        case 0://es wurde noch keine Eingabe getätigt
+                        break;
+                        case 1://Der Spieler hat das Feld gekauft
+                        flagKaufAbgechlossen = 1;
+                        break;
+                        case 2://Das Feld wurde nicht gekauft
+                        flagKaufAbgechlossen = 1;
+                        //bezahlstatus auf 1 setzen, ansonsten müsste spieler auf feld nach auktion miete bezahlen
+                        bezahlStatus = 1;
+                        zustand = VERSTEIGERUNG;
+                        break;
                     }
                 }
+                
+                if((spielfeld[aktuellePosition].besitzer && !(spielfeld[aktuellePosition].besitzer == spielerAmZug)) && !(bezahlStatus == 1))
+                {
+                    flagZahlungAbgeschlossen = 0;
+                    if (!updateLCD)
+                    {
+                        //besitzer des feldes aus array auslesen
+                        feldBesitzer = spielfeld[aktuellePosition].besitzer;
+                        //miete aus array auslesen
+                        zahlBetrag = spielfeld[aktuellePosition].preis;
+                        writeText(0,0,"   Spieler      ");
+                        sprintf(lcdBuffer,"%u",spielerAmZug);
+                        writeText(0,11,lcdBuffer);
+                        writeText(1,0,"  bezahle       ");
+                        sprintf(lcdBuffer,"%u",zahlBetrag);
+                        writeText(1,10,lcdBuffer);
+                        writeText(2,0,"an Spieler   =>X");
+                        sprintf(lcdBuffer,"%u",feldBesitzer);
+                        writeText(2,11,lcdBuffer);
+                    }
+                    
+                    //spieler am zug muss Taste X drücken um zu bezahlen
+                    if (positiveFlanke & xTasten[spielerAmZug - 1])
+                    {
+                        bezahlStatus = geldUeberweisen(spielerAmZug,feldBesitzer,zahlBetrag);
+                        if (bezahlStatus == 1)
+                        {
+                            updateLCD = 0;
+                            flagZahlungAbgeschlossen = 1;
+                        }
+                    }
+                }
+                
                 break;
             }
             break;

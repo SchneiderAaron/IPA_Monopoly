@@ -40,6 +40,7 @@
 /*--- #includes der Form "..." -----------------------------------------------*/
 /*--- #define-Konstanten und Makros ------------------------------------------*/
 #define UE "š"
+#define AE "„"
 /*--- Datentypen (typedef) ---------------------------------------------------*/
 typedef struct {
     char name[50];       // Name des Spielers
@@ -97,6 +98,7 @@ extern uint8_t spielerPos[4];     //Globales Array zur SpielerInformationen
 extern uint8_t siebensegment[16];
 extern uint8_t wuerfelArray[2];
 extern Spieler spielerInfo[5];
+extern uint8_t anzahlSpieler;
 /*--- Prototypen globaler Funktionen -----------------------------------------*/
 
 void resetMonopoly(void);
@@ -128,5 +130,7 @@ void PortInitialisierung(void);
 void startGeldAnimation(uint8_t anzahlSpieler);
 
 void initialisiereSpielfeld(Feld spielfeld[]);
+
+uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag);
 
 #endif /* MONOPOLYTREIBER_H_ */
