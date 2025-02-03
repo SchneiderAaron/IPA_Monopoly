@@ -293,7 +293,7 @@ int main(void)
                 writeText(0,0,"   Spieler X    ");
                 sprintf(lcdBuffer,"%u",i);
                 writeText(0,11,lcdBuffer);
-                writeText(1,0,"    wšrfelt    ");
+                writeText(1,0,"    w"UE"rfelt    ");
                 writeText(2,0," wuerfeln A / B ");
                 
                 //wartet bis mit beiden Würfel gewürfelt wurde
@@ -376,7 +376,7 @@ int main(void)
             writeText(0,0,"   Spieler      ");
             sprintf(lcdBuffer,"%u",spielerAmZug);
             writeText(0,11,lcdBuffer);
-            writeText(1,0," wšrfeln A / B ");
+            writeText(1,0," w"UE"rfeln A / B ");
             writeText(2,0,"    weiter C    ");
             
             zustand = SPIEL;
