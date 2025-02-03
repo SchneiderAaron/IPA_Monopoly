@@ -209,6 +209,8 @@ int main(void)
     
     uint8_t kaufStatus = 0;
     uint16_t zahlBetrag = 0;
+    uint8_t flagMieteFarbgruppe = 0;
+    uint8_t zahlBetragFarbgruppe = 0;
     uint8_t zahlSchritt = 0;
     
     
@@ -594,6 +596,20 @@ int main(void)
                         feldBesitzer = spielfeld[aktuellePosition].besitzer;
                         //miete anhand von anzahl häuser aus array auslesen
                         zahlBetrag = spielfeld[aktuellePosition].mieten[spielfeld[aktuellePosition].anzahlHaeuser];
+                        zahlBetragFarbgruppe = spielfeld[aktuellePosition].mieten[6];
+                        flagMieteFarbgruppe = 1;
+                        for (uint8_t i = 0; i < 3; i = i + 1)
+                        {
+                            if (!(spielfeld[spielfeld[aktuellePosition].farbgruppenFelder[i]].besitzer == feldBesitzer))
+                            {
+                                flagMieteFarbgruppe = 0;
+                            }
+                        }
+                        if (flagMieteFarbgruppe && (zahlBetragFarbgruppe > zahlBetrag))
+                        {
+                            zahlBetrag = zahlBetragFarbgruppe;
+                        }
+                        
                         writeText(0,0,"   Spieler      ");
                         sprintf(lcdBuffer,"%u",spielerAmZug);
                         writeText(0,11,lcdBuffer);
@@ -883,6 +899,11 @@ int main(void)
             }
             for (uint8_t i = 0;  i < 8; i = i + 1)
             {
+                //Flankenerkennung
+                tasteAlt = tasteNeu;
+                tasteNeu = 0;
+                tasteNeu = (PINL << 8) | PINK;
+                positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
                 flagFarbgruppeKomplett = 1;
                 if (spielfeld[farbgruppenErstesFeld[i]].besitzer == spielerAmZug) //überprüft ob erstes feld einer Farbgrup0pe dem Spieler gehört
                 {
