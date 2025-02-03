@@ -81,6 +81,7 @@ typedef struct {
     uint16_t mieten[7];
     uint8_t besitzer;        // Besitzer (Index des Spielers, 0 = unbesetzt)
     Farbe farbGruppe;
+    uint8_t farbgruppenFelder[4]; //FeldNummern der Farbgruppen hinterlegt
     uint8_t hausnummer;
     uint8_t anzahlHaeuser;
     uint8_t rgbNummer;

@@ -1,3 +1,34 @@
+/*********************************************************************************\
+*
+* MMMMMMMMMMMMMMMMMM   SSSSSSSSSSSSSSSSSS   WWWW   WWWW   WWWW
+* MMMMMMMMMMMMMMMMMM   SSSSSSSSSSSSSSSSSS   WWWW   WWWW   WWWW   MECHATRONIK
+* MMMMMMMMMMMMMMMMMM   SSSSS                WWWW   WWWW   WWWW
+* MMMM   MMMM   MMMM   SSSSSSSSSSSSSSSSSS   WWWW   WWWW   WWWW   SCHULE
+* MMMM   MMMM   MMMM   SSSSSSSSSSSSSSSSSS   WWWW   WWWW   WWWW
+* MMMM   MMMM   MMMM                SSSSS   WWWWWWWWWWWWWWWWWW   WINTERTHUR
+* MMMM   MMMM   MMMM   SSSSSSSSSSSSSSSSSS   WWWWWWWWWWWWWWWWWW
+* MMMM   MMMM   MMMM   SSSSSSSSSSSSSSSSSS   WWWWWWWWWWWWWWWWWW   www.msw.ch
+*
+*
+* Dateiname: ws2812.h
+*
+* Projekt  : IPA_Monopoly
+* Hardware : Monopoly-Board, ATmega2560v von Atmel
+*
+*
+* Copyright: MSW, AE3
+*
+* Beschreibung:
+* =============
+* Treiber zur ansteuerung der ws26812 der Monopoly Hardware
+*
+* Verlauf:
+* ========
+* Datum:      Autor:         Version   Grund der Änderung:
+* 10.01.2025  A.Schneider    V1.0      Neuerstellung
+*
+\*********************************************************************************/
+
 
 /* This line specifies the frequency your AVR is running at.
    This code supports 20 MHz, 16 MHz and 8MHz */

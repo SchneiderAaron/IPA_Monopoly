@@ -185,6 +185,9 @@ int main(void)
     uint8_t feldBesitzer = 0;
     uint8_t bezahlStatus = 0;
     uint8_t flagZahlungAbgeschlossen = 0;
+    
+    uint8_t farbgruppenErstesFeld[8] = {1,6,11,16,21,26,31,37}; //Jeweil das erste Feld einer Strassen Farbgruppe
+    
     uint16_t zahlBetrag = 0;
     
     //16-Bit Variabeln
@@ -195,6 +198,7 @@ int main(void)
     FeldTyp aktuellesFeld = FREIPARKEN;
     
     uint8_t flagGefaengnis = 0;
+    
     
     /*--- Prototypen modullokaler Funktionen ------------------------------------*/
     uint8_t feldKaufen(uint8_t feldNummer, Feld spielfeld[40], uint8_t spielerAmZug);
@@ -411,16 +415,14 @@ int main(void)
                 //flags zurücksetzten
                 flagFertigGewuerfelt = 0;
                 flagKaufAbgechlossen = 0;
-                globalUpdateLCD = 0;
-                //Schaltet das Blaulicht aus
-                PORTC &= ~0xC0;
+                PORTC &= ~0xC0; //Schaltet das Blaulicht aus
                 updateLCD = 0;
                 bezahlStatus = 0;
                 aktuellesFeld = spielfeld[spielerInfo[spielerAmZug].position].typ;
                 if ((aktuellesFeld == GEFAENGNIS) && spielerImGefaengnis[spielerAmZug])
                 {
                     flagGefaengnis = 1;
-                    flagFertigGewuerfelt = 1;
+                    flagFertigGewuerfelt = 1; //wenn dieses Flag gesetzt ist kann nicht gewürfelt werden
                 }
             }
             //ermöglicht es dem spieler bei Pasch zu kaufen
@@ -431,7 +433,7 @@ int main(void)
                 flagWeiter = 1; //Flag setzen
                 flagKaufAbgechlossen = 0;
                 bezahlStatus = 0;
-            }
+            }//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Würfel~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             //lässt den Spieler einmal würfel
             //Wenn flagWeiter nicht gesetzt ist, kann man nicht würfeln das
             //flag braucht es, da man ansonsten bei einem pasch nichts kaufen kann
@@ -529,7 +531,22 @@ int main(void)
             
             //kontostand aktualisieren
             updateKontostand(anzahlSpieler,spielerInfo);
-           
+            //Spieler hat fertig gewürfelt ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            if (positiveFlanke & TASTE_D)//Wenn Taste runter gedrückt wird => Bauen
+            {
+                for (uint8_t i = 0; i < 8; i = i + 1) //geht alle Strassen farbgruppen durch
+                {
+                    if (spielfeld[farbgruppenErstesFeld[i]].besitzer == spielerAmZug) //Wenn 1. Feld von Startgruppe Spieler gehört, dann Farbgruppe prüfen
+                    {
+                        for (uint8_t j = 0; j < 4; j = j + 1)
+                        {
+                            if (spielfeld[spielfeld[i].farbgruppenFelder[j]] == )
+                            {
+                            }
+                        }
+                    }
+                }
+            }
             
             switch (aktuellesFeld) //verarbeitung aktuelles feld ~~~~~~~~~~~~~~~~~
             {

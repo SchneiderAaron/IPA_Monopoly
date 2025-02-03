@@ -1,8 +1,33 @@
-/* This is AVR code for driving the RGB LED strips from Pololu.
-   It allows complete control over the color of an arbitrary number of LEDs.
-   This implementation disables interrupts while it does bit-banging with inline assembly.
- */
-
+/*********************************************************************************\
+*
+* MMMMMMMMMMMMMMMMMM   SSSSSSSSSSSSSSSSSS   WWWW   WWWW   WWWW
+* MMMMMMMMMMMMMMMMMM   SSSSSSSSSSSSSSSSSS   WWWW   WWWW   WWWW   MECHATRONIK
+* MMMMMMMMMMMMMMMMMM   SSSSS                WWWW   WWWW   WWWW
+* MMMM   MMMM   MMMM   SSSSSSSSSSSSSSSSSS   WWWW   WWWW   WWWW   SCHULE
+* MMMM   MMMM   MMMM   SSSSSSSSSSSSSSSSSS   WWWW   WWWW   WWWW
+* MMMM   MMMM   MMMM                SSSSS   WWWWWWWWWWWWWWWWWW   WINTERTHUR
+* MMMM   MMMM   MMMM   SSSSSSSSSSSSSSSSSS   WWWWWWWWWWWWWWWWWW
+* MMMM   MMMM   MMMM   SSSSSSSSSSSSSSSSSS   WWWWWWWWWWWWWWWWWW   www.msw.ch
+*
+*
+* Dateiname: ws2812.c
+*
+* Projekt  : IPA_Monopoly
+* Hardware : Monopoly-Board, ATmega2560v von Atmel
+*
+*
+* Copyright: MSW, AE3
+*
+* Beschreibung:
+* =============
+* Treiber zur ansteuerung der ws26812 der Monopoly Hardware
+*
+* Verlauf:
+* ========
+* Datum:      Autor:         Version   Grund der Änderung:
+* 10.01.2025  A.Schneider    V1.0      Neuerstellung
+*
+\*********************************************************************************/
 
 
 #include "ws2812.h"
