@@ -195,7 +195,7 @@ int main(void)
     uint8_t flagHausFeld1 = 0;
     uint8_t flagHausFeld2 = 0;
     uint8_t flagHausFeld3 = 0;
-    
+    uint8_t kaufStatus = 0;
     uint16_t zahlBetrag = 0;
     
     //16-Bit Variabeln
@@ -594,7 +594,7 @@ int main(void)
                     //spieler am zug muss Taste X drücken um zu bezahlen
                     if (positiveFlanke & xTasten[spielerAmZug - 1])
                     {
-                        bezahlStatus = geldUeberweisen(spielerAmZug,feldBesitzer,zahlBetrag);
+                        bezahlStatus = geldUeberweisen(spielerAmZug,feldBesitzer,zahlBetrag,1);
                         if (bezahlStatus == 1)
                         {
                             updateLCD = 0;
@@ -624,7 +624,7 @@ int main(void)
                     if (positiveFlanke & xTasten[spielerAmZug - 1])
                     {
                         //geld an die Bank überweisen
-                        bezahlStatus = geldUeberweisen(spielerAmZug,0,zahlBetrag);
+                        bezahlStatus = geldUeberweisen(spielerAmZug,0,zahlBetrag,10);
                         if (bezahlStatus == 1)
                         {
                             updateLCD = 0;
@@ -676,7 +676,7 @@ int main(void)
                     //spieler am zug muss Taste X drücken um zu bezahlen
                     if (positiveFlanke & xTasten[spielerAmZug - 1])
                     {
-                        bezahlStatus = geldUeberweisen(spielerAmZug,feldBesitzer,zahlBetrag);
+                        bezahlStatus = geldUeberweisen(spielerAmZug,feldBesitzer,zahlBetrag,1);
                         if (bezahlStatus == 1)
                         {
                             updateLCD = 0;
@@ -746,7 +746,7 @@ int main(void)
                     //spieler am zug muss Taste X drücken um zu bezahlen
                     if (positiveFlanke & xTasten[spielerAmZug - 1])
                     {
-                        bezahlStatus = geldUeberweisen(spielerAmZug,feldBesitzer,zahlBetrag);
+                        bezahlStatus = geldUeberweisen(spielerAmZug,feldBesitzer,zahlBetrag,1);
                         if (bezahlStatus == 1)
                         {
                             updateLCD = 0;
@@ -893,7 +893,7 @@ int main(void)
                 {
                     for (uint8_t j = 0; j < 3; j = j + 1)//Prüft ob Farbgruppen tatsächlich voll sind
                     {
-                        if (!spielfeld[spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j]].besitzer == spielerAmZug)//prüft alle Felder der Farbgruppe
+                        if (!(spielfeld[spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j]].besitzer == spielerAmZug))//prüft alle Felder der Farbgruppe
                         {
                             flagFarbgruppeKomplett = 0; //setzt flag auf 0 wenn ein Feld nicht dem Spieler gehört
                             volleFarbgruppen[i] = 0; //Markiert Farbgruppe als unvollständig
@@ -934,7 +934,7 @@ int main(void)
                                         setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser + 1); //Anzahl Häuser um 1 erhöhen
                                         spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser + 1;//Neue anzahl Häuser speichern
                                         flagHausFeld1 = 1;
-                                        geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus);
+                                        kaufStatus = geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus,10);
                                     }
                                 	break;
                                     case 1:
@@ -943,7 +943,7 @@ int main(void)
                                         setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser + 1); //Anzahl Häuser um 1 erhöhen
                                         spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser + 1;//Neue anzahl Häuser speichern
                                         flagHausFeld2 = 1;
-                                        geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus);
+                                        kaufStatus = geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus,10);
                                     }
                                     break;
                                     case 2:
@@ -952,7 +952,7 @@ int main(void)
                                         setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser + 1); //Anzahl Häuser um 1 erhöhen
                                         spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser + 1;//Neue anzahl Häuser speichern
                                         flagHausFeld3 = 1;
-                                        geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus);
+                                        kaufStatus = geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus,10);
                                     }
                                     break;
                                 }

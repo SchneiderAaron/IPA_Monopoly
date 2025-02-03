@@ -133,6 +133,6 @@ void startGeldAnimation(uint8_t anzahlSpieler);
 
 void initialisiereSpielfeld(Feld spielfeld[]);
 
-uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag);
+uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag, uint8_t schritt);
 
 #endif /* MONOPOLYTREIBER_H_ */

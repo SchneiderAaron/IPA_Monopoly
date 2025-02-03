@@ -822,6 +822,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[1].farbgruppenFelder[2] = 0;
     spielfeld[1].hausnummer = 0;
     spielfeld[1].anzahlHaeuser = 0;
+    spielfeld[1].kostenHaus = 50;
     spielfeld[1].rgbNummer = 0;
     spielfeld[1].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
@@ -848,6 +849,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[3].farbgruppenFelder[2] = 0;
     spielfeld[3].hausnummer = 1;
     spielfeld[3].anzahlHaeuser = 0;
+    spielfeld[3].kostenHaus = 50;
     spielfeld[3].rgbNummer = 1;
     spielfeld[3].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
@@ -893,6 +895,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[6].farbgruppenFelder[2] = 9;
     spielfeld[6].hausnummer = 2;
     spielfeld[6].anzahlHaeuser = 0;
+    spielfeld[6].kostenHaus = 50;
     spielfeld[6].rgbNummer = 3;
     spielfeld[6].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
@@ -919,6 +922,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[8].farbgruppenFelder[2] = 9;
     spielfeld[8].hausnummer = 3;
     spielfeld[8].anzahlHaeuser = 0;
+    spielfeld[8].kostenHaus = 50;
     spielfeld[8].rgbNummer = 4;
     spielfeld[8].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
@@ -942,6 +946,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[9].farbgruppenFelder[2] = 9;
     spielfeld[9].hausnummer = 4;
     spielfeld[9].anzahlHaeuser = 0;
+    spielfeld[9].kostenHaus = 50;
     spielfeld[9].rgbNummer = 5;
     spielfeld[9].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
@@ -970,6 +975,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[11].farbgruppenFelder[2] = 14;
     spielfeld[11].hausnummer = 5;
     spielfeld[11].anzahlHaeuser = 0;
+    spielfeld[11].kostenHaus = 100;
     spielfeld[11].rgbNummer = 6;
     spielfeld[11].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
@@ -1000,6 +1006,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[13].farbgruppenFelder[2] = 14;
     spielfeld[13].hausnummer = 6;
     spielfeld[13].anzahlHaeuser = 0;
+    spielfeld[13].kostenHaus = 100;
     spielfeld[13].rgbNummer = 8;
     spielfeld[13].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
@@ -1021,6 +1028,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[14].farbgruppenFelder[2] = 14;
     spielfeld[14].hausnummer = 7;
     spielfeld[14].anzahlHaeuser = 0;
+    spielfeld[14].kostenHaus = 100;
     spielfeld[14].rgbNummer = 9;
     spielfeld[14].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
@@ -1059,6 +1067,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[16].farbgruppenFelder[2] = 19;
     spielfeld[16].hausnummer = 8;
     spielfeld[16].anzahlHaeuser = 0;
+    spielfeld[16].kostenHaus = 100;
     spielfeld[16].rgbNummer = 11;
     spielfeld[16].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
@@ -1084,6 +1093,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[18].farbgruppenFelder[2] = 19;
     spielfeld[18].hausnummer = 9;
     spielfeld[18].anzahlHaeuser = 0;
+    spielfeld[18].kostenHaus = 100;
     spielfeld[18].rgbNummer = 12;
     spielfeld[18].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
@@ -1105,6 +1115,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[19].farbgruppenFelder[2] = 19;
     spielfeld[19].hausnummer = 10;
     spielfeld[19].anzahlHaeuser = 0;
+    spielfeld[19].kostenHaus = 100;
     spielfeld[19].rgbNummer = 13;
     spielfeld[19].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
@@ -1130,6 +1141,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[21].farbgruppenFelder[2] = 24;
     spielfeld[21].hausnummer = 11;
     spielfeld[21].anzahlHaeuser = 0;
+    spielfeld[21].kostenHaus = 150;
     spielfeld[21].rgbNummer = 14;
     spielfeld[21].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
@@ -1155,6 +1167,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[23].farbgruppenFelder[2] = 24;
     spielfeld[23].hausnummer = 12;
     spielfeld[23].anzahlHaeuser = 0;
+    spielfeld[23].kostenHaus = 150;
     spielfeld[23].rgbNummer = 15;
     spielfeld[23].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
@@ -1176,6 +1189,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[24].farbgruppenFelder[2] = 24;
     spielfeld[24].hausnummer = 13;
     spielfeld[24].anzahlHaeuser = 0;
+    spielfeld[24].kostenHaus = 150;
     spielfeld[24].rgbNummer = 16;
     spielfeld[24].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
@@ -1214,6 +1228,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[26].farbgruppenFelder[2] = 29;
     spielfeld[26].hausnummer = 14;
     spielfeld[26].anzahlHaeuser = 0;
+    spielfeld[26].kostenHaus = 150;
     spielfeld[26].rgbNummer = 18;
     spielfeld[26].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
@@ -1235,6 +1250,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[27].farbgruppenFelder[2] = 29;
     spielfeld[27].hausnummer = 15;
     spielfeld[27].anzahlHaeuser = 0;
+    spielfeld[27].kostenHaus = 150;
     spielfeld[27].rgbNummer = 19;
     spielfeld[27].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
@@ -1265,6 +1281,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[29].farbgruppenFelder[2] = 29;
     spielfeld[29].hausnummer = 16;
     spielfeld[29].anzahlHaeuser = 0;
+    spielfeld[29].kostenHaus = 150;
     spielfeld[29].rgbNummer = 21;
     spielfeld[29].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
@@ -1290,6 +1307,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[31].farbgruppenFelder[2] = 34;
     spielfeld[31].hausnummer = 17;
     spielfeld[31].anzahlHaeuser = 0;
+    spielfeld[31].kostenHaus = 200;
     spielfeld[31].rgbNummer = 22;
     spielfeld[31].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
@@ -1311,6 +1329,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[32].farbgruppenFelder[2] = 34;
     spielfeld[32].hausnummer = 18;
     spielfeld[32].anzahlHaeuser = 0;
+    spielfeld[32].kostenHaus = 200;
     spielfeld[32].rgbNummer = 23;
     spielfeld[32].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
@@ -1336,6 +1355,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[34].farbgruppenFelder[2] = 34;
     spielfeld[34].hausnummer = 19;
     spielfeld[34].anzahlHaeuser = 0;
+    spielfeld[34].kostenHaus = 200;
     spielfeld[34].rgbNummer = 24;
     spielfeld[34].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
@@ -1378,6 +1398,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[37].farbgruppenFelder[2] = 0;
     spielfeld[37].hausnummer = 20;
     spielfeld[37].anzahlHaeuser = 0;
+    spielfeld[37].kostenHaus = 200;
     spielfeld[37].rgbNummer = 26;
     spielfeld[37].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
@@ -1405,23 +1426,24 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[39].farbgruppenFelder[3] = 39;
     spielfeld[39].hausnummer = 21;
     spielfeld[39].anzahlHaeuser = 0;
+    spielfeld[39].kostenHaus = 200;
     spielfeld[39].rgbNummer = 27;
     spielfeld[39].feldBelastet = 0;  //wenn das Feld belastet ist = 1
 }
 
 
 
-uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag)
+uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag, uint8_t schritt)
 {
     if (empfaenger) //wenn der empfänger nicht spieler 0 ist
     {
         //wenn der Zahlende Spieler genug geld hat
         if (spielerInfo[zahler].geld >= betrag)
         {
-            for (uint16_t i = 0; i < betrag; i = i + 1)
+            for (uint16_t i = 0; i < betrag; i = i + schritt)
             {
-                spielerInfo[zahler].geld -= 1;
-                spielerInfo[empfaenger].geld += 1;
+                spielerInfo[zahler].geld -= schritt;
+                spielerInfo[empfaenger].geld += schritt;
                 updateKontostand(anzahlSpieler,spielerInfo);
             }
             return 1; //zahlung erfolgreich
@@ -1436,9 +1458,9 @@ uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag)
         //wenn der Zahlende Spieler genug geld hat
         if (spielerInfo[zahler].geld >= betrag)
         {
-            for (uint16_t i = 0; i < betrag; i = i + 1)
+            for (uint16_t i = 0; i < betrag; i = i + schritt)
             {
-                spielerInfo[zahler].geld -= 1;
+                spielerInfo[zahler].geld -= schritt;
                 updateKontostand(anzahlSpieler,spielerInfo);
             }
             return 1; //zahlung erfolgreich
