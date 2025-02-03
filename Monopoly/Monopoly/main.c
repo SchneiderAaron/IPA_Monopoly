@@ -104,6 +104,8 @@
 //#define UMLAUT_U "\u00DC"
 //#define UMLAUT_U "š"
 
+#define MIN_ANZAHL_HAEUSER 0
+#define MAX_ANZAHL_HAEUSER 5
 
 /*--- Datentypen (typedef) --------------------------------------------------*/
 
@@ -195,8 +197,14 @@ int main(void)
     uint8_t flagHausFeld1 = 0;
     uint8_t flagHausFeld2 = 0;
     uint8_t flagHausFeld3 = 0;
+    uint8_t anzahlHauser[3] = {0};
+    uint8_t haeuser = 0;
+    uint8_t minHaeuser = 5;
+    uint8_t maxHaeuser = 0;
     uint8_t kaufStatus = 0;
     uint16_t zahlBetrag = 0;
+    uint8_t zahlSchritt = 0;
+    
     
     //16-Bit Variabeln
     uint16_t geldZwischenspeicher[5] = {0};
@@ -862,25 +870,6 @@ int main(void)
             }
             break;
             case BAUEN:
-            
-            //zurück zum Spiel~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~     
-            /*if (positiveFlanke & TASTE_C) //zurück zum Spiel
-            {
-                clear();//lcd leeren
-                //spieler am zug anzeigen
-                writeText(0,0,"   Spieler      ");
-                sprintf(lcdBuffer,"%u",spielerAmZug);
-                writeText(0,11,lcdBuffer);
-                writeText(1,0," w"UE"rfeln A / B ");
-                writeText(2,0,"    weiter C    ");
-                zustand = SPIEL;
-            }
-            if (positiveFlanke & TASTE_L)//Nächste bebaubare Farbgruppe
-            {
-                
-            }*/
-            
-            
             //Felder nach vollen Farbgruppen absuchen~~~~~~~~~~~~~~~~~~~~~~~~~
             for (uint8_t i = 0; i < 8; i = i + 1)//Alle Farbgruppen werden als voll markiert
             {
@@ -911,48 +900,131 @@ int main(void)
                             tasteNeu = 0;
                             tasteNeu = (PINL << 8) | PINK;
                             positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
+                            minHaeuser = 255;
+                            maxHaeuser = 0;
+                            for (uint8_t j = 0; j < 3; j = j + 1)
+                            {
+                                haeuser = spielfeld[spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j]].anzahlHaeuser;
+                                if (haeuser < minHaeuser)
+                                {
+                                    minHaeuser = haeuser;
+                                }
+                                if (haeuser > maxHaeuser)
+                                {
+                                    maxHaeuser = haeuser;
+                                }
+                            }
+                            for (uint8_t j = 0; j < 3; j = j + 1)
+                            {
+                                haeuser = spielfeld[spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j]].anzahlHaeuser;
+                                if (haeuser == maxHaeuser)
+                                {
+                                    anzahlHauser[j] = 1;
+                                }
+                                else
+                                {
+                                    anzahlHauser[j] = 0;
+                                }
+                            }
+                            
                             
                             if (!updateLCD)
                             {
                                 clear();//lcd leeren
                                 //spieler am zug anzeigen
-                                writeText(0,0,"   Haus Bauen   ");
+                                writeText(0,0," Haus Bauen = S ");
                                 writeText(1,0,spielfeld[feldNummer].name);
-                                writeText(2,0,"S=Kaufen");
+                                writeText(2,0,"  Verkaufen = < ");
                                 /*writeText(1,0," w"UE"rfeln A / B ");
                                 writeText(2,0,"    weiter C    ");*/
                                 gruppeAnzahlHaeuser = spielfeld[farbgruppenErstesFeld[i]].anzahlHaeuser; //holt die Anzahl Häuser
                                 updateLCD = 1;
                             }
-                            if ((positiveFlanke & TASTE_S))//Haus Bauen
+                            if ((positiveFlanke & TASTE_S))//Haus Bauen~~~~~~~~~~~~~~~~~~~~~~~~
                             {
+                                //Wenn auf allen felder gebaut wurde, flags zurücksetzten
+                                if (anzahlHauser[0] && anzahlHauser[1] && anzahlHauser[2])
+                                {
+                                    anzahlHauser[0] = 0;
+                                    anzahlHauser[1] = 0;
+                                    anzahlHauser[2] = 0;
+                                }
                                 switch (farbgruppenCounter)
                                 {
                                     case 0:
-                                    if (!flagHausFeld1)
+                                    if (!anzahlHauser[0])
                                     {
                                         setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser + 1); //Anzahl Häuser um 1 erhöhen
                                         spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser + 1;//Neue anzahl Häuser speichern
-                                        flagHausFeld1 = 1;
+                                        anzahlHauser[0] = 1;
                                         kaufStatus = geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus,10);
                                     }
                                 	break;
                                     case 1:
-                                    if (!flagHausFeld2)
+                                    if (!anzahlHauser[1])
                                     {
                                         setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser + 1); //Anzahl Häuser um 1 erhöhen
                                         spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser + 1;//Neue anzahl Häuser speichern
-                                        flagHausFeld2 = 1;
+                                        anzahlHauser[1] = 1;
                                         kaufStatus = geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus,10);
                                     }
                                     break;
                                     case 2:
-                                    if (!flagHausFeld3)
+                                    if (!anzahlHauser[2])
                                     {
                                         setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser + 1); //Anzahl Häuser um 1 erhöhen
                                         spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser + 1;//Neue anzahl Häuser speichern
-                                        flagHausFeld3 = 1;
+                                        anzahlHauser[2] = 1;
                                         kaufStatus = geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus,10);
+                                    }
+                                    break;
+                                }
+                                
+                            }
+                            if ((positiveFlanke & TASTE_L))//Haus Verkaufen~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                            {
+                                if ((spielfeld[feldNummer].kostenHaus / 2) > 25)
+                                {
+                                    zahlSchritt = 10;
+                                }
+                                else
+                                {
+                                    zahlSchritt = 5;
+                                }
+                                //Wenn auf allen felder gebaut wurde, flags zurücksetzten
+                                if (!(anzahlHauser[0] || anzahlHauser[1] || anzahlHauser[2]))
+                                {
+                                    anzahlHauser[0] = 1;
+                                    anzahlHauser[1] = 1;
+                                    anzahlHauser[2] = 1;
+                                }
+                                switch (farbgruppenCounter)
+                                {
+                                    case 0:
+                                    if (anzahlHauser[0])
+                                    {
+                                        setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser - 1); //Anzahl Häuser um 1 erhöhen
+                                        spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser - 1;//Neue anzahl Häuser speichern
+                                        anzahlHauser[0] = 0;
+                                        kaufStatus = geldUeberweisen(0,spielerAmZug,spielfeld[feldNummer].kostenHaus / 2, zahlSchritt);
+                                    }
+                                    break;
+                                    case 1:
+                                    if (anzahlHauser[1])
+                                    {
+                                        setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser - 1); //Anzahl Häuser um 1 erhöhen
+                                        spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser - 1;//Neue anzahl Häuser speichern
+                                        anzahlHauser[1] = 0;
+                                        kaufStatus = geldUeberweisen(0,spielerAmZug,spielfeld[feldNummer].kostenHaus / 2, zahlSchritt);
+                                    }
+                                    break;
+                                    case 2:
+                                    if (anzahlHauser[2])
+                                    {
+                                        setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser - 1); //Anzahl Häuser um 1 erhöhen
+                                        spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser - 1;//Neue anzahl Häuser speichern
+                                        anzahlHauser[2] = 0;
+                                        kaufStatus = geldUeberweisen(0,spielerAmZug,spielfeld[feldNummer].kostenHaus / 2, zahlSchritt);
                                     }
                                     break;
                                 }
@@ -969,12 +1041,6 @@ int main(void)
                                     flagHausFeld3 = 1;
                                 }
                                 updateLCD = 0;
-                            }//Wenn auf allen felder gebaut wurde, flags zurücksetzten
-                            if (flagHausFeld1 && flagHausFeld2 && flagHausFeld3)
-                            {
-                                flagHausFeld1 = 0;
-                                flagHausFeld2 = 0;
-                                flagHausFeld3 = 0;
                             }
                         }
                         
@@ -990,6 +1056,8 @@ int main(void)
             writeText(0,11,lcdBuffer);
             writeText(1,0," w"UE"rfeln A / B ");
             writeText(2,0,"    weiter C    ");
+            minHaeuser = 5;
+            maxHaeuser = 0;
             zustand = SPIEL;
             break;
             default:

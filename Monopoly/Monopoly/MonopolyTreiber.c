@@ -1435,7 +1435,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
 
 uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag, uint8_t schritt)
 {
-    if (empfaenger) //wenn der empfänger nicht spieler 0 ist
+    if (empfaenger && zahler) //wenn der empfänger nicht spieler 0 ist
     {
         //wenn der Zahlende Spieler genug geld hat
         if (spielerInfo[zahler].geld >= betrag)
@@ -1453,7 +1453,7 @@ uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag, uin
             return 2; //zahlung fehlgeschlagen
         }
     }
-    else //wenn spieler 0 eingegeben wurde, wird an die Bank überwiesen
+    else if (!empfaenger) //wenn spieler 0 als empfänger eingegeben wurde, wird an die Bank überwiesen
     {
         //wenn der Zahlende Spieler genug geld hat
         if (spielerInfo[zahler].geld >= betrag)
@@ -1469,6 +1469,15 @@ uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag, uin
         {
             return 2; //zahlung fehlgeschlagen
         }
+    }
+    else if (!zahler)//wenn spieler 0 als zahler eingegeben wurde, kommt das Geld von der Bank
+    {
+        for (uint16_t i = 0; i < betrag; i = i + schritt)
+        {
+            spielerInfo[empfaenger].geld += schritt;
+            updateKontostand(anzahlSpieler,spielerInfo);
+        }
+        return 1; //zahlung erfolgreich
     }
     
 }
