@@ -888,7 +888,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[6].mieten[4] = 400;   //Feld mit 4 Häuser
     spielfeld[6].mieten[5] = 550;   //Feld mit 5 Häuser
     spielfeld[6].mieten[6] = 12;    //Feld mit Farbgruppe
-    spielfeld[6].besitzer = 1;
+    spielfeld[6].besitzer = 0;
     spielfeld[6].farbGruppe = HELLBLAU;
     spielfeld[6].farbgruppenFelder[0] = 6;
     spielfeld[6].farbgruppenFelder[1] = 8;
@@ -915,7 +915,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[8].mieten[4] = 400;   //Feld mit 4 Häuser
     spielfeld[8].mieten[5] = 550;   //Feld mit 5 Häuser
     spielfeld[8].mieten[6] = 12;    //Feld mit Farbgruppe
-    spielfeld[8].besitzer = 1;
+    spielfeld[8].besitzer = 0;
     spielfeld[8].farbGruppe = HELLBLAU;
     spielfeld[8].farbgruppenFelder[0] = 6;
     spielfeld[8].farbgruppenFelder[1] = 8;
@@ -939,7 +939,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[9].mieten[4] = 450;   //Feld mit 4 Häuser
     spielfeld[9].mieten[5] = 600;   //Feld mit 5 Häuser
     spielfeld[9].mieten[6] = 16;    //Feld mit Farbgruppe
-    spielfeld[9].besitzer = 1;
+    spielfeld[9].besitzer = 0;
     spielfeld[9].farbGruppe = HELLBLAU;
     spielfeld[9].farbgruppenFelder[0] = 6;
     spielfeld[9].farbgruppenFelder[1] = 8;
@@ -968,7 +968,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[11].mieten[4] = 625;  //Feld mit 4 Häuser
     spielfeld[11].mieten[5] = 750;  //Feld mit 5 Häuser
     spielfeld[11].mieten[6] = 20;   //Feld mit Farbgruppe
-    spielfeld[11].besitzer = 2;
+    spielfeld[11].besitzer = 0;
     spielfeld[11].farbGruppe = ROSA;
     spielfeld[11].farbgruppenFelder[0] = 11;
     spielfeld[11].farbgruppenFelder[1] = 13;
@@ -999,7 +999,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[13].mieten[4] = 625;  //Feld mit 4 Häuser
     spielfeld[13].mieten[5] = 750;  //Feld mit 5 Häuser
     spielfeld[13].mieten[6] = 20;   //Feld mit Farbgruppe
-    spielfeld[13].besitzer = 2;
+    spielfeld[13].besitzer = 0;
     spielfeld[13].farbGruppe = ROSA;
     spielfeld[13].farbgruppenFelder[0] = 11;
     spielfeld[13].farbgruppenFelder[1] = 13;
@@ -1021,7 +1021,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[14].mieten[4] = 700;  //Feld mit 4 Häuser
     spielfeld[14].mieten[5] = 900;  //Feld mit 5 Häuser
     spielfeld[14].mieten[6] = 24;   //Feld mit Farbgruppe
-    spielfeld[14].besitzer = 2;
+    spielfeld[14].besitzer = 0;
     spielfeld[14].farbGruppe = ROSA;
     spielfeld[14].farbgruppenFelder[0] = 11;
     spielfeld[14].farbgruppenFelder[1] = 13;
@@ -1391,7 +1391,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[37].mieten[4] = 1300; //Feld mit 4 Häuser
     spielfeld[37].mieten[5] = 1500; //Feld mit 5 Häuser
     spielfeld[37].mieten[6] = 70;   //Feld mit Farbgruppe
-    spielfeld[37].besitzer = 0;
+    spielfeld[37].besitzer = 1;
     spielfeld[37].farbGruppe = BLAU;
     spielfeld[37].farbgruppenFelder[0] = 37;
     spielfeld[37].farbgruppenFelder[1] = 39;
@@ -1418,7 +1418,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[39].mieten[4] = 1700; //Feld mit 4 Häuser
     spielfeld[39].mieten[5] = 2000; //Feld mit 5 Häuser
     spielfeld[39].mieten[6] = 100;   //Feld mit Farbgruppe
-    spielfeld[39].besitzer = 0;
+    spielfeld[39].besitzer = 1;
     spielfeld[39].farbGruppe = BLAU;
     spielfeld[39].farbgruppenFelder[0] = 37;
     spielfeld[39].farbgruppenFelder[1] = 37;

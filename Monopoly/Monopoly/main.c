@@ -107,6 +107,8 @@
 #define MIN_ANZAHL_HAEUSER 0
 #define MAX_ANZAHL_HAEUSER 5
 
+#define MAX_ANZAHL_HAEUSER_IM_SPIEL 32
+#define MAX_ANZAHL_HOTELS_IM_SPIEL 12
 /*--- Datentypen (typedef) --------------------------------------------------*/
 
 
@@ -201,6 +203,10 @@ int main(void)
     uint8_t haeuser = 0;
     uint8_t minHaeuser = 5;
     uint8_t maxHaeuser = 0;
+    
+    uint8_t haeuserImSpiel = 0;
+    uint8_t hotelsImSpiel = 0;
+    
     uint8_t kaufStatus = 0;
     uint16_t zahlBetrag = 0;
     uint8_t zahlSchritt = 0;
@@ -882,7 +888,7 @@ int main(void)
                 {
                     for (uint8_t j = 0; j < 3; j = j + 1)//Prüft ob Farbgruppen tatsächlich voll sind
                     {
-                        if (!(spielfeld[spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j]].besitzer == spielerAmZug))//prüft alle Felder der Farbgruppe
+                        if ((!(spielfeld[spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j]].besitzer == spielerAmZug)) && (spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j]))//prüft alle Felder der Farbgruppe
                         {
                             flagFarbgruppeKomplett = 0; //setzt flag auf 0 wenn ein Feld nicht dem Spieler gehört
                             volleFarbgruppen[i] = 0; //Markiert Farbgruppe als unvollständig
@@ -904,14 +910,17 @@ int main(void)
                             maxHaeuser = 0;
                             for (uint8_t j = 0; j < 3; j = j + 1)
                             {
-                                haeuser = spielfeld[spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j]].anzahlHaeuser;
-                                if (haeuser < minHaeuser)
+                                if (spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j] > 0)
                                 {
-                                    minHaeuser = haeuser;
-                                }
-                                if (haeuser > maxHaeuser)
-                                {
-                                    maxHaeuser = haeuser;
+                                    haeuser = spielfeld[spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j]].anzahlHaeuser;
+                                    if ((haeuser < minHaeuser))
+                                    {
+                                        minHaeuser = haeuser;
+                                    }
+                                    if (haeuser > maxHaeuser)
+                                    {
+                                        maxHaeuser = haeuser;
+                                    }
                                 }
                             }
                             for (uint8_t j = 0; j < 3; j = j + 1)
@@ -921,9 +930,13 @@ int main(void)
                                 {
                                     anzahlHauser[j] = 1;
                                 }
-                                else
+                                else if (spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j])
                                 {
                                     anzahlHauser[j] = 0;
+                                }
+                                else
+                                {
+                                    anzahlHauser[j] = 1;
                                 }
                             }
                             
@@ -954,28 +967,52 @@ int main(void)
                                     case 0:
                                     if (!anzahlHauser[0])
                                     {
+                                        kaufStatus = geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus,10);
                                         setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser + 1); //Anzahl Häuser um 1 erhöhen
                                         spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser + 1;//Neue anzahl Häuser speichern
                                         anzahlHauser[0] = 1;
-                                        kaufStatus = geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus,10);
+                                        if (spielfeld[feldNummer].anzahlHaeuser == 5)
+                                        {
+                                            haeuserImSpiel -= 4;
+                                        }
+                                        else
+                                        {
+                                            haeuserImSpiel += 1;
+                                        }
                                     }
                                 	break;
                                     case 1:
                                     if (!anzahlHauser[1])
                                     {
+                                        kaufStatus = geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus,10);
                                         setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser + 1); //Anzahl Häuser um 1 erhöhen
                                         spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser + 1;//Neue anzahl Häuser speichern
                                         anzahlHauser[1] = 1;
-                                        kaufStatus = geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus,10);
+                                        if (spielfeld[feldNummer].anzahlHaeuser == 5)
+                                        {
+                                            haeuserImSpiel -= 4;
+                                        }
+                                        else
+                                        {
+                                            haeuserImSpiel += 1;
+                                        }
                                     }
                                     break;
                                     case 2:
                                     if (!anzahlHauser[2])
                                     {
+                                        kaufStatus = geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus,10);
                                         setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser + 1); //Anzahl Häuser um 1 erhöhen
                                         spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser + 1;//Neue anzahl Häuser speichern
                                         anzahlHauser[2] = 1;
-                                        kaufStatus = geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus,10);
+                                        if (spielfeld[feldNummer].anzahlHaeuser == 5)
+                                        {
+                                            haeuserImSpiel -= 4;
+                                        }
+                                        else
+                                        {
+                                            haeuserImSpiel += 1;
+                                        }
                                     }
                                     break;
                                 }
@@ -1003,6 +1040,14 @@ int main(void)
                                     case 0:
                                     if (anzahlHauser[0])
                                     {
+                                        if (spielfeld[feldNummer].anzahlHaeuser == 5)
+                                        {
+                                            haeuserImSpiel += 4;
+                                        }
+                                        else
+                                        {
+                                            haeuserImSpiel -= 1;
+                                        }
                                         setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser - 1); //Anzahl Häuser um 1 erhöhen
                                         spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser - 1;//Neue anzahl Häuser speichern
                                         anzahlHauser[0] = 0;
@@ -1012,6 +1057,14 @@ int main(void)
                                     case 1:
                                     if (anzahlHauser[1])
                                     {
+                                        if (spielfeld[feldNummer].anzahlHaeuser == 5)
+                                        {
+                                            haeuserImSpiel += 4;
+                                        }
+                                        else
+                                        {
+                                            haeuserImSpiel -= 1;
+                                        }
                                         setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser - 1); //Anzahl Häuser um 1 erhöhen
                                         spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser - 1;//Neue anzahl Häuser speichern
                                         anzahlHauser[1] = 0;
@@ -1021,6 +1074,14 @@ int main(void)
                                     case 2:
                                     if (anzahlHauser[2])
                                     {
+                                        if (spielfeld[feldNummer].anzahlHaeuser == 5)
+                                        {
+                                            haeuserImSpiel += 4;
+                                        }
+                                        else
+                                        {
+                                            haeuserImSpiel -= 1;
+                                        }
                                         setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser - 1); //Anzahl Häuser um 1 erhöhen
                                         spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser - 1;//Neue anzahl Häuser speichern
                                         anzahlHauser[2] = 0;
@@ -1038,7 +1099,7 @@ int main(void)
                                 {
                                     farbgruppenCounter = 0;
                                     feldNummer = spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[farbgruppenCounter];
-                                    flagHausFeld3 = 1;
+                                    anzahlHauser[2] = anzahlHauser[1];
                                 }
                                 updateLCD = 0;
                             }
