@@ -191,6 +191,10 @@ int main(void)
     uint8_t volleFarbgruppen[8] = {0};
     uint8_t farbgruppenCounter = 0;
     uint8_t feldNummer = 0;
+    uint8_t gruppeAnzahlHaeuser = 0;
+    uint8_t flagHausFeld1 = 0;
+    uint8_t flagHausFeld2 = 0;
+    uint8_t flagHausFeld3 = 0;
     
     uint16_t zahlBetrag = 0;
     
@@ -895,7 +899,7 @@ int main(void)
                             volleFarbgruppen[i] = 0; //Markiert Farbgruppe als unvollständig
                         }
                     }
-                    if (flagFarbgruppeKomplett)
+                    if (flagFarbgruppeKomplett)//Wenn farbgruppe komplett
                     {
                         updateLCD = 0;
                         //nächstes Feld
@@ -917,21 +921,61 @@ int main(void)
                                 writeText(2,0,"S=Kaufen");
                                 /*writeText(1,0," w"UE"rfeln A / B ");
                                 writeText(2,0,"    weiter C    ");*/
+                                gruppeAnzahlHaeuser = spielfeld[farbgruppenErstesFeld[i]].anzahlHaeuser; //holt die Anzahl Häuser
                                 updateLCD = 1;
                             }
-                            if (positiveFlanke & TASTE_S)//Haus Bauen
+                            if ((positiveFlanke & TASTE_S))//Haus Bauen
                             {
-                                setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser + 1); //Anzahl Häuser um 1 erhöhen
-                                spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser + 1;//Neue anzahl Häuser speichern
+                                switch (farbgruppenCounter)
+                                {
+                                    case 0:
+                                    if (!flagHausFeld1)
+                                    {
+                                        setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser + 1); //Anzahl Häuser um 1 erhöhen
+                                        spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser + 1;//Neue anzahl Häuser speichern
+                                        flagHausFeld1 = 1;
+                                        geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus);
+                                    }
+                                	break;
+                                    case 1:
+                                    if (!flagHausFeld2)
+                                    {
+                                        setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser + 1); //Anzahl Häuser um 1 erhöhen
+                                        spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser + 1;//Neue anzahl Häuser speichern
+                                        flagHausFeld2 = 1;
+                                        geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus);
+                                    }
+                                    break;
+                                    case 2:
+                                    if (!flagHausFeld3)
+                                    {
+                                        setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser + 1); //Anzahl Häuser um 1 erhöhen
+                                        spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser + 1;//Neue anzahl Häuser speichern
+                                        flagHausFeld3 = 1;
+                                        geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus);
+                                    }
+                                    break;
+                                }
+                                
                             }
                             if (positiveFlanke & TASTE_R)//nächstes Feld
                             {
                                 farbgruppenCounter = (farbgruppenCounter + 1) % 3;
                                 feldNummer = spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[farbgruppenCounter];
+                                if (!feldNummer)//Sonderfall bei Farbgruppen mit nur 2 Feldern
+                                {
+                                    farbgruppenCounter = 0;
+                                    feldNummer = spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[farbgruppenCounter];
+                                    flagHausFeld3 = 1;
+                                }
                                 updateLCD = 0;
+                            }//Wenn auf allen felder gebaut wurde, flags zurücksetzten
+                            if (flagHausFeld1 && flagHausFeld2 && flagHausFeld3)
+                            {
+                                flagHausFeld1 = 0;
+                                flagHausFeld2 = 0;
+                                flagHausFeld3 = 0;
                             }
-                            
-                            
                         }
                         
                     }
