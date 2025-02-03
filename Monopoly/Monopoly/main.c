@@ -29,7 +29,7 @@
 *
 \*********************************************************************************/
 
-
+#pragma GCC optimize 0
 
 //Standardisierte Datentypen
 #include <stdint.h>
@@ -104,11 +104,11 @@
 //#define UMLAUT_U "\u00DC"
 //#define UMLAUT_U "š"
 
-#pragma GCC optimize 0
+
 /*--- Datentypen (typedef) --------------------------------------------------*/
 
 
-typedef enum {SPIELERAUSWAHL, WUERFELSTART, SPIEL, VERSTEIGERUNG} zustand_t;
+typedef enum {SPIELERAUSWAHL, WUERFELSTART, SPIEL, VERSTEIGERUNG, BAUEN} zustand_t;
 /*--- Globale Konstanten ----------------------------------------------------*/
 /*--- Globale Variablen -----------------------------------------------------*/
 
@@ -187,6 +187,10 @@ int main(void)
     uint8_t flagZahlungAbgeschlossen = 0;
     
     uint8_t farbgruppenErstesFeld[8] = {1,6,11,16,21,26,31,37}; //Jeweil das erste Feld einer Strassen Farbgruppe
+    uint8_t flagFarbgruppeKomplett = 0;
+    uint8_t volleFarbgruppen[8] = {0};
+    uint8_t farbgruppenCounter = 0;
+    uint8_t feldNummer = 0;
     
     uint16_t zahlBetrag = 0;
     
@@ -223,6 +227,10 @@ int main(void)
         tasteNeu = (PINL << 8) | PINK;
         positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
         
+        if (positiveFlanke & TASTE_U)//Wenn Taste runter gedrückt wird => Bauen
+        {
+            zustand = BAUEN;
+        }
         //verarbeitung verschiedener zustände
         switch (zustand)//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         {
@@ -532,21 +540,7 @@ int main(void)
             //kontostand aktualisieren
             updateKontostand(anzahlSpieler,spielerInfo);
             //Spieler hat fertig gewürfelt ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            if (positiveFlanke & TASTE_D)//Wenn Taste runter gedrückt wird => Bauen
-            {
-                for (uint8_t i = 0; i < 8; i = i + 1) //geht alle Strassen farbgruppen durch
-                {
-                    if (spielfeld[farbgruppenErstesFeld[i]].besitzer == spielerAmZug) //Wenn 1. Feld von Startgruppe Spieler gehört, dann Farbgruppe prüfen
-                    {
-                        for (uint8_t j = 0; j < 4; j = j + 1)
-                        {
-                            if (spielfeld[spielfeld[i].farbgruppenFelder[j]] == )
-                            {
-                            }
-                        }
-                    }
-                }
-            }
+            
             
             switch (aktuellesFeld) //verarbeitung aktuelles feld ~~~~~~~~~~~~~~~~~
             {
@@ -862,6 +856,97 @@ int main(void)
                     zustand = SPIEL;
                 }
             }
+            break;
+            case BAUEN:
+            
+            //zurück zum Spiel~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~     
+            /*if (positiveFlanke & TASTE_C) //zurück zum Spiel
+            {
+                clear();//lcd leeren
+                //spieler am zug anzeigen
+                writeText(0,0,"   Spieler      ");
+                sprintf(lcdBuffer,"%u",spielerAmZug);
+                writeText(0,11,lcdBuffer);
+                writeText(1,0," w"UE"rfeln A / B ");
+                writeText(2,0,"    weiter C    ");
+                zustand = SPIEL;
+            }
+            if (positiveFlanke & TASTE_L)//Nächste bebaubare Farbgruppe
+            {
+                
+            }*/
+            
+            
+            //Felder nach vollen Farbgruppen absuchen~~~~~~~~~~~~~~~~~~~~~~~~~
+            for (uint8_t i = 0; i < 8; i = i + 1)//Alle Farbgruppen werden als voll markiert
+            {
+                volleFarbgruppen[i] = 1;
+            }
+            for (uint8_t i = 0;  i < 8; i = i + 1)
+            {
+                flagFarbgruppeKomplett = 1;
+                if (spielfeld[farbgruppenErstesFeld[i]].besitzer == spielerAmZug) //überprüft ob erstes feld einer Farbgrup0pe dem Spieler gehört
+                {
+                    for (uint8_t j = 0; j < 3; j = j + 1)//Prüft ob Farbgruppen tatsächlich voll sind
+                    {
+                        if (!spielfeld[spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j]].besitzer == spielerAmZug)//prüft alle Felder der Farbgruppe
+                        {
+                            flagFarbgruppeKomplett = 0; //setzt flag auf 0 wenn ein Feld nicht dem Spieler gehört
+                            volleFarbgruppen[i] = 0; //Markiert Farbgruppe als unvollständig
+                        }
+                    }
+                    if (flagFarbgruppeKomplett)
+                    {
+                        updateLCD = 0;
+                        //nächstes Feld
+                        feldNummer = farbgruppenErstesFeld[i];
+                        while (!(positiveFlanke & TASTE_D))
+                        {
+                            //Flankenerkennung
+                            tasteAlt = tasteNeu;
+                            tasteNeu = 0;
+                            tasteNeu = (PINL << 8) | PINK;
+                            positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
+                            
+                            if (!updateLCD)
+                            {
+                                clear();//lcd leeren
+                                //spieler am zug anzeigen
+                                writeText(0,0,"   Haus Bauen   ");
+                                writeText(1,0,spielfeld[feldNummer].name);
+                                writeText(2,0,"S=Kaufen");
+                                /*writeText(1,0," w"UE"rfeln A / B ");
+                                writeText(2,0,"    weiter C    ");*/
+                                updateLCD = 1;
+                            }
+                            if (positiveFlanke & TASTE_S)//Haus Bauen
+                            {
+                                setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser + 1); //Anzahl Häuser um 1 erhöhen
+                                spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser + 1;//Neue anzahl Häuser speichern
+                            }
+                            if (positiveFlanke & TASTE_R)//nächstes Feld
+                            {
+                                farbgruppenCounter = (farbgruppenCounter + 1) % 3;
+                                feldNummer = spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[farbgruppenCounter];
+                                updateLCD = 0;
+                            }
+                            
+                            
+                        }
+                        
+                    }
+                    
+                }
+            }
+            //Felder nach vollen Farbgruppen absuchen~~~~~~~~~~~~~~~~~~~~~~~~~
+            clear();//lcd leeren
+            //spieler am zug anzeigen
+            writeText(0,0,"   Spieler      ");
+            sprintf(lcdBuffer,"%u",spielerAmZug);
+            writeText(0,11,lcdBuffer);
+            writeText(1,0," w"UE"rfeln A / B ");
+            writeText(2,0,"    weiter C    ");
+            zustand = SPIEL;
             break;
             default:
             break;
