@@ -185,15 +185,16 @@ int main(void)
     
     uint8_t spielerSetup = 0;
     
-    uint8_t flagFertigGewuerfelt, flagWuerfel1, flagWuerfel2, letzterWuerfel = 0;
+    uint8_t flagFertigGewuerfelt, flagWuerfel1, flagWuerfel2, letzterWuerfel, flagSchulden = 0;
     
     uint8_t flagKaufAbgechlossen, flagVersteigert, verkaufSpielerEingabe = 0;
     
     uint8_t updateLCD = 0;
+    uint8_t flagSpielLCD = 0;
     
     uint8_t feldBesitzer = 0;
     uint8_t bezahlStatus = 0;
-    uint8_t flagZahlungAbgeschlossen = 0;
+    uint8_t flagZahlungAbgeschlossen = 1;
     
     uint8_t farbgruppenErstesFeld[8] = {1,6,11,16,21,26,31,37}; //Jeweil das erste Feld einer Strassen Farbgruppe
     uint8_t flagFarbgruppeKomplett = 0;
@@ -432,7 +433,7 @@ int main(void)
             break;
             case SPIEL://~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             //nach einer Versteigerung info an lcd anzeigen
-            if (flagVersteigert || flagZahlungAbgeschlossen)
+            /*if (flagVersteigert || flagZahlungAbgeschlossen)
             {
                 clear();//lcd leeren
                 //spieler am zug anzeigen
@@ -443,9 +444,20 @@ int main(void)
                 writeText(2,0,"    weiter C    ");
                 flagVersteigert = 0;
                 flagZahlungAbgeschlossen = 0;
+            }*/
+            if (flagSpielLCD)
+            {
+                clear();//lcd leeren
+                //spieler am zug anzeigen
+                writeText(0,0,"   Spieler      ");
+                sprintf(lcdBuffer,"%u",spielerAmZug);
+                writeText(0,11,lcdBuffer);
+                writeText(1,0," w"UE"rfeln A / B ");
+                writeText(2,0,"    weiter C    ");
+                flagSpielLCD = 0;
             }
             //Spielzug abschliessen alles zurücksetzen
-            if(((positiveFlanke & TASTE_C) && flagFertigGewuerfelt))
+            if(((positiveFlanke & TASTE_C) && flagFertigGewuerfelt) && flagZahlungAbgeschlossen && flagKaufAbgechlossen)
             {
                 //würfel Siebensegmente ausschalten
                 wuerfelTransmit(SIEBENSEGMENT_OFF,SIEBENSEGMENT_OFF);
@@ -459,7 +471,6 @@ int main(void)
                 writeText(2,0,"    weiter C    ");
                 //flags zurücksetzten
                 flagFertigGewuerfelt = 0;
-                flagKaufAbgechlossen = 0;
                 PORTC &= ~0xC0; //Schaltet das Blaulicht aus
                 updateLCD = 0;
                 bezahlStatus = 0;
@@ -471,7 +482,7 @@ int main(void)
                 }
             }
             //ermöglicht es dem spieler bei Pasch zu kaufen
-            if ((positiveFlanke & TASTE_C) && !flagWeiter)
+            if ((positiveFlanke & TASTE_C) && !flagWeiter && flagZahlungAbgeschlossen)
             {
                 //Würfel Siebensegmente ausschalten
                 wuerfelTransmit(SIEBENSEGMENT_OFF,SIEBENSEGMENT_OFF);
@@ -615,6 +626,8 @@ int main(void)
                         zahlBetrag = spielfeld[aktuellePosition].mieten[spielfeld[aktuellePosition].anzahlHaeuser];
                         zahlBetragFarbgruppe = spielfeld[aktuellePosition].mieten[6];
                         flagMieteFarbgruppe = 1;
+                        
+                        //prüft ob die ganze farbgruppe dem selben SPieler gehhört
                         for (uint8_t i = 0; i < 3; i = i + 1)
                         {
                             if (!(spielfeld[spielfeld[aktuellePosition].farbgruppenFelder[i]].besitzer == feldBesitzer))
@@ -622,6 +635,7 @@ int main(void)
                                 flagMieteFarbgruppe = 0;
                             }
                         }
+                        //bestimmt ob farbgruppenmiete oder miete mit Häuser bezahlt werden muss
                         if (flagMieteFarbgruppe && (zahlBetragFarbgruppe > zahlBetrag))
                         {
                             zahlBetrag = zahlBetragFarbgruppe;
@@ -646,6 +660,7 @@ int main(void)
                         {
                             updateLCD = 0;
                             flagZahlungAbgeschlossen = 1;
+                            flagSpielLCD = 1;
                         }
                     }
                 }
@@ -676,6 +691,7 @@ int main(void)
                         {
                             updateLCD = 0;
                             flagZahlungAbgeschlossen = 1;
+                            flagSpielLCD = 1;
                         }
                     }
                 }
@@ -728,6 +744,7 @@ int main(void)
                         {
                             updateLCD = 0;
                             flagZahlungAbgeschlossen = 1;
+                            flagSpielLCD = 1;
                         }
                     }
                 }
@@ -798,6 +815,7 @@ int main(void)
                         {
                             updateLCD = 0;
                             flagZahlungAbgeschlossen = 1;
+                            flagSpielLCD = 1;
                         }
                     }
                 }
@@ -877,7 +895,8 @@ int main(void)
                     }
                     //flags setzen
                     updateLCD = 0;
-                    flagVersteigert = 1;
+                    //flagVersteigert = 1;
+                    flagSpielLCD = 1;
                     //zum spiel zurückkehren
                     zustand = SPIEL;
                 }
@@ -902,7 +921,8 @@ int main(void)
                     }
                     //flags setzen
                     updateLCD = 0;
-                    flagVersteigert = 1;
+                    //flagVersteigert = 1;
+                    flagSpielLCD = 1;
                     //zum spiel zurückkehren
                     zustand = SPIEL;
                 }
