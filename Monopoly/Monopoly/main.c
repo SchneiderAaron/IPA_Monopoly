@@ -79,9 +79,9 @@
 #define TASTE_B TASTE10 //Taste B
 #define TASTE_C TASTE11 //Taste C
 
-#define TASTE_U TASTE12 //Taste Hoch
+#define TASTE_O TASTE12 //Taste Hoch
 #define TASTE_S TASTE13 //Taste Select
-#define TASTE_D TASTE16 //Taste Runter
+#define TASTE_U TASTE16 //Taste Runter
 #define TASTE_L TASTE14 //Taste Links
 #define TASTE_R TASTE15 //Taste Rechts
 
@@ -97,10 +97,11 @@
 
 
 //LCD Pfeile
-#define PFEIL_R 126
-#define PFEIL_L 8
-#define PFEIL_O 0
-#define PFEIL_U 1
+#define PFEIL_R "\x7E"  // ASCII 126 (Pfeil nach rechts)
+#define PFEIL_L "\x08"  // ASCII 8 (Pfeil nach links)
+#define PFEIL_O "\x01"  // Custom Character 1 (Pfeil nach oben)
+#define PFEIL_U "\x02"  // Custom Character 2 (Pfeil nach unten)
+
 //#define UMLAUT_U "\u00DC"
 //#define UMLAUT_U "š"
 
@@ -134,6 +135,10 @@ uint8_t anzahlSpieler = 2;
 
 uint8_t globalUpdateLCD = 0;
 
+Feld spielfeld[40];
+
+uint8_t haeuserImSpiel = 0;
+uint8_t hotelsImSpiel = 0;
 
 void initSpieler(Spieler spielerInfo[])
 {
@@ -203,9 +208,9 @@ int main(void)
     uint8_t haeuser = 0;
     uint8_t minHaeuser = 5;
     uint8_t maxHaeuser = 0;
+    uint8_t flagBauErfolgreich = 0;
     
-    uint8_t haeuserImSpiel = 0;
-    uint8_t hotelsImSpiel = 0;
+    
     
     uint8_t kaufStatus = 0;
     uint16_t zahlBetrag = 0;
@@ -218,7 +223,7 @@ int main(void)
     uint16_t geldZwischenspeicher[5] = {0};
     uint16_t aktuellesGebot = 0;
     //Eigene Datentypen
-    Feld spielfeld[40];
+    
     FeldTyp aktuellesFeld = FREIPARKEN;
     
     uint8_t flagGefaengnis = 0;
@@ -226,6 +231,8 @@ int main(void)
     
     /*--- Prototypen modullokaler Funktionen ------------------------------------*/
     uint8_t feldKaufen(uint8_t feldNummer, Feld spielfeld[40], uint8_t spielerAmZug);
+    uint8_t bauen(uint8_t feldNummer, uint8_t spielerAmZug);
+    uint8_t abBauen(uint8_t feldNummer, uint8_t spielerAmZug);
     /*--- Funktionsdefinitionen -------------------------------------------------*/
     
     
@@ -239,6 +246,18 @@ int main(void)
     //random Seed setzen
     adm_ADC_init();
     srand(adm_ADC_read(0));
+    
+    
+    for (uint8_t i = 0; i < 40; i = i + 1)
+    {
+        if (spielfeld[i].besitzer)
+        {
+            setPropertyRgb(spielfeld[i].rgbNummer,spielfeld[i].besitzer);
+        }
+    }
+    
+    
+    
     while (1) 
     {
         //Flankenerkennung
@@ -247,7 +266,7 @@ int main(void)
         tasteNeu = (PINL << 8) | PINK;
         positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
         
-        if (positiveFlanke & TASTE_U)//Wenn Taste runter gedrückt wird => Bauen
+        if (positiveFlanke & TASTE_O)//Wenn Taste runter gedrückt wird => Bauen
         {
             zustand = BAUEN;
         }
@@ -259,10 +278,8 @@ int main(void)
             {
                 //LCD ausgabe
                 writeText(0,0,"Spielerauswahl");
-                writeText(1,1,"- 2 Spieler  +");
-                displayCharacterAt(1,0,PFEIL_L);
-                displayCharacterAt(1,15,PFEIL_R);
-                writeText(2,0,"weiter Taste S ");
+                writeText(1,0,PFEIL_L"- 2 Spieler  +"PFEIL_R);
+                writeText(2,0,"weiter Taste S");
                 //schaltet nicht benötigte siebensegmente aus
                 updateKontostand(anzahlSpieler,spielerInfo);
                 spielerSetup = 1; //setzt Flag um erneutes ausführen zu verhindern
@@ -920,7 +937,7 @@ int main(void)
                         updateLCD = 0;
                         //nächstes Feld
                         feldNummer = farbgruppenErstesFeld[i];
-                        while (!(positiveFlanke & TASTE_D))
+                        while (!(positiveFlanke & TASTE_U))
                         {
                             //Flankenerkennung
                             tasteAlt = tasteNeu;
@@ -966,15 +983,16 @@ int main(void)
                             {
                                 clear();//lcd leeren
                                 //spieler am zug anzeigen
-                                writeText(0,0," Haus Bauen = S ");
+                                
+                                writeText(0,0,PFEIL_L"Abbauen  Bauen"PFEIL_R);
                                 writeText(1,0,spielfeld[feldNummer].name);
-                                writeText(2,0,"  Verkaufen = < ");
+                                writeText(2,0,PFEIL_O"next    weiter"PFEIL_U);
                                 /*writeText(1,0," w"UE"rfeln A / B ");
                                 writeText(2,0,"    weiter C    ");*/
                                 gruppeAnzahlHaeuser = spielfeld[farbgruppenErstesFeld[i]].anzahlHaeuser; //holt die Anzahl Häuser
                                 updateLCD = 1;
                             }
-                            if ((positiveFlanke & TASTE_S))//Haus Bauen~~~~~~~~~~~~~~~~~~~~~~~~
+                            if ((positiveFlanke & TASTE_R))//Haus Bauen~~~~~~~~~~~~~~~~~~~~~~~~
                             {
                                 //Wenn auf allen felder gebaut wurde, flags zurücksetzten
                                 if (anzahlHauser[0] && anzahlHauser[1] && anzahlHauser[2])
@@ -988,51 +1006,31 @@ int main(void)
                                     case 0:
                                     if (!anzahlHauser[0])
                                     {
-                                        kaufStatus = geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus,10);
-                                        setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser + 1); //Anzahl Häuser um 1 erhöhen
-                                        spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser + 1;//Neue anzahl Häuser speichern
-                                        anzahlHauser[0] = 1;
-                                        if (spielfeld[feldNummer].anzahlHaeuser == 5)
+                                        flagBauErfolgreich = bauen(feldNummer, spielerAmZug);
+                                        if (flagBauErfolgreich)
                                         {
-                                            haeuserImSpiel -= 4;
+                                            anzahlHauser[0] = 1;
                                         }
-                                        else
-                                        {
-                                            haeuserImSpiel += 1;
-                                        }
+                                        
                                     }
                                 	break;
                                     case 1:
                                     if (!anzahlHauser[1])
                                     {
-                                        kaufStatus = geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus,10);
-                                        setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser + 1); //Anzahl Häuser um 1 erhöhen
-                                        spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser + 1;//Neue anzahl Häuser speichern
-                                        anzahlHauser[1] = 1;
-                                        if (spielfeld[feldNummer].anzahlHaeuser == 5)
+                                        flagBauErfolgreich = bauen(feldNummer, spielerAmZug);
+                                        if (flagBauErfolgreich)
                                         {
-                                            haeuserImSpiel -= 4;
-                                        }
-                                        else
-                                        {
-                                            haeuserImSpiel += 1;
+                                            anzahlHauser[1] = 1;
                                         }
                                     }
                                     break;
                                     case 2:
                                     if (!anzahlHauser[2])
                                     {
-                                        kaufStatus = geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus,10);
-                                        setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser + 1); //Anzahl Häuser um 1 erhöhen
-                                        spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser + 1;//Neue anzahl Häuser speichern
-                                        anzahlHauser[2] = 1;
-                                        if (spielfeld[feldNummer].anzahlHaeuser == 5)
+                                        flagBauErfolgreich = bauen(feldNummer, spielerAmZug);
+                                        if (flagBauErfolgreich)
                                         {
-                                            haeuserImSpiel -= 4;
-                                        }
-                                        else
-                                        {
-                                            haeuserImSpiel += 1;
+                                            anzahlHauser[2] = 1;
                                         }
                                     }
                                     break;
@@ -1041,14 +1039,6 @@ int main(void)
                             }
                             if ((positiveFlanke & TASTE_L))//Haus Verkaufen~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                             {
-                                if ((spielfeld[feldNummer].kostenHaus / 2) > 25)
-                                {
-                                    zahlSchritt = 10;
-                                }
-                                else
-                                {
-                                    zahlSchritt = 5;
-                                }
                                 //Wenn auf allen felder gebaut wurde, flags zurücksetzten
                                 if (!(anzahlHauser[0] || anzahlHauser[1] || anzahlHauser[2]))
                                 {
@@ -1061,58 +1051,37 @@ int main(void)
                                     case 0:
                                     if (anzahlHauser[0])
                                     {
-                                        if (spielfeld[feldNummer].anzahlHaeuser == 5)
+                                        flagBauErfolgreich = abBauen(feldNummer, spielerAmZug);
+                                        if (flagBauErfolgreich)
                                         {
-                                            haeuserImSpiel += 4;
-                                        }
-                                        else
-                                        {
-                                            haeuserImSpiel -= 1;
-                                        }
-                                        setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser - 1); //Anzahl Häuser um 1 erhöhen
-                                        spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser - 1;//Neue anzahl Häuser speichern
-                                        anzahlHauser[0] = 0;
-                                        kaufStatus = geldUeberweisen(0,spielerAmZug,spielfeld[feldNummer].kostenHaus / 2, zahlSchritt);
+                                            anzahlHauser[0] = 0;
+                                        } 
                                     }
                                     break;
                                     case 1:
                                     if (anzahlHauser[1])
                                     {
-                                        if (spielfeld[feldNummer].anzahlHaeuser == 5)
+                                        flagBauErfolgreich = abBauen(feldNummer, spielerAmZug);
+                                        if (flagBauErfolgreich)
                                         {
-                                            haeuserImSpiel += 4;
+                                            anzahlHauser[1] = 0;
                                         }
-                                        else
-                                        {
-                                            haeuserImSpiel -= 1;
-                                        }
-                                        setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser - 1); //Anzahl Häuser um 1 erhöhen
-                                        spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser - 1;//Neue anzahl Häuser speichern
-                                        anzahlHauser[1] = 0;
-                                        kaufStatus = geldUeberweisen(0,spielerAmZug,spielfeld[feldNummer].kostenHaus / 2, zahlSchritt);
                                     }
                                     break;
                                     case 2:
                                     if (anzahlHauser[2])
                                     {
-                                        if (spielfeld[feldNummer].anzahlHaeuser == 5)
+                                        flagBauErfolgreich = abBauen(feldNummer, spielerAmZug);
+                                        if (flagBauErfolgreich)
                                         {
-                                            haeuserImSpiel += 4;
+                                            anzahlHauser[2] = 0;
                                         }
-                                        else
-                                        {
-                                            haeuserImSpiel -= 1;
-                                        }
-                                        setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser - 1); //Anzahl Häuser um 1 erhöhen
-                                        spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser - 1;//Neue anzahl Häuser speichern
-                                        anzahlHauser[2] = 0;
-                                        kaufStatus = geldUeberweisen(0,spielerAmZug,spielfeld[feldNummer].kostenHaus / 2, zahlSchritt);
                                     }
                                     break;
                                 }
                                 
                             }
-                            if (positiveFlanke & TASTE_R)//nächstes Feld
+                            if (positiveFlanke & TASTE_O)//nächstes Feld
                             {
                                 farbgruppenCounter = (farbgruppenCounter + 1) % 3;
                                 feldNummer = spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[farbgruppenCounter];
@@ -1196,4 +1165,62 @@ uint8_t feldKaufen(uint8_t feldNummer, Feld spielfeld[40], uint8_t spielerAmZug)
             globalUpdateLCD = 0;
         }
     return spielerEingabe;
+}
+
+
+uint8_t bauen(uint8_t feldNummer, uint8_t spielerAmZug)
+{
+    uint8_t kaufStatus = 0;
+    //wenn ein Hotel gebaut wird
+    if ((spielfeld[feldNummer].anzahlHaeuser == 4) && hotelsImSpiel < MAX_ANZAHL_HOTELS_IM_SPIEL)
+    {
+        haeuserImSpiel -= 4;
+        hotelsImSpiel += 1;
+        
+        kaufStatus = geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus,10);
+        setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser + 1); //Anzahl Häuser um 1 erhöhen
+        spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser + 1;//Neue anzahl Häuser speichern
+        return 1;//Erfolgreich
+    }
+    //haus bauen
+    else if (haeuserImSpiel < MAX_ANZAHL_HAEUSER_IM_SPIEL)
+    {
+        haeuserImSpiel += 1;
+        
+        kaufStatus = geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus,10);
+        setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser + 1); //Anzahl Häuser um 1 erhöhen
+        spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser + 1;//Neue anzahl Häuser speichern
+        return 1;//Erfolgreich
+    }
+    else
+    {
+        return 0;//Fehlgeschlagen
+    }
+}
+
+uint8_t abBauen(uint8_t feldNummer, uint8_t spielerAmZug)
+{
+    uint8_t kaufStatus = 0;
+    if ((spielfeld[feldNummer].anzahlHaeuser == 5) && (spielfeld[feldNummer].anzahlHaeuser > 0))
+    {
+        haeuserImSpiel += 4;
+        hotelsImSpiel -= 1;
+        setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser - 1); //Anzahl Häuser um 1 erhöhen
+        spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser - 1;//Neue anzahl Häuser speichern
+        kaufStatus = geldUeberweisen(0,spielerAmZug,spielfeld[feldNummer].kostenHaus / 2, 5);
+        return 1;
+    }
+    else if (spielfeld[feldNummer].anzahlHaeuser > 0)
+    {
+        haeuserImSpiel -= 1;
+        setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser - 1); //Anzahl Häuser um 1 erhöhen
+        spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser - 1;//Neue anzahl Häuser speichern
+        kaufStatus = geldUeberweisen(0,spielerAmZug,spielfeld[feldNummer].kostenHaus / 2, 5);
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+    
 }

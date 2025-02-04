@@ -10,7 +10,7 @@
 * MMMM   MMMM   MMMM   SSSSSSSSSSSSSSSSSS   WWWWWWWWWWWWWWWWWW   www.msw.ch
 *
 *
-* Dateiname: LCD.c0
+* Dateiname: LCD.c
 *
 * Projekt  : IPA_Monopoly
 * Hardware : Monopoly-Board, ATmega2560v von Atmel
@@ -160,28 +160,26 @@ void displayCharacterAt(uint8_t zeile, uint8_t spalte, uint8_t charAddress)
 }
 void defineCustomCharacters(void) 
 {
-    void defineCustomCharacters() {
-        // Up Arrow
-        CmdDisplay(0x40); // Set CGRAM address to 16
-        DataDisplay(0b00100);
-        DataDisplay(0b01110);
-        DataDisplay(0b10101);
-        DataDisplay(0b00100);
-        DataDisplay(0b00100);
-        DataDisplay(0b00100);
-        DataDisplay(0b00000);
-        DataDisplay(0b00000);
-        // Down Arrow
-        CmdDisplay(0x48); // Set CGRAM address to 24
-        DataDisplay(0b00000);
-        DataDisplay(0b00100);
-        DataDisplay(0b00100);
-        DataDisplay(0b00100);
-        DataDisplay(0b10101);
-        DataDisplay(0b01110);
-        DataDisplay(0b00100);
-        DataDisplay(0b00000);
-    }
+    // Up Arrow
+    CmdDisplay(0x48); // Set CGRAM address to 16
+    DataDisplay(0b00100);
+    DataDisplay(0b01110);
+    DataDisplay(0b10101);
+    DataDisplay(0b00100);
+    DataDisplay(0b00100);
+    DataDisplay(0b00100);
+    DataDisplay(0b00000);
+    DataDisplay(0b00000);
+    // Down Arrow
+    CmdDisplay(0x50); // Set CGRAM address to 24
+    DataDisplay(0b00000);
+    DataDisplay(0b00100);
+    DataDisplay(0b00100);
+    DataDisplay(0b00100);
+    DataDisplay(0b10101);
+    DataDisplay(0b01110);
+    DataDisplay(0b00100);
+    DataDisplay(0b00000);
 }
 
 void lcdInitAll(void)
@@ -190,6 +188,6 @@ void lcdInitAll(void)
     
     clear();
     home();
-    //defineCustomCharacters();
+    defineCustomCharacters();
     displayOnOff(1,0,0);
 }
