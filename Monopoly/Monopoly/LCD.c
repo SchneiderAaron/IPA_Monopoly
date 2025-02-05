@@ -207,8 +207,8 @@ uint8_t lcdLauftext(const char *text, uint8_t schritt)
         zeile2[16] = '\0';
     }
     clear();
-    writeText(0,0,zeile1);
-    writeText(1,0,zeile2);
+    writeText(1,0,zeile1);
+    writeText(2,0,zeile2);
     if ((schritt * 16) > textLen-32)
     {
         return 1;

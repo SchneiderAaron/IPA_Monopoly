@@ -44,6 +44,10 @@
 #define UE "š"
 #define AE "„"
 #define OE "”"
+
+#define CHANCE1 7
+#define CHANCE2 22
+#define CHANCE3 36
 /*--- Datentypen (typedef) ---------------------------------------------------*/
 typedef struct {
     char name[50];      // Name des Spielers

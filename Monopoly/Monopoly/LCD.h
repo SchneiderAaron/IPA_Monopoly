@@ -35,6 +35,11 @@
 ™ = Ö
 š = ü
 */
+//LCD Pfeile
+#define PFEIL_R "\x7E"  // ASCII 126 (Pfeil nach rechts)
+#define PFEIL_L "\x08"  // ASCII 8 (Pfeil nach links)
+#define PFEIL_O "\x01"  // Custom Character 1 (Pfeil nach oben)
+#define PFEIL_U "\x02"  // Custom Character 2 (Pfeil nach unten)
 #include <string.h>
 
 #ifndef LCD_H_

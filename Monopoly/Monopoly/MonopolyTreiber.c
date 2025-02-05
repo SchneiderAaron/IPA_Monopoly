@@ -867,7 +867,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[5].mieten[1] = 50;    //wenn man 2 Bahnen besitzt
     spielfeld[5].mieten[2] = 100;   //wenn man 3 Bahnen besitzt
     spielfeld[5].mieten[3] = 200;   //wenn man 4 Bahnen besitzt
-    spielfeld[5].besitzer = 0;
+    spielfeld[5].besitzer = 1;
     spielfeld[5].farbGruppe = FARBLOS;
     spielfeld[5].farbgruppenFelder[0] = 5;
     spielfeld[5].farbgruppenFelder[1] = 15;
@@ -983,7 +983,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     strcpy(spielfeld[12].name, "Informatikdienst");
     spielfeld[12].typ = WERK;
     spielfeld[12].preis = 150;
-    spielfeld[12].besitzer = 0;
+    spielfeld[12].besitzer = 2;
     spielfeld[12].farbGruppe = FARBLOS;
     spielfeld[12].rgbNummer = 7;
     spielfeld[12].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -1040,7 +1040,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[15].mieten[1] = 50;   //wenn man 2 Bahnen besitzt
     spielfeld[15].mieten[2] = 100;  //wenn man 3 Bahnen besitzt
     spielfeld[15].mieten[3] = 200;  //wenn man 4 Bahnen besitzt
-    spielfeld[15].besitzer = 0;
+    spielfeld[15].besitzer = 1;
     spielfeld[15].farbGruppe = FARBLOS;
     spielfeld[15].farbgruppenFelder[0] = 5;
     spielfeld[15].farbgruppenFelder[1] = 15;
@@ -1201,7 +1201,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[25].mieten[1] = 50;   //wenn man 2 Bahnen besitzt
     spielfeld[25].mieten[2] = 100;  //wenn man 3 Bahnen besitzt
     spielfeld[25].mieten[3] = 200;  //wenn man 4 Bahnen besitzt
-    spielfeld[25].besitzer = 0;
+    spielfeld[25].besitzer = 1;
     spielfeld[25].farbGruppe = FARBLOS;
     spielfeld[25].farbgruppenFelder[0] = 5;
     spielfeld[25].farbgruppenFelder[1] = 15;
@@ -1258,7 +1258,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     strcpy(spielfeld[28].name, "Putzdienst");
     spielfeld[28].typ = WERK;
     spielfeld[28].preis = 150;
-    spielfeld[28].besitzer = 0;
+    spielfeld[28].besitzer = 2;
     spielfeld[28].farbGruppe = FARBLOS;
     spielfeld[28].rgbNummer = 20;
     spielfeld[28].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -1439,6 +1439,7 @@ void initialisiereKarten(Karte chanceKanzlei[])
     
     chanceKanzlei[2].typ = BEWEGEN;
     chanceKanzlei[2].zielFeldTyp = WERK;
+    chanceKanzlei[2].bewegung = 0;
     
     chanceKanzlei[3].typ = GELD_AN_BANK;
     chanceKanzlei[3].geld = 50;
@@ -1451,6 +1452,7 @@ void initialisiereKarten(Karte chanceKanzlei[])
     
     chanceKanzlei[6].typ = BEWEGEN;
     chanceKanzlei[6].zielFeldTyp = HALTESTELLE;
+    chanceKanzlei[6].bewegung = 0;
     
     chanceKanzlei[7].typ = TELEPORTIEREN;
     chanceKanzlei[7].zielFeld = 31;
@@ -1587,10 +1589,11 @@ void read_string(char *buf, size_t i)
 }
 
 #define ANZAHL_KARTEN 17
+uint8_t zufallsNummer = 0;
 uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uint8_t flagWeiter, Karte chanceKanzlei[])
 {
     static char text[200] = {0};
-    static uint8_t zufallsNummer = 0;
+    //static uint8_t zufallsNummer = 0;
     static uint8_t rueckgabewert = 0;
     
     //initialisiert variabeln
@@ -1619,6 +1622,7 @@ uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uin
             spielerInfo[spielerAmZug].position = 10; //setzt die Position des spielers auf gefängnis
             spielerInfo[spielerAmZug].gefaengnis = 1; //vermerkt den Spieler als Häftling
             spielerInfo[spielerAmZug].rundenImGefaengnis = 0; //setzt die anzahl im gefängnis verbrachten runden auf 0
+            setPlayerPosition(10, spielerAmZug);
             break;
             case FREIKARTE:
             spielerInfo[spielerAmZug].freikarte = 1; //gibt dem Spieler eine Freikarte
@@ -1639,13 +1643,20 @@ uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uin
             case GELD_AN_MITSPIELER:
             for (uint8_t i = 1; i <= anzahlSpieler; i = i + 1)
             {
-                geldUeberweisen(spielerAmZug,i,chanceKanzlei[zufallsNummer].geld,1);
+                if (!(i == spielerAmZug))
+                {
+                    geldUeberweisen(spielerAmZug,i,chanceKanzlei[zufallsNummer].geld,1);
+                }
+                
             }
             break;
             case GELD_VON_MITSPIELER:
             for (uint8_t i = 1; i <= anzahlSpieler; i = i + 1)
             {
-                geldUeberweisen(i,spielerAmZug,chanceKanzlei[zufallsNummer].geld,1);
+                if (i == spielerAmZug)
+                {
+                    geldUeberweisen(i,spielerAmZug,chanceKanzlei[zufallsNummer].geld,1);
+                }
             }
             break;
             case BEWEGEN:
@@ -1658,10 +1669,10 @@ uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uin
             else
             {
                 ausgangsPosition = spielerInfo[spielerAmZug].position;
-                for (uint8_t i = ausgangsPosition; !(chanceKanzlei[zufallsNummer].typ == spielfeld[i].typ); i = i + 1)
+                for (uint8_t i = ausgangsPosition; !(chanceKanzlei[zufallsNummer].zielFeldTyp == spielfeld[i].typ); i = i + 1)
                 {
                     anzahlFelder = i;
-                    neuePosition = ((ausgangsPosition + i) % 40);
+                    neuePosition = (i % 40) + 1;
                     setPlayerPosition(neuePosition, spielerAmZug);
                     if (neuePosition == 0)
                     {
@@ -1684,12 +1695,12 @@ uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uin
                 //berechnet den betrag, den man auf start erhält
                 startGeld = 200 + chanceKanzlei[zufallsNummer].geld;
                 //animiert die fortbewegung des spielers bis feld Los
-                for (uint8_t i = spielerInfo[spielerAmZug].position; i < 40; i = i + 1)
+                for (uint8_t i = spielerInfo[spielerAmZug].position; i <= 40; i = i + 1)
                 {
                     setPlayerPosition(i % 40,spielerAmZug);
                     _delay_ms(100); //delay dient zu animationszwecken
                 }
-                geldUeberweisen(0,spielerAmZug,200,10);
+                geldUeberweisen(0,spielerAmZug,startGeld,10);
             }
             for (uint8_t i = spielerInfo[spielerAmZug].position; i < chanceKanzlei[zufallsNummer].zielFeld; i = i + 1)
             {
@@ -1702,12 +1713,19 @@ uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uin
             setPlayerPosition(spielerInfo[spielerAmZug].position,spielerAmZug);
             break;
         }
+        
+        
         return 1;
     }
     
     if (!rueckgabewert)
     {
         rueckgabewert = lcdLauftext(text,schritt); //schreibt den Text auf das LCD
+        writeText(0,0,"X OK     Weiter"PFEIL_R);
+    }
+    else
+    {
+        writeText(0,0,"X OK            ");
     }
     return 0;
     

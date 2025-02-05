@@ -97,11 +97,7 @@
 #define TASTE_Y4 TASTE7 //Taste Y Spieler 4
 
 
-//LCD Pfeile
-#define PFEIL_R "\x7E"  // ASCII 126 (Pfeil nach rechts)
-#define PFEIL_L "\x08"  // ASCII 8 (Pfeil nach links)
-#define PFEIL_O "\x01"  // Custom Character 1 (Pfeil nach oben)
-#define PFEIL_U "\x02"  // Custom Character 2 (Pfeil nach unten)
+
 
 //#define UMLAUT_U "\u00DC"
 //#define UMLAUT_U "š"
@@ -111,10 +107,13 @@
 
 #define MAX_ANZAHL_HAEUSER_IM_SPIEL 32
 #define MAX_ANZAHL_HOTELS_IM_SPIEL 12
+
+
 /*--- Datentypen (typedef) --------------------------------------------------*/
 
 
 typedef enum {SPIELERAUSWAHL, WUERFELSTART, SPIEL, VERSTEIGERUNG, BAUEN} zustand_t;
+typedef enum {FREIKARTE, PASCH, WARTEN, BEZAHLEN} workshopZustand_t;
 /*--- Globale Konstanten ----------------------------------------------------*/
 
 /*--- Globale Variablen -----------------------------------------------------*/
@@ -132,6 +131,7 @@ uint8_t spielerImGefaengnis[5] = {0};
 uint16_t tasteAlt, tasteNeu, positiveFlanke = 0; //Variabeln Flankenerkennung
 
 zustand_t zustand = SPIELERAUSWAHL;
+workshopZustand_t workshopZustand = PASCH;
 
 uint8_t anzahlSpieler = 2;
 
@@ -243,11 +243,14 @@ int main(void)
     uint8_t minHaeuser = 5;
     uint8_t maxHaeuser = 0;
     uint8_t flagBauErfolgreich = 0;
+    uint8_t haltestelleFarbgruppe = 0;
+    uint8_t multiplikator = 0;
     
     uint8_t ereignisSchritt = 0;
     uint8_t flagEreignisWeiter = 0;
     uint8_t flagEreignisAbgeschlossen = 1;
     uint8_t ereignisfeldRueckgabe = 0;
+    uint8_t flagKanzlei = 0;
     
     uint8_t kaufStatus = 0;
     uint16_t zahlBetrag = 0;
@@ -519,10 +522,11 @@ int main(void)
                 bezahlStatus = 0;
                 ereignisfeldRueckgabe = 0;
                 aktuellesFeld = spielfeld[spielerInfo[spielerAmZug].position].typ;
-                if ((aktuellesFeld == GEFAENGNIS) && spielerImGefaengnis[spielerAmZug])
+                if ((aktuellesFeld == GEFAENGNIS) && spielerInfo[spielerAmZug].gefaengnis && (spielerInfo[spielerAmZug].rundenImGefaengnis < 3))
                 {
                     flagGefaengnis = 1;
                     flagFertigGewuerfelt = 1; //wenn dieses Flag gesetzt ist kann nicht gewürfelt werden
+                    spielerInfo[spielerAmZug].rundenImGefaengnis += 1;
                 }
             }
             //ermöglicht es dem spieler bei Pasch zu kaufen
@@ -637,13 +641,22 @@ int main(void)
             switch (aktuellesFeld) //verarbeitung aktuelles feld ~~~~~~~~~~~~~~~~~
             {
                 case EREIGNISFELD://~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                
+                //prüft ob das aktuelle feld Chance ode Kanzlei ist
+                if ((aktuellePosition == CHANCE1) || (aktuellePosition == CHANCE2) || (aktuellePosition == CHANCE3))
+                {
+                    flagKanzlei = 0;//das feld ist chance
+                }
+                else
+                {
+                    flagKanzlei = 1;//das feld ist kanzlei
+                }
+                //wenn das ereignis noch nicht durchgeführt wurde
                 if (!ereignisfeldRueckgabe)
                 {
                     flagEreignisAbgeschlossen = 0;
                     if ((positiveFlanke & TASTE_R) || !ereignisSchritt)//Taste zum scrollen
                     {
-                        ereignisfeldRueckgabe = ereignisFeld(1,spielerAmZug,ereignisSchritt,flagEreignisWeiter,chanceKanzlei);
+                        ereignisfeldRueckgabe = ereignisFeld(flagKanzlei,spielerAmZug,ereignisSchritt,flagEreignisWeiter,chanceKanzlei);
                         if (!ereignisfeldRueckgabe)
                         {
                             ereignisSchritt += 2;
@@ -652,7 +665,7 @@ int main(void)
                     if (positiveFlanke & xTasten[spielerAmZug - 1])
                     {
                         flagEreignisWeiter = 1;
-                        ereignisfeldRueckgabe = ereignisFeld(1,spielerAmZug,ereignisSchritt,flagEreignisWeiter,chanceKanzlei);
+                        ereignisfeldRueckgabe = ereignisFeld(flagKanzlei,spielerAmZug,ereignisSchritt,flagEreignisWeiter,chanceKanzlei);
                         //speichert den aktuellen Feld typ
                         aktuellesFeld = spielfeld[spielerInfo[spielerAmZug].position].typ;
                         //speichert die aktuelle position
@@ -770,6 +783,7 @@ int main(void)
                 }
                 break;
                 case HALTESTELLE://~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                //wenn die Haltestelle noch niemandem gehört
                 if (spielfeld[aktuellePosition].besitzer == 0)
                 {
                     flagKaufAbgechlossen = 0;
@@ -798,7 +812,19 @@ int main(void)
                         //besitzer des feldes aus array auslesen
                         feldBesitzer = spielfeld[aktuellePosition].besitzer;
                         //miete aus array auslesen
-                        zahlBetrag = spielfeld[aktuellePosition].mieten[0];
+                        
+                        haltestelleFarbgruppe = 0;
+                        for (uint8_t i = 5; i <= 35; i = i + 10)
+                        {
+                            if (spielfeld[i].besitzer == spielfeld[aktuellePosition].besitzer)
+                            {
+                                //wenn dem selben spieler noch eine Haltestelle gehört, wird der zähler erhöt
+                                haltestelleFarbgruppe += 1; 
+                            }
+                        }
+                        //vom zähler muss 1 abgezogen werden da eine haltestelle dem spieler gehören muss
+                        haltestelleFarbgruppe -= 1;
+                        zahlBetrag = spielfeld[aktuellePosition].mieten[haltestelleFarbgruppe];
                         writeText(0,0,"   Spieler      ");
                         sprintf(lcdBuffer,"%u",spielerAmZug);
                         writeText(0,11,lcdBuffer);
@@ -814,7 +840,7 @@ int main(void)
                     //spieler am zug muss Taste X drücken um zu bezahlen
                     if (positiveFlanke & xTasten[spielerAmZug - 1])
                     {
-                        bezahlStatus = geldUeberweisen(spielerAmZug,feldBesitzer,zahlBetrag,1);
+                        bezahlStatus = geldUeberweisen(spielerAmZug,feldBesitzer,zahlBetrag,5);
                         if (bezahlStatus == 1)
                         {
                             updateLCD = 0;
@@ -825,7 +851,7 @@ int main(void)
                 }
                 break;
                 case GEFAENGNIS://~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                if (spielerImGefaengnis[spielerAmZug] && flagGefaengnis)
+                if (spielerInfo[spielerAmZug].gefaengnis && flagGefaengnis)
                 {
                     writeText(0,0,"   Spieler      ");
                     sprintf(lcdBuffer,"%u",spielerAmZug);
@@ -833,12 +859,37 @@ int main(void)
                     writeText(1,0,"   Du bist im   ");
                     writeText(2,0,"    Workshop    ");
                     flagGefaengnis = 0;
+                    _delay_ms(5000); //5s Auf LCD anzeigen
+                }
+                if (spielerInfo[spielerAmZug].freikarte)
+                {
+                    workshopZustand = FREIKARTE;
+                }
+                switch (workshopZustand)
+                {
+                    case FREIKARTE:
+                    writeText(1,0,"Freikarte X=JA  ");
+                    writeText(2,0,"Verwenden Y=NEIN");
+                    break;
+                    case PASCH:
+                    writeText(1,0,"  Pasch   X=JA  ");
+                    writeText(2,0,"W"UE"rfeln   Y=NEIN");
+                    break;
+                    case BEZAHLEN:
+                    writeText(1,0,"   50     X=JA  ");
+                    writeText(2,0,"Bezahlen  Y=NEIN");
+                    break;
+                    case WARTEN:
+                    writeText(1,0,"3 Runden  X=JA  ");
+                    writeText(2,0,"  warten  Y=NEIN");
+                    break;
                 }
                 break;
                 case GEH_INS_GEFAENGNIS://~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 
                 abInsGefaengnis(spielerAmZug);
                 aktuellesFeld = GEFAENGNIS;
+                spielerInfo[spielerAmZug].gefaengnis = 1;
                 break;
                 case FREIPARKEN://~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 break;
@@ -868,10 +919,53 @@ int main(void)
                     flagZahlungAbgeschlossen = 0;
                     if (!updateLCD)
                     {
+                        if (spielfeld[12].besitzer == spielfeld[28].besitzer)
+                        {
+                            multiplikator = 10;
+                        }
+                        else
+                        {
+                            multiplikator = 4;
+                        }
+                        writeText(0,0,"   Spieler      ");
+                        sprintf(lcdBuffer,"%u",spielerAmZug);
+                        writeText(0,11,lcdBuffer);
+                        writeText(1,0,"  W"UE"rfeln A / B  ");
+                        
+                        writeText(2,0,"W"UE"rfelsumme x   ");
+                        sprintf(lcdBuffer,"%u",multiplikator);
+                        writeText(2,14,lcdBuffer);
+
+                        //wartet bis mit beiden Würfel gewürfelt wurde
+                        while (!(flagWuerfel1 && flagWuerfel2))
+                        {
+                            //flankenerkennung
+                            tasteAlt = tasteNeu;
+                            tasteNeu = 0;
+                            tasteNeu = (PINL << 8) | PINK;
+                            positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
+                            //würfelt würfel 1 nur wenn taste9 betätigt wurde
+                            //und würfel 1 noch nicht gewürfelt wurde
+                            if ((positiveFlanke & TASTE_A) && !flagWuerfel1)
+                            {
+                                //mit 1. würfel würfeln
+                                wuerfelAB(1,flagWuerfel1,flagWuerfel2);
+                                flagWuerfel1 = 1;
+                            }
+                            //würfelt würfel 2 nur wenn taste9 betätigt wurde
+                            //und würfel 2 noch nicht gewürfelt wurde
+                            else if ((positiveFlanke & TASTE_B) && !flagWuerfel2)
+                            {
+                                //mit 2. würfel würfeln
+                                wuerfelAB(2,flagWuerfel1,flagWuerfel2);
+                                flagWuerfel2 = 1;
+                                
+                            }
+                        }
                         //besitzer des feldes aus array auslesen
                         feldBesitzer = spielfeld[aktuellePosition].besitzer;
                         //miete aus array auslesen
-                        zahlBetrag = spielfeld[aktuellePosition].preis;
+                        zahlBetrag = (wuerfelArray[0] + wuerfelArray[1]) * multiplikator;
                         writeText(0,0,"   Spieler      ");
                         sprintf(lcdBuffer,"%u",spielerAmZug);
                         writeText(0,11,lcdBuffer);
