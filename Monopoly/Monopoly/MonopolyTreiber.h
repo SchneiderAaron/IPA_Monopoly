@@ -37,15 +37,23 @@
 #define F_CPU 16000000UL
 #define __DELAY_BACKWARD_COMPATIBLE__
 #include <util/delay.h>
+
+#include <avr/pgmspace.h>  // Benötigt für PROGMEM und pgm_read Funktionen
 /*--- #includes der Form "..." -----------------------------------------------*/
 /*--- #define-Konstanten und Makros ------------------------------------------*/
 #define UE "š"
 #define AE "„"
+#define OE "”"
 /*--- Datentypen (typedef) ---------------------------------------------------*/
 typedef struct {
-    char name[50];       // Name des Spielers
-    uint16_t geld;         //Kontostand des Spielers
-    uint8_t position;           //Position des spielers
+    char name[50];      // Name des Spielers
+    uint16_t geld;      //Kontostand des Spielers
+    uint8_t position;   //Position des spielers
+    uint8_t gefaengnis;
+    uint8_t rundenImGefaengnis;
+    uint8_t freikarte;
+    uint8_t haeuser;
+    uint8_t hotels;
 } Spieler;
 
 typedef enum {
@@ -90,6 +98,29 @@ typedef struct {
     uint8_t hypothek;
     uint8_t hypothekAufloesen;
 } Feld;
+typedef enum
+{
+    WORKSHOP,//gehe direkt in den workshop
+    FREIKARTE,//workshop freikarte
+    RENOVIEREN,//für jedes haus un jedes hotel bezahlen
+    GELD_AN_BANK,//geld erhalten/bezahlen -> Bank
+    GELD_VON_BANK,//geld erhalten/bezahlen -> Bank
+    GELD_AN_MITSPIELER,//geld erhalten/bezahlen -> mitspieler
+    GELD_VON_MITSPIELER,//geld erhalten/bezahlen -> mitspieler
+    BEWEGEN,//anzahl velder vor oder zurück
+    TELEPORTIEREN//auf zielfeld vorrücken
+} KartenTyp;
+
+typedef struct {
+    KartenTyp typ;      // Typ der Karte
+    int8_t bewegung;    // Anzahl der Felder (positiv = vorwärts, negativ = rückwärts)
+    int16_t geld;       // Geldbetrag (+ für Gewinn, - für Strafe)
+    int16_t geld2;      //2. geldbetrag
+    uint8_t zielFeld;   // Falls die Karte den Spieler auf ein bestimmtes Feld schickt
+    FeldTyp zielFeldTyp;
+} Karte;
+
+
 /*--- Globale Konstanten (extern) --------------------------------------------*/
 /*--- Globale Variablen (extern) ---------------------------------------------*/
 extern uint8_t houses[14][8];           //Globales Array zur Ausgabe der Immobilien
@@ -101,6 +132,8 @@ extern uint8_t wuerfelArray[2];
 extern Spieler spielerInfo[5];
 extern uint8_t anzahlSpieler;
 extern uint8_t spielerImGefaengnis[5];
+
+extern Feld spielfeld[40];
 /*--- Prototypen globaler Funktionen -----------------------------------------*/
 
 void resetMonopoly(void);
@@ -132,7 +165,9 @@ void PortInitialisierung(void);
 void startGeldAnimation(uint8_t anzahlSpieler);
 
 void initialisiereSpielfeld(Feld spielfeld[]);
-
+void initialisiereKarten(Karte chanceKanzlei[]);
+void read_string(char *buf, size_t i);
+uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uint8_t flagWeiter, Karte chanceKanzlei[]);
 uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag, uint8_t schritt);
 
 #endif /* MONOPOLYTREIBER_H_ */

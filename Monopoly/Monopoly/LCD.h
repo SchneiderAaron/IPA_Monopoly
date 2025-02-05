@@ -35,7 +35,7 @@
 ™ = Ö
 š = ü
 */
-
+#include <string.h>
 
 #ifndef LCD_H_
 #define LCD_H_
@@ -51,7 +51,7 @@ void writeText(uint8_t Zeile, uint8_t Spalte, const char *Text);
 void displayCharacterAt(uint8_t zeile, uint8_t spalte, uint8_t charAddress);
 void defineCustomCharacters(void);
 void lcdInitAll(void);
-
+uint8_t lcdLauftext(const char *text, uint8_t schritt);
 
 
 #endif /* LCD_H_ */

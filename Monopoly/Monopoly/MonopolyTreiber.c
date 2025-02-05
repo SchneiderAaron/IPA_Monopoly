@@ -1431,7 +1431,287 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[39].feldBelastet = 0;  //wenn das Feld belastet ist = 1
 }
 
+void initialisiereKarten(Karte chanceKanzlei[])
+{
+    chanceKanzlei[0].typ = WORKSHOP;
+    
+    chanceKanzlei[1].typ = FREIKARTE;
+    
+    chanceKanzlei[2].typ = BEWEGEN;
+    chanceKanzlei[2].zielFeldTyp = WERK;
+    
+    chanceKanzlei[3].typ = GELD_AN_BANK;
+    chanceKanzlei[3].geld = 50;
+    
+    chanceKanzlei[4].typ = TELEPORTIEREN;
+    chanceKanzlei[4].zielFeld = 39;
+    
+    chanceKanzlei[5].typ = BEWEGEN;
+    chanceKanzlei[5].zielFeldTyp = HALTESTELLE;
+    
+    chanceKanzlei[6].typ = BEWEGEN;
+    chanceKanzlei[6].zielFeldTyp = HALTESTELLE;
+    
+    chanceKanzlei[7].typ = TELEPORTIEREN;
+    chanceKanzlei[7].zielFeld = 31;
+    
+    chanceKanzlei[8].typ = TELEPORTIEREN;
+    chanceKanzlei[8].zielFeld = 24;
+    
+    chanceKanzlei[9].typ = TELEPORTIEREN;
+    chanceKanzlei[9].zielFeld = 0;
+    chanceKanzlei[9].geld = 200;
+    
+    chanceKanzlei[10].typ = TELEPORTIEREN;
+    chanceKanzlei[10].zielFeld = 25;
+    
+    chanceKanzlei[11].typ = GELD_VON_BANK;
+    chanceKanzlei[11].geld = 70;
+    
+    chanceKanzlei[12].typ = GELD_VON_BANK;
+    chanceKanzlei[12].geld = 140;
+    
+    chanceKanzlei[13].typ = BEWEGEN;
+    chanceKanzlei[13].bewegung = -3;
+    
+    chanceKanzlei[14].typ = RENOVIEREN;
+    chanceKanzlei[14].geld = 25;
+    chanceKanzlei[14].geld2 = 100;
+    
+    chanceKanzlei[15].typ = GELD_AN_MITSPIELER;
+    chanceKanzlei[15].geld = 50;
+    
+    chanceKanzlei[16].typ = GELD_AN_BANK;
+    chanceKanzlei[16].geld = 5;
+    
+    //Kanzlei Karten
+    chanceKanzlei[17].typ = WORKSHOP;
+    
+    chanceKanzlei[18].typ = FREIKARTE;
+    
+    chanceKanzlei[19].typ = RENOVIEREN;
+    chanceKanzlei[19].geld = 40;
+    chanceKanzlei[19].geld2 = 115;
+    
+    chanceKanzlei[20].typ = GELD_AN_BANK;
+    chanceKanzlei[20].geld = 100;
+    
+    chanceKanzlei[21].typ = GELD_AN_BANK;
+    chanceKanzlei[21].geld = 50;
+    
+    chanceKanzlei[22].typ = GELD_AN_BANK;
+    chanceKanzlei[22].geld = 50;
+    
+    chanceKanzlei[23].typ = GELD_VON_MITSPIELER;
+    chanceKanzlei[23].geld = 10;
+    
+    chanceKanzlei[24].typ = GELD_VON_BANK;
+    chanceKanzlei[24].geld = 100;
+    
+    chanceKanzlei[25].typ = GELD_VON_BANK;
+    chanceKanzlei[25].geld = 10;
+    
+    chanceKanzlei[26].typ = GELD_VON_BANK;
+    chanceKanzlei[26].geld = 50;
+    
+    chanceKanzlei[27].typ = GELD_VON_BANK;
+    chanceKanzlei[27].geld = 100;
+    
+    chanceKanzlei[28].typ = GELD_VON_BANK;
+    chanceKanzlei[28].geld = 25;
+    
+    chanceKanzlei[29].typ = GELD_VON_BANK;
+    chanceKanzlei[29].geld = 20;
+    
+    chanceKanzlei[30].typ = GELD_VON_BANK;
+    chanceKanzlei[30].geld = 100;
+    
+    chanceKanzlei[31].typ = GELD_VON_BANK;
+    chanceKanzlei[31].geld = 100;
+    
+    chanceKanzlei[32].typ = TELEPORTIEREN;
+    chanceKanzlei[32].zielFeld = 0;
+    chanceKanzlei[32].geld = 200;
+    
+    chanceKanzlei[33].typ = TELEPORTIEREN;
+    chanceKanzlei[33].zielFeld = 32;
+    
+}
 
+const char kartenArray[][200] PROGMEM =
+{
+    //17x chance Karten
+    "Oli mag dich    nicht.          Gehe ins        Gef"AE"ngnis",
+    "Freikarte",
+    "R"UE"cke vor bis   zum N"AE"chsten    Werk",
+    "Du hast zu vieleAbsenzen        Zahle 50",
+    "R"UE"cke vor bis   zur Produktion  Polymechaniker",
+    "Ziehe vor bis   zur n"AE"chsten    Haltestelle",
+    "Ziehe vor bis   zur n"AE"chsten    Haltestelle",
+    "Ziehe vor bis   Grundausbildung Elektroniker",
+    "Ziehe vor bis   Mechatronik     Labor",
+    "Rücke vor auf   Start",
+    "Heute InformiertIhr euch "UE"ber   Studieng"AE"nge    R"UE"cke vor bis   Technikum",
+    "Es ist der 25.  Du erh"AE"ltst     deinen Lohn. von70",
+    "Es ist der 25.  Du erh"AE"ltst     deinen Lohn. von140",
+    "Gehe 3 Felder   zur"UE"ck",
+    "Du renovierst   deine  H"AE"user   Zahle f"UE"r jedes Haus 25 und f"UE"r jedes Hotel 100",
+    "Du wurdest zum  KlassenvertreterGew"AE"hlt. Zahle  jedem Spieler 50",
+    "Du hast eine    Wette gegen     Peter verloren  du schuldest ihmeinen Kaffee    zahle 5",
+    
+    //17x Kanzlei Karten
+    "Du hast bei     einem Kunden    eine schlechte  Bewertung       hinterlassen    gehe in den     Workshop",
+    "Freikarte",
+    "Du renovierst   deine  H"AE"user   Zahle f"UE"r jedes Haus 40 und f"UE"r jedes Hotel 115",
+    "In der          Versetzung ist  dir ein Fr"AE"ser  zerbrochen.     Zahle 100",
+    "Du g"OE"nnst dir   etwas beim      Snackautomat    zahle 50",
+    "Ihr macht eine 	Exkursion       zahle 50",
+    "Du hast die     Abschlussreise  organisiert,    jeder Spieler   zahlt dir 10",
+    "Elektroniker    des Monats      Du erh"AE"ltst 100",
+    "Du hilfst deinemMitschüler beim lernen.         Du erh"AE"ltst 10",
+    "Du erh"AE"lst 50",
+    "Du erh"AE"lst 100",
+    "Du erh"AE"lst 25",
+    "Du erh"AE"lst 20",
+    "Du erh"AE"lst 100",
+    "Du erh"AE"lst 100", 
+    "Du bist         Weltmeister.    Rücke vor bis   Start ziehe den doppelten       Betrag ein",
+    "Du hast gegen   die Handyregel  verstossen.     R"UE"cke vor bis   Produktion      Elektroniker" 
+};
+
+
+void read_string(char *buf, size_t i) 
+{
+    // Kopiere direkt aus dem Flash ins RAM
+    strcpy_P(buf, kartenArray[i]);
+}
+
+#define ANZAHL_KARTEN 17
+uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uint8_t flagWeiter, Karte chanceKanzlei[])
+{
+    static char text[200] = {0};
+    static uint8_t zufallsNummer = 0;
+    static uint8_t rueckgabewert = 0;
+    
+    //initialisiert variabeln
+    uint16_t hausBetrag = 0;
+    uint16_t hotelBetrag = 0;
+    uint8_t anzahlFelder = 0;
+    uint8_t ausgangsPosition = 0;
+    uint8_t neuePosition = 0;
+    uint16_t startGeld = 0;
+    if (!schritt)
+    {
+        rueckgabewert = 0;
+        zufallsNummer = (rand() % 16);
+        if (kanzlei)
+        {
+            zufallsNummer += ANZAHL_KARTEN;
+        }
+        read_string(text, zufallsNummer);  //Liest den Text aus dem Flash speicher
+    }
+    
+    if (flagWeiter) //wenn der Spieler bestätigt hat.
+    {
+        switch(chanceKanzlei[zufallsNummer].typ)
+        {
+            case WORKSHOP:
+            spielerInfo[spielerAmZug].position = 10; //setzt die Position des spielers auf gefängnis
+            spielerInfo[spielerAmZug].gefaengnis = 1; //vermerkt den Spieler als Häftling
+            spielerInfo[spielerAmZug].rundenImGefaengnis = 0; //setzt die anzahl im gefängnis verbrachten runden auf 0
+            break;
+            case FREIKARTE:
+            spielerInfo[spielerAmZug].freikarte = 1; //gibt dem Spieler eine Freikarte
+            break;
+            case RENOVIEREN:
+            //berechet den Preis für die Häuser und die hotels
+            hausBetrag = spielerInfo[spielerAmZug].haeuser * chanceKanzlei[zufallsNummer].geld;
+            hausBetrag = spielerInfo[spielerAmZug].hotels * chanceKanzlei[zufallsNummer].geld2;
+            //zieht den berechneten betrag vom spieler ab
+            geldUeberweisen(spielerAmZug,0,(hausBetrag + hotelBetrag),1);
+            break;
+            case GELD_AN_BANK:
+            geldUeberweisen(spielerAmZug,0,chanceKanzlei[zufallsNummer].geld,1);
+            break;
+            case GELD_VON_BANK:
+            geldUeberweisen(0,spielerAmZug,chanceKanzlei[zufallsNummer].geld,1);
+            break;
+            case GELD_AN_MITSPIELER:
+            for (uint8_t i = 1; i <= anzahlSpieler; i = i + 1)
+            {
+                geldUeberweisen(spielerAmZug,i,chanceKanzlei[zufallsNummer].geld,1);
+            }
+            break;
+            case GELD_VON_MITSPIELER:
+            for (uint8_t i = 1; i <= anzahlSpieler; i = i + 1)
+            {
+                geldUeberweisen(i,spielerAmZug,chanceKanzlei[zufallsNummer].geld,1);
+            }
+            break;
+            case BEWEGEN:
+            if (chanceKanzlei[zufallsNummer].bewegung)
+            {
+                ausgangsPosition = spielerInfo[spielerAmZug].position;
+                neuePosition = ausgangsPosition + chanceKanzlei[zufallsNummer].bewegung;
+                setPlayerPosition(neuePosition, spielerAmZug);
+            }
+            else
+            {
+                ausgangsPosition = spielerInfo[spielerAmZug].position;
+                for (uint8_t i = ausgangsPosition; !(chanceKanzlei[zufallsNummer].typ == spielfeld[i].typ); i = i + 1)
+                {
+                    anzahlFelder = i;
+                    neuePosition = ((ausgangsPosition + i) % 40);
+                    setPlayerPosition(neuePosition, spielerAmZug);
+                    if (neuePosition == 0)
+                    {
+                        geldUeberweisen(0,spielerAmZug,200,10);
+                    }
+                    _delay_ms(100);
+                }
+            }
+            //setzt die neue Position
+            spielerInfo[spielerAmZug].position = neuePosition;
+            //setzt den spieler auf das richtige Feld
+            setPlayerPosition(spielerInfo[spielerAmZug].position,spielerAmZug);
+            break;
+            case TELEPORTIEREN:
+            //wenn die aktuelle spition des Spielers + wüfelsumme grösser gleich 40 is
+            // erhält der spieler 200 CHF
+            
+            if (spielerInfo[spielerAmZug].position > chanceKanzlei[zufallsNummer].zielFeld)
+            {
+                //berechnet den betrag, den man auf start erhält
+                startGeld = 200 + chanceKanzlei[zufallsNummer].geld;
+                //animiert die fortbewegung des spielers bis feld Los
+                for (uint8_t i = spielerInfo[spielerAmZug].position; i < 40; i = i + 1)
+                {
+                    setPlayerPosition(i % 40,spielerAmZug);
+                    _delay_ms(100); //delay dient zu animationszwecken
+                }
+                geldUeberweisen(0,spielerAmZug,200,10);
+            }
+            for (uint8_t i = spielerInfo[spielerAmZug].position; i < chanceKanzlei[zufallsNummer].zielFeld; i = i + 1)
+            {
+                setPlayerPosition(i % 40,spielerAmZug);
+                _delay_ms(100); //delay dient zu animationszwecken
+            }
+            //addiert die würfelsumme zur aktuellen position dazu
+            spielerInfo[spielerAmZug].position = chanceKanzlei[zufallsNummer].zielFeld;
+            //setzt den spieler auf das richtige Feld
+            setPlayerPosition(spielerInfo[spielerAmZug].position,spielerAmZug);
+            break;
+        }
+        return 1;
+    }
+    
+    if (!rueckgabewert)
+    {
+        rueckgabewert = lcdLauftext(text,schritt); //schreibt den Text auf das LCD
+    }
+    return 0;
+    
+}
 
 uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag, uint8_t schritt)
 {
@@ -1481,3 +1761,6 @@ uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag, uin
     }
     
 }
+
+
+

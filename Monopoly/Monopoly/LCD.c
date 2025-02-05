@@ -191,3 +191,30 @@ void lcdInitAll(void)
     defineCustomCharacters();
     displayOnOff(1,0,0);
 }
+
+#define LCD_WIDTH 16 
+#define MAX_TEXT_LEN 32
+uint8_t lcdLauftext(const char *text, uint8_t schritt)
+{
+    char zeile1[17] = {0};
+    char zeile2[17] = {0};
+    int textLen = strlen(text);
+    strncpy(zeile1,text + (schritt * 16),16);
+    zeile1[16] =  '\0';
+    if (textLen > 16 + (schritt * 16))
+    {
+        strncpy(zeile2,text + 16 + (schritt * 16),16);
+        zeile2[16] = '\0';
+    }
+    clear();
+    writeText(0,0,zeile1);
+    writeText(1,0,zeile2);
+    if ((schritt * 16) > textLen-32)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
