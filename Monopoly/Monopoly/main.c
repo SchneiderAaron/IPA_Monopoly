@@ -113,7 +113,7 @@
 
 
 typedef enum {SPIELERAUSWAHL, WUERFELSTART, SPIEL, VERSTEIGERUNG, BAUEN} zustand_t;
-typedef enum {FREIKARTE, PASCH, WARTEN, BEZAHLEN} workshopZustand_t;
+typedef enum {FREIKARTEVERWENDEN, PASCH, WARTEN, BEZAHLEN} workshopZustand_t;
 /*--- Globale Konstanten ----------------------------------------------------*/
 
 /*--- Globale Variablen -----------------------------------------------------*/
@@ -149,7 +149,7 @@ void initSpieler(Spieler spielerInfo[])
     strcpy(spielerInfo[1].name, "Spieler 1");
     spielerInfo[1].geld = 1111;
     spielerInfo[1].position = 40;
-    spielerInfo[1].gefaengnis = 0;
+    spielerInfo[1].gefaengnis = 1;
     spielerInfo[1].rundenImGefaengnis = 0;
     spielerInfo[1].freikarte = 0;
     spielerInfo[1].haeuser = 0;
@@ -210,6 +210,8 @@ int main(void)
     uint8_t aktuellePosition = 0;
     uint8_t xTasten[4] = {TASTE_X1, TASTE_X2, TASTE_X3, TASTE_X4};
     uint8_t yTasten[4] = {TASTE_Y1, TASTE_Y2, TASTE_Y3, TASTE_Y4};
+    uint8_t flagTasteX = 0;
+    uint8_t flagTasteY = 0;
     uint8_t bieter[6] = {0};//0-3 Bieter 4 anz. spieler raus 5 höchstbieter
     uint8_t ersterSpieler = 0;
     
@@ -267,7 +269,7 @@ int main(void)
     FeldTyp aktuellesFeld = FREIPARKEN;
     
     uint8_t flagGefaengnis = 0;
-    
+    uint8_t flagGefaengnisLCD = 0;
     
     /*--- Prototypen modullokaler Funktionen ------------------------------------*/
     uint8_t feldKaufen(uint8_t feldNummer, Feld spielfeld[40], uint8_t spielerAmZug);
@@ -859,30 +861,79 @@ int main(void)
                     writeText(1,0,"   Du bist im   ");
                     writeText(2,0,"    Workshop    ");
                     flagGefaengnis = 0;
+                    flagGefaengnisLCD = 1;
                     _delay_ms(5000); //5s Auf LCD anzeigen
+                    if (spielerInfo[spielerAmZug].freikarte)
+                    {
+                        workshopZustand = FREIKARTEVERWENDEN;
+                    }
+                    else
+                    {
+                        workshopZustand = PASCH;
+                    }
                 }
-                if (spielerInfo[spielerAmZug].freikarte)
+                //prüfen ob spieler eine freikarte hat
+                
+                //tasten abfragen
+                if (positiveFlanke & xTasten[spielerAmZug])
                 {
-                    workshopZustand = FREIKARTE;
+                    flagTasteX = 1;
+                    flagTasteY = 0;
+                    flagGefaengnisLCD = 1;
                 }
-                switch (workshopZustand)
+                else if (positiveFlanke & yTasten[spielerAmZug])
                 {
-                    case FREIKARTE:
-                    writeText(1,0,"Freikarte X=JA  ");
-                    writeText(2,0,"Verwenden Y=NEIN");
-                    break;
-                    case PASCH:
-                    writeText(1,0,"  Pasch   X=JA  ");
-                    writeText(2,0,"W"UE"rfeln   Y=NEIN");
-                    break;
-                    case BEZAHLEN:
-                    writeText(1,0,"   50     X=JA  ");
-                    writeText(2,0,"Bezahlen  Y=NEIN");
-                    break;
-                    case WARTEN:
-                    writeText(1,0,"3 Runden  X=JA  ");
-                    writeText(2,0,"  warten  Y=NEIN");
-                    break;
+                    flagTasteX = 0;
+                    flagTasteY = 1;
+                    flagGefaengnisLCD = 1;
+                }
+                else
+                {
+                    flagTasteX = 0;
+                    flagTasteY = 0;
+                    flagGefaengnisLCD = 0;
+                }
+                if (flagGefaengnisLCD)
+                {
+                    switch (workshopZustand)
+                    {
+                        case FREIKARTEVERWENDEN:
+                        writeText(1,0,"Freikarte X=JA  ");
+                        writeText(2,0,"Verwenden Y=NEIN");
+                        if (flagTasteY)
+                        {
+                            workshopZustand = PASCH;
+                        }
+                        break;
+                        case PASCH:
+                        writeText(1,0,"  Pasch   X=JA  ");
+                        writeText(2,0,"W"UE"rfeln   Y=NEIN");
+                        if (flagTasteY)
+                        {
+                            workshopZustand = BEZAHLEN;
+                        }
+                        break;
+                        case BEZAHLEN:
+                        writeText(1,0,"   50     X=JA  ");
+                        writeText(2,0,"Bezahlen  Y=NEIN");
+                        if (flagTasteY)
+                        {
+                            workshopZustand = WARTEN;
+                        }
+                        break;
+                        case WARTEN:
+                        writeText(1,0,"3 Runden  X=JA  ");
+                        writeText(2,0,"  warten  Y=NEIN");
+                        if (spielerInfo[spielerAmZug].freikarte)
+                        {
+                            workshopZustand = FREIKARTEVERWENDEN;
+                        }
+                        else if (flagTasteY)
+                        {
+                            workshopZustand = PASCH;
+                        }
+                        break;
+                    }
                 }
                 break;
                 case GEH_INS_GEFAENGNIS://~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
