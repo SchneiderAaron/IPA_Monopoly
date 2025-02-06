@@ -108,12 +108,14 @@
 #define MAX_ANZAHL_HAEUSER_IM_SPIEL 32
 #define MAX_ANZAHL_HOTELS_IM_SPIEL 12
 
+#define ZAHLUNG_ERFOLGREICH 1
+#define ZAHLUNG_FEHLGESCHLAGEN 2
 
 /*--- Datentypen (typedef) --------------------------------------------------*/
 
 
 typedef enum {SPIELERAUSWAHL, WUERFELSTART, SPIEL, VERSTEIGERUNG, BAUEN} zustand_t;
-typedef enum {FREIKARTEVERWENDEN, PASCH, WARTEN, BEZAHLEN} workshopZustand_t;
+typedef enum {FREIKARTEVE_J_N, PASCH_J_N, BEZAHLEN_J_N, PASCH} workshopZustand_t;
 /*--- Globale Konstanten ----------------------------------------------------*/
 
 /*--- Globale Variablen -----------------------------------------------------*/
@@ -130,8 +132,8 @@ uint8_t spielerImGefaengnis[5] = {0};
 
 uint16_t tasteAlt, tasteNeu, positiveFlanke = 0; //Variabeln Flankenerkennung
 
-zustand_t zustand = SPIELERAUSWAHL;
-workshopZustand_t workshopZustand = PASCH;
+zustand_t zustand = SPIEL;
+workshopZustand_t workshopZustand = PASCH_J_N;
 
 uint8_t anzahlSpieler = 2;
 
@@ -142,6 +144,8 @@ Karte chanceKanzlei[34];
 uint8_t haeuserImSpiel = 0;
 uint8_t hotelsImSpiel = 0;
 
+uint8_t flagWuerfel1 = 0;
+uint8_t flagWuerfel2 = 0;
 extern const char kartenArray[][200];
 void initSpieler(Spieler spielerInfo[])
 {
@@ -149,7 +153,7 @@ void initSpieler(Spieler spielerInfo[])
     strcpy(spielerInfo[1].name, "Spieler 1");
     spielerInfo[1].geld = 1111;
     spielerInfo[1].position = 40;
-    spielerInfo[1].gefaengnis = 1;
+    spielerInfo[1].gefaengnis = 0;
     spielerInfo[1].rundenImGefaengnis = 0;
     spielerInfo[1].freikarte = 0;
     spielerInfo[1].haeuser = 0;
@@ -219,7 +223,7 @@ int main(void)
     
     uint8_t spielerSetup = 0;
     
-    uint8_t flagFertigGewuerfelt, flagWuerfel1, flagWuerfel2, letzterWuerfel, flagSchulden = 0;
+    uint8_t flagFertigGewuerfelt, letzterWuerfel, flagSchulden = 0;
     
     uint8_t flagVersteigert, verkaufSpielerEingabe = 0;
     
@@ -270,11 +274,13 @@ int main(void)
     
     uint8_t flagGefaengnis = 0;
     uint8_t flagGefaengnisLCD = 0;
+    uint8_t flagGefaengnisWeiter = 0;
     
     /*--- Prototypen modullokaler Funktionen ------------------------------------*/
     uint8_t feldKaufen(uint8_t feldNummer, Feld spielfeld[40], uint8_t spielerAmZug);
     uint8_t bauen(uint8_t feldNummer, uint8_t spielerAmZug);
     uint8_t abBauen(uint8_t feldNummer, uint8_t spielerAmZug);
+    void warteBisGewuerfelt(void);
     /*--- Funktionsdefinitionen -------------------------------------------------*/
     
     
@@ -303,6 +309,7 @@ int main(void)
     uint8_t stringCounter = 0;
     uint8_t flagEreignisfeld = 0;
     _delay_ms(1000);
+    abInsGefaengnis(2);
     while (1) 
     {
         //Flankenerkennung
@@ -505,7 +512,7 @@ int main(void)
                 flagSpielLCD = 0;
             }
             //Spielzug abschliessen alles zurücksetzen
-            if(((positiveFlanke & TASTE_C) && flagFertigGewuerfelt) && flagZahlungAbgeschlossen && flagKaufAbgechlossen && flagEreignisAbgeschlossen)
+            if(((positiveFlanke & TASTE_C) || flagGefaengnisWeiter) && flagFertigGewuerfelt && flagZahlungAbgeschlossen && flagKaufAbgechlossen && flagEreignisAbgeschlossen)
             {
                 //würfel Siebensegmente ausschalten
                 wuerfelTransmit(SIEBENSEGMENT_OFF,SIEBENSEGMENT_OFF);
@@ -524,11 +531,14 @@ int main(void)
                 bezahlStatus = 0;
                 ereignisfeldRueckgabe = 0;
                 aktuellesFeld = spielfeld[spielerInfo[spielerAmZug].position].typ;
-                if ((aktuellesFeld == GEFAENGNIS) && spielerInfo[spielerAmZug].gefaengnis && (spielerInfo[spielerAmZug].rundenImGefaengnis < 3))
+                flagGefaengnis = 0; //flagGefaengnis zurücksetzen
+                flagGefaengnisLCD = 0;
+                flagGefaengnisWeiter = 0;
+                if ((aktuellesFeld == GEFAENGNIS) && spielerInfo[spielerAmZug].gefaengnis)
                 {
-                    flagGefaengnis = 1;
+                    flagGefaengnis = 1;//flag setzen wenn spieler im gefängnis ist
                     flagFertigGewuerfelt = 1; //wenn dieses Flag gesetzt ist kann nicht gewürfelt werden
-                    spielerInfo[spielerAmZug].rundenImGefaengnis += 1;
+
                 }
             }
             //ermöglicht es dem spieler bei Pasch zu kaufen
@@ -546,32 +556,10 @@ int main(void)
             if (!flagFertigGewuerfelt && flagWeiter) 
             {
                 //wartet bis mit beiden Würfel gewürfelt wurde
-                while (!(flagWuerfel1 && flagWuerfel2))
-                {
-                    //flankenerkennung
-                    tasteAlt = tasteNeu;
-                    tasteNeu = 0;
-                    tasteNeu = (PINL << 8) | PINK;
-                    positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
-                    //würfelt würfel 1 nur wenn taste9 betätigt wurde
-                    //und würfel 1 noch nicht gewürfelt wurde
-                    if ((positiveFlanke & TASTE_A) && !flagWuerfel1)
-                    {
-                        //mit 1. würfel würfeln
-                        wuerfelAB(1,flagWuerfel1,flagWuerfel2);
-                        flagWuerfel1 = 1;
-                    }
-                    //würfelt würfel 2 nur wenn taste9 betätigt wurde
-                    //und würfel 2 noch nicht gewürfelt wurde
-                    else if ((positiveFlanke & TASTE_B) && !flagWuerfel2)
-                    {
-                        //mit 2. würfel würfeln
-                        wuerfelAB(2,flagWuerfel1,flagWuerfel2);
-                        flagWuerfel2 = 1;
-                        
-                    }
-                }
-                if (wuerfelArray[0] == wuerfelArray[1]) //Pasch
+                warteBisGewuerfelt();
+                //lässt den spieler bei einem Pasch nochmal würfeln,
+                //ausser der Pasch wurde im Workshop gemacht
+                if ((wuerfelArray[0] == wuerfelArray[1]) && !flagGefaengnis) //Pasch
                 {   
                     flagWeiter = 0; //bei einem Pasch wird flagWeiter = 0 gesetzt
                     flagPasch = flagPasch + 1; //flagPasch erhöhen
@@ -630,10 +618,9 @@ int main(void)
                  aktuellesFeld = spielfeld[spielerInfo[spielerAmZug].position].typ;
                  //speichert die aktuelle position
                  aktuellePosition = spielerInfo[spielerAmZug].position;
+                 flagWuerfel1 = 0;
+                 flagWuerfel2 = 0;
             }
-            //Kann möglicherweise in nach oben verschiben werden ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~!!!!!!!
-            flagWuerfel1 = 0;
-            flagWuerfel2 = 0;
             
             //kontostand aktualisieren
             updateKontostand(anzahlSpieler,spielerInfo);
@@ -853,94 +840,195 @@ int main(void)
                 }
                 break;
                 case GEFAENGNIS://~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                if (spielerInfo[spielerAmZug].gefaengnis && flagGefaengnis)
+                if (flagGefaengnis)//nur wenn spieler im workshop
                 {
-                    writeText(0,0,"   Spieler      ");
-                    sprintf(lcdBuffer,"%u",spielerAmZug);
-                    writeText(0,11,lcdBuffer);
-                    writeText(1,0,"   Du bist im   ");
-                    writeText(2,0,"    Workshop    ");
-                    flagGefaengnis = 0;
-                    flagGefaengnisLCD = 1;
-                    _delay_ms(5000); //5s Auf LCD anzeigen
-                    if (spielerInfo[spielerAmZug].freikarte)
+                    if (spielerInfo[spielerAmZug].gefaengnis && !flagGefaengnisLCD)
                     {
-                        workshopZustand = FREIKARTEVERWENDEN;
+                        writeText(0,0,"   Spieler      ");
+                        sprintf(lcdBuffer,"%u",spielerAmZug);
+                        writeText(0,11,lcdBuffer);
+                        writeText(1,0,"   Du bist im   ");
+                        writeText(2,0,"    Workshop    ");
+                        flagGefaengnisLCD = 1;
+                        _delay_ms(5000); //5s Auf LCD anzeigen
+                        //prüfen ob spieler eine freikarte hat
+                        if (spielerInfo[spielerAmZug].freikarte)
+                        {
+                            workshopZustand = FREIKARTEVE_J_N;
+                            writeText(1,0,"Freikarte X=JA  ");
+                            writeText(2,0,"verwenden Y=NEIN");
+                        }
+                        else
+                        {
+                            workshopZustand = PASCH_J_N;
+                            writeText(1,0,"  Pasch   X=JA  ");
+                            writeText(2,0,"W"UE"rfeln   Y=NEIN");
+                        }
                     }
-                    else
-                    {
-                        workshopZustand = PASCH;
-                    }
-                }
-                //prüfen ob spieler eine freikarte hat
-                
-                //tasten abfragen
-                if (positiveFlanke & xTasten[spielerAmZug])
-                {
-                    flagTasteX = 1;
-                    flagTasteY = 0;
-                    flagGefaengnisLCD = 1;
-                }
-                else if (positiveFlanke & yTasten[spielerAmZug])
-                {
-                    flagTasteX = 0;
-                    flagTasteY = 1;
-                    flagGefaengnisLCD = 1;
-                }
-                else
-                {
-                    flagTasteX = 0;
-                    flagTasteY = 0;
-                    flagGefaengnisLCD = 0;
-                }
-                if (flagGefaengnisLCD)
-                {
                     switch (workshopZustand)
                     {
-                        case FREIKARTEVERWENDEN:
-                        writeText(1,0,"Freikarte X=JA  ");
-                        writeText(2,0,"Verwenden Y=NEIN");
-                        if (flagTasteY)
+                        case FREIKARTEVE_J_N:
+                        if (flagTasteY)//spieler will Freikarte nicht verwenden
                         {
+                            writeText(1,0," Pasch    X=JA  ");
+                            writeText(2,0,"W"UE"rfeln   Y=NEIN");
+                            //wechselt zur nächsten option
+                            workshopZustand = PASCH_J_N;
+                        }
+                        else if (flagTasteX) //spieler will Freikarte verwenden
+                        {
+                            spielerInfo[spielerAmZug].gefaengnis = 0;
+                            spielerInfo[spielerAmZug].freikarte = 0;
+                            spielerInfo[spielerAmZug].rundenImGefaengnis = 0;
+                            flagFertigGewuerfelt = 0;//lässt spieler würfeln
+                            flagGefaengnis = 0;
+                        }
+                        break;
+                        case PASCH_J_N:
+                        if (flagTasteY)//Spieler will keinen Pasch würfeln
+                        {
+                            //wechselt zum nächsten zustand
+                            workshopZustand = BEZAHLEN_J_N;
+                            writeText(1,0,"   50     X=JA  ");
+                            writeText(2,0,"Bezahlen  Y=NEIN");
+                        }
+                        else if (flagTasteX)//Spieler will Pasch würfeln
+                        {
+                            writeText(1,0," w"UE"rfeln A / B ");
+                            writeText(2,0,"                ");
+                            //wechselt zu zustand Pasch
                             workshopZustand = PASCH;
+                        }
+                        break;
+                        case BEZAHLEN_J_N:
+                        if (flagTasteY)//Spieler will nicht zahlen
+                        {
+                            //wechsel zum nächsten zustand
+                            //prüfen ob spieler eine freikarte hat
+                            if (spielerInfo[spielerAmZug].freikarte)
+                            {
+                                workshopZustand = FREIKARTEVE_J_N;
+                                writeText(1,0,"Freikarte X=JA  ");
+                                writeText(2,0,"verwenden Y=NEIN");
+                            }
+                            else
+                            {
+                                workshopZustand = PASCH_J_N;
+                                writeText(1,0," Pasch    X=JA  ");
+                                writeText(2,0,"W"UE"rfeln   Y=NEIN");
+                            }
+                        }
+                        else if (flagTasteX)//Spieler will bezahlen
+                        {
+                            //zieht den betrag vom spieler ab
+                            bezahlStatus = geldUeberweisen(spielerAmZug,0,50,1);
+                            //prüft ob zahlung erfolgreich
+                            if (bezahlStatus == ZAHLUNG_ERFOLGREICH)
+                            {
+                                writeText(1,0,"     Zahlung    ");
+                                writeText(2,0,"   Erfolgreich  ");
+                                //entlässt den spieler aus dem gefängnis
+                                spielerInfo[spielerAmZug].gefaengnis = 0;
+                                spielerInfo[spielerAmZug].rundenImGefaengnis = 0;
+                                flagFertigGewuerfelt = 0;//lässt spieler würfeln
+                                flagGefaengnis = 0;
+                            }
+                            else if (bezahlStatus == ZAHLUNG_FEHLGESCHLAGEN)
+                            {
+                                writeText(1,0,"     Zahlung    ");
+                                writeText(2,0," Fehlgeschlagen ");
+                                _delay_ms(5000); //5s Warten 
+                                //wechsel zum nächsten zustand
+                                //prüfen ob spieler eine freikarte hat
+                                if (spielerInfo[spielerAmZug].freikarte)
+                                {
+                                    workshopZustand = FREIKARTEVE_J_N;
+                                    writeText(1,0,"Freikarte X=JA  ");
+                                    writeText(2,0,"verwenden Y=NEIN");
+                                }
+                                else
+                                {
+                                    workshopZustand = PASCH_J_N;
+                                    writeText(1,0,"  Pasch   X=JA  ");
+                                    writeText(2,0,"W"UE"rfeln   Y=NEIN");
+                                }
+                                sprintf(lcdBuffer,"%u",spielerInfo[spielerAmZug].rundenImGefaengnis);
+                                writeText(1,0,lcdBuffer);
+                                writeText(1,0,"   Runden X=JA  ");
+                                writeText(2,0,"  warten  Y=NEIN");
+                            }
                         }
                         break;
                         case PASCH:
-                        writeText(1,0,"  Pasch   X=JA  ");
-                        writeText(2,0,"W"UE"rfeln   Y=NEIN");
-                        if (flagTasteY)
+                        //wartet bis mit beiden Würfel gewürfelt wurde
+                        flagWuerfel1 = 0;
+                        flagWuerfel2 = 0;
+                        warteBisGewuerfelt();
+                        //prüft ob ein Pasch gewürfelt wurde
+                        if (wuerfelArray[0] == wuerfelArray[1])
                         {
-                            workshopZustand = BEZAHLEN;
+                            writeText(1,0,"     PASCH      ");
+                            writeText(2,0,"                ");
+                            //läst den spieler mit dem letzten wurf fahren
+                            flagFertigGewuerfelt = 0;
+                            spielerInfo[spielerAmZug].rundenImGefaengnis = 0;
+                            spielerInfo[spielerAmZug].gefaengnis = 0;
+                            _delay_ms(5000); //5s Warten
+                        }
+                        else
+                        {
+                            writeText(1,0,"   KEIN PASCH   ");
+                            writeText(2,0,"                ");
+                            flagWuerfel1 = 0;
+                            flagWuerfel2 = 0;
+                            //erhöt die gewarteten runden
+                            spielerInfo[spielerAmZug].rundenImGefaengnis += 1;
+                            //wenn beim 3. versuch kein Pasch gewürfelt wurde
+                            if (spielerInfo[spielerAmZug].rundenImGefaengnis == 3)
+                            {
+                                //nach 3 Runden muss bezahlt werden
+                                bezahlStatus = geldUeberweisen(spielerAmZug,0,50,1);
+                                spielerInfo[spielerAmZug].rundenImGefaengnis = 0;
+                                spielerInfo[spielerAmZug].gefaengnis = 0;
+                                //läst den spieler mit dem letzten wurf fahren
+                                flagFertigGewuerfelt = 0; 
+                            }
+                            else
+                            {
+                                //Der nächste Spieler ist am zug
+                                flagGefaengnisWeiter = 1;
+                                _delay_ms(5000); //5s Warten
+                            }
                         }
                         break;
-                        case BEZAHLEN:
-                        writeText(1,0,"   50     X=JA  ");
-                        writeText(2,0,"Bezahlen  Y=NEIN");
-                        if (flagTasteY)
-                        {
-                            workshopZustand = WARTEN;
-                        }
-                        break;
-                        case WARTEN:
-                        writeText(1,0,"3 Runden  X=JA  ");
-                        writeText(2,0,"  warten  Y=NEIN");
-                        if (spielerInfo[spielerAmZug].freikarte)
-                        {
-                            workshopZustand = FREIKARTEVERWENDEN;
-                        }
-                        else if (flagTasteY)
-                        {
-                            workshopZustand = PASCH;
-                        }
-                        break;
+                    }
+                    if (flagGefaengnisLCD)
+                    {
+                    }
+                    //tasten abfragen
+                    if (positiveFlanke & xTasten[spielerAmZug - 1])
+                    {
+                        flagTasteX = 1;
+                        flagTasteY = 0;
+                    }
+                    else if (positiveFlanke & yTasten[spielerAmZug - 1])
+                    {
+                        flagTasteX = 0;
+                        flagTasteY = 1;
+                    }
+                    else
+                    {
+                        flagTasteX = 0;
+                        flagTasteY = 0;
                     }
                 }
                 break;
                 case GEH_INS_GEFAENGNIS://~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                
                 abInsGefaengnis(spielerAmZug);
                 aktuellesFeld = GEFAENGNIS;
                 spielerInfo[spielerAmZug].gefaengnis = 1;
+                flagWeiter = 1;
+                flagFertigGewuerfelt = 1;
                 break;
                 case FREIPARKEN://~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 break;
@@ -1465,4 +1553,35 @@ uint8_t abBauen(uint8_t feldNummer, uint8_t spielerAmZug)
         return 0;
     }
     
+}
+
+
+void warteBisGewuerfelt(void)
+{
+    //wartet bis mit beiden Würfel gewürfelt wurde
+    while (!(flagWuerfel1 && flagWuerfel2))
+    {
+        //flankenerkennung
+        tasteAlt = tasteNeu;
+        tasteNeu = 0;
+        tasteNeu = (PINL << 8) | PINK;
+        positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
+        //würfelt würfel 1 nur wenn taste9 betätigt wurde
+        //und würfel 1 noch nicht gewürfelt wurde
+        if ((positiveFlanke & TASTE_A) && !flagWuerfel1)
+        {
+            //mit 1. würfel würfeln
+            wuerfelAB(1,flagWuerfel1,flagWuerfel2);
+            flagWuerfel1 = 1;
+        }
+        //würfelt würfel 2 nur wenn taste9 betätigt wurde
+        //und würfel 2 noch nicht gewürfelt wurde
+        else if ((positiveFlanke & TASTE_B) && !flagWuerfel2)
+        {
+            //mit 2. würfel würfeln
+            wuerfelAB(2,flagWuerfel1,flagWuerfel2);
+            flagWuerfel2 = 1;
+            
+        }
+    }
 }

@@ -704,7 +704,8 @@ uint16_t adm_ADC_read(uint8_t kanal)
 \******************************************************************************/
 void abInsGefaengnis(uint8_t spielerNr)
 {
-    spielerImGefaengnis[spielerNr] = 1;
+    spielerInfo[spielerNr].gefaengnis = 1;
+    //spielerImGefaengnis[spielerNr] = 1;
     blaulicht(100,20);
     spielerInfo[spielerNr].position = 10;
     setPlayerPosition(10,spielerNr);
@@ -1591,6 +1592,7 @@ void read_string(char *buf, size_t i)
 #define ANZAHL_KARTEN 17
 uint8_t zufallsNummer = 0;
 uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uint8_t flagWeiter, Karte chanceKanzlei[])
+
 {
     static char text[200] = {0};
     //static uint8_t zufallsNummer = 0;
