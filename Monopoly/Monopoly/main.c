@@ -111,11 +111,13 @@
 #define ZAHLUNG_ERFOLGREICH 1
 #define ZAHLUNG_FEHLGESCHLAGEN 2
 
+#define ANZAHL_FELDER 40
 /*--- Datentypen (typedef) --------------------------------------------------*/
 
 
-typedef enum {SPIELERAUSWAHL, WUERFELSTART, SPIEL, VERSTEIGERUNG, BAUEN} zustand_t;
-typedef enum {FREIKARTEVE_J_N, PASCH_J_N, BEZAHLEN_J_N, PASCH} workshopZustand_t;
+typedef enum {SPIELERAUSWAHL, WUERFELSTART, SPIEL, VERSTEIGERUNG, BAUEN, VERWALTEN, VERPFAENDEN} zustand_t;
+typedef enum {FREIKARTE_J_N, PASCH_J_N, BEZAHLEN_J_N, PASCH} workshopZustand_t;
+typedef enum {HYPOTHEK, VERWALTUNG_BAUEN} verwaltung_t;
 /*--- Globale Konstanten ----------------------------------------------------*/
 
 /*--- Globale Variablen -----------------------------------------------------*/
@@ -132,9 +134,9 @@ uint8_t spielerImGefaengnis[5] = {0};
 
 uint16_t tasteAlt, tasteNeu, positiveFlanke = 0; //Variabeln Flankenerkennung
 
-zustand_t zustand = SPIEL;
+zustand_t zustand = SPIELERAUSWAHL;
 workshopZustand_t workshopZustand = PASCH_J_N;
-
+verwaltung_t verwaltung = VERWALTUNG_BAUEN;
 uint8_t anzahlSpieler = 2;
 
 uint8_t globalUpdateLCD = 0;
@@ -264,6 +266,12 @@ int main(void)
     uint8_t zahlBetragFarbgruppe = 0;
     uint8_t zahlSchritt = 0;
     
+    uint8_t anzahlEigentum = 0;
+    uint8_t feldZaehler = 0;
+    uint8_t hausNummer = 0;
+    uint8_t rgbFeldNummer = 0;
+    
+    uint8_t feldbelastet = 0;
     
     //16-Bit Variabeln
     uint16_t geldZwischenspeicher[5] = {0};
@@ -275,6 +283,9 @@ int main(void)
     uint8_t flagGefaengnis = 0;
     uint8_t flagGefaengnisLCD = 0;
     uint8_t flagGefaengnisWeiter = 0;
+    
+    uint8_t spielerInventar[28] = {0};
+    
     
     /*--- Prototypen modullokaler Funktionen ------------------------------------*/
     uint8_t feldKaufen(uint8_t feldNummer, Feld spielfeld[40], uint8_t spielerAmZug);
@@ -308,8 +319,7 @@ int main(void)
     uint8_t textCounter = 0;
     uint8_t stringCounter = 0;
     uint8_t flagEreignisfeld = 0;
-    _delay_ms(1000);
-    abInsGefaengnis(2);
+    //_delay_ms(1000);
     while (1) 
     {
         //Flankenerkennung
@@ -318,10 +328,10 @@ int main(void)
         tasteNeu = (PINL << 8) | PINK;
         positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
         
-        if (positiveFlanke & TASTE_O)//Wenn Taste runter gedrückt wird => Bauen
+        /*if (positiveFlanke & TASTE_O)//Wenn Taste runter gedrückt wird => Bauen
         {
             zustand = BAUEN;
-        }
+        }*/
         
         
         
@@ -508,7 +518,7 @@ int main(void)
                 sprintf(lcdBuffer,"%u",spielerAmZug);
                 writeText(0,11,lcdBuffer);
                 writeText(1,0," w"UE"rfeln A / B ");
-                writeText(2,0,"    weiter C    ");
+                writeText(2,0,"weiter C  mehr S");
                 flagSpielLCD = 0;
             }
             //Spielzug abschliessen alles zurücksetzen
@@ -523,7 +533,7 @@ int main(void)
                 sprintf(lcdBuffer,"%u",spielerAmZug);
                 writeText(0,11,lcdBuffer);
                 writeText(1,0," w"UE"rfeln A / B ");
-                writeText(2,0,"    weiter C    ");
+                writeText(2,0,"weiter C  mehr S");
                 //flags zurücksetzten
                 flagFertigGewuerfelt = 0;
                 PORTC &= ~0xC0; //Schaltet das Blaulicht aus
@@ -626,6 +636,19 @@ int main(void)
             updateKontostand(anzahlSpieler,spielerInfo);
             //Spieler hat fertig gewürfelt ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             
+            //Wenn Taste S => mehr betätigt wurde
+            if (positiveFlanke & TASTE_S)
+            {
+                /*writeText(0,0,"   Spieler      ");
+                sprintf(lcdBuffer,"%u",spielerAmZug);
+                writeText(0,11,lcdBuffer);
+                writeText(1,0," w"UE"rfeln A / B ");
+                writeText(2,0,"weiter C  mehr S");*/
+                //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~VERPFÄNDEN~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                updateLCD = 0;
+                zustand = VERWALTEN;
+            }
+            
             
             switch (aktuellesFeld) //verarbeitung aktuelles feld ~~~~~~~~~~~~~~~~~
             {
@@ -688,8 +711,9 @@ int main(void)
                         break;
                     }
                 }
-                 //wenn das Aktuelle feld einem spieler gehört muss man bezahlen, ausser es gehört einem selbst
-                if((spielfeld[aktuellePosition].besitzer && !(spielfeld[aktuellePosition].besitzer == spielerAmZug)) && !(bezahlStatus == 1))
+                feldbelastet = spielfeld[aktuellePosition].hypothek;
+                //wenn das Aktuelle feld einem spieler gehört muss man bezahlen, ausser es gehört einem selbst
+                if((spielfeld[aktuellePosition].besitzer && !(spielfeld[aktuellePosition].besitzer == spielerAmZug)) && !(bezahlStatus == 1) && !feldbelastet)
                 {
                     flagZahlungAbgeschlossen = 0;
                     if (!updateLCD)
@@ -792,8 +816,8 @@ int main(void)
                         break;
                     }
                 }
-                
-                if((spielfeld[aktuellePosition].besitzer && !(spielfeld[aktuellePosition].besitzer == spielerAmZug)) && !(bezahlStatus == 1))
+                feldbelastet = spielfeld[aktuellePosition].hypothek;
+                if((spielfeld[aktuellePosition].besitzer && !(spielfeld[aktuellePosition].besitzer == spielerAmZug)) && !(bezahlStatus == 1) && !feldbelastet)
                 {
                     flagZahlungAbgeschlossen = 0;
                     if (!updateLCD)
@@ -854,7 +878,7 @@ int main(void)
                         //prüfen ob spieler eine freikarte hat
                         if (spielerInfo[spielerAmZug].freikarte)
                         {
-                            workshopZustand = FREIKARTEVE_J_N;
+                            workshopZustand = FREIKARTE_J_N;
                             writeText(1,0,"Freikarte X=JA  ");
                             writeText(2,0,"verwenden Y=NEIN");
                         }
@@ -867,7 +891,7 @@ int main(void)
                     }
                     switch (workshopZustand)
                     {
-                        case FREIKARTEVE_J_N:
+                        case FREIKARTE_J_N:
                         if (flagTasteY)//spieler will Freikarte nicht verwenden
                         {
                             writeText(1,0," Pasch    X=JA  ");
@@ -907,7 +931,7 @@ int main(void)
                             //prüfen ob spieler eine freikarte hat
                             if (spielerInfo[spielerAmZug].freikarte)
                             {
-                                workshopZustand = FREIKARTEVE_J_N;
+                                workshopZustand = FREIKARTE_J_N;
                                 writeText(1,0,"Freikarte X=JA  ");
                                 writeText(2,0,"verwenden Y=NEIN");
                             }
@@ -942,7 +966,7 @@ int main(void)
                                 //prüfen ob spieler eine freikarte hat
                                 if (spielerInfo[spielerAmZug].freikarte)
                                 {
-                                    workshopZustand = FREIKARTEVE_J_N;
+                                    workshopZustand = FREIKARTE_J_N;
                                     writeText(1,0,"Freikarte X=JA  ");
                                     writeText(2,0,"verwenden Y=NEIN");
                                 }
@@ -1052,8 +1076,8 @@ int main(void)
                         break;
                     }
                 }
-                
-                if((spielfeld[aktuellePosition].besitzer && !(spielfeld[aktuellePosition].besitzer == spielerAmZug)) && !(bezahlStatus == 1))
+                feldbelastet = spielfeld[aktuellePosition].hypothek;
+                if((spielfeld[aktuellePosition].besitzer && !(spielfeld[aktuellePosition].besitzer == spielerAmZug)) && !(bezahlStatus == 1) && !feldbelastet)
                 {
                     flagZahlungAbgeschlossen = 0;
                     if (!updateLCD)
@@ -1254,11 +1278,12 @@ int main(void)
                 tasteNeu = (PINL << 8) | PINK;
                 positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
                 flagFarbgruppeKomplett = 1;
-                if (spielfeld[farbgruppenErstesFeld[i]].besitzer == spielerAmZug) //überprüft ob erstes feld einer Farbgrup0pe dem Spieler gehört
+                if (spielfeld[farbgruppenErstesFeld[i]].besitzer == spielerAmZug) //überprüft ob erstes feld einer Farbgruppe dem Spieler gehört
                 {
                     for (uint8_t j = 0; j < 3; j = j + 1)//Prüft ob Farbgruppen tatsächlich voll sind
                     {
-                        if ((!(spielfeld[spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j]].besitzer == spielerAmZug)) && (spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j]))//prüft alle Felder der Farbgruppe
+                        //besitzer des spielfeldes mit dem spieler am zug vergleichen                                             Was dieser teil macht weiss ich grade auch nicht mehr         Dieser Teil prüft ob ein Feld der Farbgruppe belastet ist. Wenn ja, kann man nicht bauen
+                        if ((!(spielfeld[spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j]].besitzer == spielerAmZug)) && (spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j]) && !(spielfeld[spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j]].hypothek))//prüft alle Felder der Farbgruppe
                         {
                             flagFarbgruppeKomplett = 0; //setzt flag auf 0 wenn ein Feld nicht dem Spieler gehört
                             volleFarbgruppen[i] = 0; //Markiert Farbgruppe als unvollständig
@@ -1442,6 +1467,165 @@ int main(void)
             minHaeuser = 5;
             maxHaeuser = 0;
             zustand = SPIEL;
+            break;
+            case VERWALTEN:
+            switch (verwaltung)
+            {
+                case VERWALTUNG_BAUEN:
+                if (!updateLCD)
+                {
+                    writeText(0,0,"   Spieler      ");
+                    sprintf(lcdBuffer,"%u",spielerAmZug);
+                    writeText(0,11,lcdBuffer);
+                    writeText(1,0,"     Bauen      ");
+                    writeText(2,0,"next "PFEIL_R"  zur"UE"ck S");
+                    updateLCD = 1;
+                }
+                if (positiveFlanke & TASTE_R)
+                {
+                    //zustand wechseln
+                    verwaltung = HYPOTHEK;
+                    updateLCD = 0;
+                }
+                else if (positiveFlanke & TASTE_S)
+                {
+                    //zurück zum Spiel
+                    verwaltung = VERWALTUNG_BAUEN;
+                    zustand = BAUEN;
+                    updateLCD = 0;
+                }
+                break;
+                case HYPOTHEK:
+                if (!updateLCD)
+                {
+                    writeText(0,0,"   Spieler      ");
+                    sprintf(lcdBuffer,"%u",spielerAmZug);
+                    writeText(0,11,lcdBuffer);
+                    writeText(1,0,"   verpf"AE"nden X   ");
+                    writeText(2,0,"next "PFEIL_R"  zur"UE"ck S");
+                    updateLCD = 1;
+                }
+                if (positiveFlanke & TASTE_R)
+                {
+                    //zustand wechseln
+                    verwaltung = VERWALTUNG_BAUEN;
+                    updateLCD = 0;
+                }
+                else if (positiveFlanke & TASTE_S)
+                {
+                    //zurück zum Spiel
+                    verwaltung = VERWALTUNG_BAUEN;
+                    zustand = VERPFAENDEN;
+                    updateLCD = 0;
+                }
+                break;
+                default:
+                break;
+            }
+            break;
+            case VERPFAENDEN://~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            if (!updateLCD)
+            {
+                writeText(0,0,"   Spieler      ");
+                sprintf(lcdBuffer,"%u",spielerAmZug);
+                writeText(0,11,lcdBuffer);
+                writeText(1,0,"Hyp. aufnehmen "PFEIL_O);
+                writeText(2,0,"Hyp. aufl"OE"sen  "PFEIL_U);
+                updateLCD = 1;
+                //Spielerinventar zurücksetzen
+                for (uint8_t i = 0; i < 28; i = i + 1)
+                {
+                    spielerInventar[i] = 0;
+                }
+                anzahlEigentum = 0;
+                for (uint8_t i = 0; i < ANZAHL_FELDER; i = i + 1)
+                {
+                    //sucht die spielfelder nach denen ab, die dem Spieler gehören
+                    if (spielfeld[i].besitzer == spielerAmZug)
+                    {
+                        //speichert die Feldnummer im spielerinventar
+                        spielerInventar[anzahlEigentum] = i;
+                        anzahlEigentum += 1;
+                    }
+                }
+                writeText(0,0,spielfeld[spielerInventar[feldZaehler]].name);
+            }
+            //nächstes Feld
+            if (positiveFlanke & TASTE_R)
+            {
+                feldZaehler = (feldZaehler + 1) % anzahlEigentum;
+                //Schreibt den Namen des Feldes auf das LCD
+                writeText(0,0,"                ");
+                writeText(0,0,spielfeld[spielerInventar[feldZaehler]].name);
+            }
+            //wenn spieler Feld verpfänden will
+            if (positiveFlanke & TASTE_O)
+            {
+                //prüft ob es auf dem Feld noch Häuser hatt und ob das Feld bereits belastet ist
+                if (!(spielfeld[spielerInventar[feldZaehler]].anzahlHaeuser) && !(spielfeld[spielerInventar[feldZaehler]].hypothek))
+                {
+                    //berechnet den Wert des Feldes
+                    zahlBetrag = spielfeld[spielerInventar[feldZaehler]].preis / 2;
+                    bezahlStatus = geldUeberweisen(0,spielerAmZug,zahlBetrag,1);
+                    if (bezahlStatus == 1) //wenn die Bezahlung erfolgreich war
+                    {
+                        //vermerkt das feld als verpfändet
+                        spielfeld[spielerInventar[feldZaehler]].hypothek = 1;
+                        //Markiert das Feld als verpfändet
+                        hausNummer = 0;
+                        hausNummer = spielfeld[spielerInventar[feldZaehler]].hausnummer;
+                        rgbFeldNummer = spielfeld[spielerInventar[feldZaehler]].rgbNummer;
+                        if (hausNummer)//wenn es eine Strase ist
+                        {
+                            //Markiert das Feld als verpfändet
+                            //alle 5 haus LEDs werden eingeschaltet
+                            setHaus(hausNummer,6);
+                        }
+                        else //wenn es keine strasse ist
+                        {
+                            //wenn es keine häuser hat, die man als Markierung nutzen kann
+                            // wird die RGB auf weiss gestellt.
+                            setPropertyRgb(rgbFeldNummer,5);
+                        }
+                    }
+                }
+            }
+            else if (positiveFlanke & TASTE_U) //wenn der Spieler die hypothek auflösen will
+            {
+                //prüft ob das Feld belastet ist
+                if (spielfeld[spielerInventar[feldZaehler]].hypothek)
+                {
+                    //berechnet den Preis um eine Hypothek aufzulösen
+                    zahlBetrag = (spielfeld[spielerInventar[feldZaehler]].preis / 2) * 1.1;
+                    //Geld wird an Bank überwiesen
+                    bezahlStatus = geldUeberweisen(spielerAmZug,0,zahlBetrag,1);
+                    if (bezahlStatus == 1) //wenn die Zahlung erfolgreich war
+                    {
+                        //vermerkt das feld als nicht mehr verpfändet
+                        spielfeld[spielerInventar[feldZaehler]].hypothek = 0;
+                        hausNummer = 0;
+                        hausNummer = spielfeld[spielerInventar[feldZaehler]].hausnummer;
+                        rgbFeldNummer = spielfeld[spielerInventar[feldZaehler]].rgbNummer;
+                        if (hausNummer)//wenn es eine Strase ist
+                        {
+                            //Markiert das Feld als nicht mehr verpfändet
+                            setHaus(hausNummer,0);
+                        }
+                        else //wenn es keine strasse ist
+                        {
+                            //markiert das Feld wieder mit der Spielerfarbe
+                            setPropertyRgb(rgbFeldNummer,spielerAmZug);
+                        }
+                    }
+                }
+                
+            }
+            if (positiveFlanke & TASTE_C)
+            {
+                zustand = SPIEL;
+                flagSpielLCD = 1;
+            }
+            
             break;
             default:
             break;
