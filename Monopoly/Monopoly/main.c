@@ -1688,29 +1688,32 @@ uint8_t bauen(uint8_t feldNummer, uint8_t spielerAmZug)
 {
     uint8_t kaufStatus = 0;
     //wenn ein Hotel gebaut wird
-    if ((spielfeld[feldNummer].anzahlHaeuser == 4) && hotelsImSpiel < MAX_ANZAHL_HOTELS_IM_SPIEL)
+    if (spielfeld[feldNummer].anzahlHaeuser < 5)
     {
-        haeuserImSpiel -= 4;
-        hotelsImSpiel += 1;
-        
-        kaufStatus = geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus,10);
-        setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser + 1); //Anzahl Häuser um 1 erhöhen
-        spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser + 1;//Neue anzahl Häuser speichern
-        return 1;//Erfolgreich
-    }
-    //haus bauen
-    else if (haeuserImSpiel < MAX_ANZAHL_HAEUSER_IM_SPIEL)
-    {
-        haeuserImSpiel += 1;
-        
-        kaufStatus = geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus,10);
-        setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser + 1); //Anzahl Häuser um 1 erhöhen
-        spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser + 1;//Neue anzahl Häuser speichern
-        return 1;//Erfolgreich
-    }
-    else
-    {
-        return 0;//Fehlgeschlagen
+        if ((spielfeld[feldNummer].anzahlHaeuser == 4) && hotelsImSpiel < MAX_ANZAHL_HOTELS_IM_SPIEL)
+        {
+            haeuserImSpiel -= 4;
+            hotelsImSpiel += 1;
+            
+            kaufStatus = geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus,10);
+            setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser + 1); //Anzahl Häuser um 1 erhöhen
+            spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser + 1;//Neue anzahl Häuser speichern
+            return 1;//Erfolgreich
+        }
+        //haus bauen
+        else if (haeuserImSpiel < MAX_ANZAHL_HAEUSER_IM_SPIEL)
+        {
+            haeuserImSpiel += 1;
+            
+            kaufStatus = geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus,10);
+            setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser + 1); //Anzahl Häuser um 1 erhöhen
+            spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser + 1;//Neue anzahl Häuser speichern
+            return 1;//Erfolgreich
+        }
+        else
+        {
+            return 0;//Fehlgeschlagen
+        }
     }
 }
 

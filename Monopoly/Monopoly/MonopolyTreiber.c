@@ -119,15 +119,15 @@ void setHaus(uint8_t FeldNr, uint8_t anzahlHaus)
     startRegister = anzahlLeds / 8;
     //Berechnet die Position des ersten Haus-Bits im Schieberegister
     startLed = (anzahlLeds % 8);
-
+    
+    if (anzahlHaus == 6)//Feld verpfändet
+    {
+        hausWert = 0x1F;
+    }
     //Wenn 5 Häuser gesetzt sind, wird nur das Hotel aktiviert
     if (anzahlHaus == 5)
     {
         hausWert = 0x10;
-    }
-    if (anzahlHaus == 6)//Feld verpfändet
-    {
-        hausWert = 0x1F;
     }
     else
     {
