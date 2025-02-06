@@ -1283,7 +1283,7 @@ int main(void)
                     for (uint8_t j = 0; j < 3; j = j + 1)//Prüft ob Farbgruppen tatsächlich voll sind
                     {
                         //besitzer des spielfeldes mit dem spieler am zug vergleichen                                             Was dieser teil macht weiss ich grade auch nicht mehr         Dieser Teil prüft ob ein Feld der Farbgruppe belastet ist. Wenn ja, kann man nicht bauen
-                        if ((!(spielfeld[spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j]].besitzer == spielerAmZug)) && (spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j]) && !(spielfeld[spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j]].hypothek))//prüft alle Felder der Farbgruppe
+                        if (((!(spielfeld[spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j]].besitzer == spielerAmZug)) && (spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j])) || spielfeld[spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j]].feldBelastet)//prüft alle Felder der Farbgruppe
                         {
                             flagFarbgruppeKomplett = 0; //setzt flag auf 0 wenn ein Feld nicht dem Spieler gehört
                             volleFarbgruppen[i] = 0; //Markiert Farbgruppe als unvollständig
@@ -1562,7 +1562,7 @@ int main(void)
             if (positiveFlanke & TASTE_O)
             {
                 //prüft ob es auf dem Feld noch Häuser hatt und ob das Feld bereits belastet ist
-                if (!(spielfeld[spielerInventar[feldZaehler]].anzahlHaeuser) && !(spielfeld[spielerInventar[feldZaehler]].hypothek))
+                if (!(spielfeld[spielerInventar[feldZaehler]].anzahlHaeuser) && !(spielfeld[spielerInventar[feldZaehler]].feldBelastet))
                 {
                     //berechnet den Wert des Feldes
                     zahlBetrag = spielfeld[spielerInventar[feldZaehler]].preis / 2;
@@ -1570,12 +1570,12 @@ int main(void)
                     if (bezahlStatus == 1) //wenn die Bezahlung erfolgreich war
                     {
                         //vermerkt das feld als verpfändet
-                        spielfeld[spielerInventar[feldZaehler]].hypothek = 1;
+                        spielfeld[spielerInventar[feldZaehler]].feldBelastet = 1;
                         //Markiert das Feld als verpfändet
                         hausNummer = 0;
                         hausNummer = spielfeld[spielerInventar[feldZaehler]].hausnummer;
                         rgbFeldNummer = spielfeld[spielerInventar[feldZaehler]].rgbNummer;
-                        if (hausNummer)//wenn es eine Strase ist
+                        if (spielfeld[spielerInventar[feldZaehler]].typ == STRASSE)//wenn es eine Strase ist
                         {
                             //Markiert das Feld als verpfändet
                             //alle 5 haus LEDs werden eingeschaltet
@@ -1593,7 +1593,7 @@ int main(void)
             else if (positiveFlanke & TASTE_U) //wenn der Spieler die hypothek auflösen will
             {
                 //prüft ob das Feld belastet ist
-                if (spielfeld[spielerInventar[feldZaehler]].hypothek)
+                if (spielfeld[spielerInventar[feldZaehler]].feldBelastet)
                 {
                     //berechnet den Preis um eine Hypothek aufzulösen
                     zahlBetrag = (spielfeld[spielerInventar[feldZaehler]].preis / 2) * 1.1;
@@ -1602,11 +1602,11 @@ int main(void)
                     if (bezahlStatus == 1) //wenn die Zahlung erfolgreich war
                     {
                         //vermerkt das feld als nicht mehr verpfändet
-                        spielfeld[spielerInventar[feldZaehler]].hypothek = 0;
+                        spielfeld[spielerInventar[feldZaehler]].feldBelastet = 0;
                         hausNummer = 0;
                         hausNummer = spielfeld[spielerInventar[feldZaehler]].hausnummer;
                         rgbFeldNummer = spielfeld[spielerInventar[feldZaehler]].rgbNummer;
-                        if (hausNummer)//wenn es eine Strase ist
+                        if (spielfeld[spielerInventar[feldZaehler]].typ == STRASSE)//wenn es eine Strase ist
                         {
                             //Markiert das Feld als nicht mehr verpfändet
                             setHaus(hausNummer,0);
