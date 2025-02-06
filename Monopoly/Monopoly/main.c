@@ -1126,6 +1126,8 @@ int main(void)
                             updateLCD = 0;
                             flagZahlungAbgeschlossen = 1;
                             flagSpielLCD = 1;
+                            flagWuerfel1 = 0;
+                            flagWuerfel2 = 0;
                         }
                     }
                 }
