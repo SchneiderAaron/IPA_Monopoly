@@ -1601,7 +1601,6 @@ void read_string(char *buf, size_t i)
 #define ANZAHL_KARTEN 17
 uint8_t zufallsNummer = 0;
 uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uint8_t flagWeiter, Karte chanceKanzlei[])
-
 {
     static char text[200] = {0};
     //static uint8_t zufallsNummer = 0;
