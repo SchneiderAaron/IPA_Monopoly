@@ -138,7 +138,7 @@ uint8_t spielerImGefaengnis[5] = {0};
 
 uint16_t tasteAlt, tasteNeu, positiveFlanke = 0; //Variabeln Flankenerkennung
 
-zustand_t zustand = SPIELERAUSWAHL;
+zustand_t zustand = SPIEL;//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~SPIELERAUSWAHL~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 workshopZustand_t workshopZustand = PASCH_J_N;
 verwaltung_t verwaltung = VERWALTUNG_BAUEN;
 uint8_t anzahlSpieler = 2;
@@ -201,7 +201,11 @@ Spieler spielerInfo[5];
 
 
 
-
+uint8_t handelbareFelder[28] = {0};
+uint8_t anzahlHandelbareFelder = 0;
+uint8_t anzahlAusgewaehlteFelder = 0;
+uint8_t handelFeld = 0;
+uint8_t handelUpdateLCD = 0;
 
 
 
@@ -295,13 +299,13 @@ int main(void)
     
     uint8_t haendlerZaehler = 0;
     uint8_t haendlerAmZug = 0;
-    
+    uint8_t auswahlAbgeschlossen = 0;
     /*--- Prototypen modullokaler Funktionen ------------------------------------*/
     uint8_t feldKaufen(uint8_t feldNummer, Feld spielfeld[40], uint8_t spielerAmZug);
     uint8_t bauen(uint8_t feldNummer, uint8_t spielerAmZug);
     uint8_t abBauen(uint8_t feldNummer, uint8_t spielerAmZug);
     void warteBisGewuerfelt(void);
-    void handelWareAuswaehlen(uint8_t haendlerNr);
+    uint8_t handelWareAuswaehlen(uint8_t haendlerNr);
     /*--- Funktionsdefinitionen -------------------------------------------------*/
     
     
@@ -352,6 +356,7 @@ int main(void)
         if (((PINL << 8) | PINK) == (TASTE_Y1 | TASTE_Y2 | TASTE_Y3 | TASTE_Y4))
         {
             lcdInitAll();//LCD neu initialisieren
+            _delay_ms(1000);
             writeText(0,0,"      LCD       ");
             writeText(1,0," Initialisiert  ");
         }
@@ -1767,13 +1772,14 @@ int main(void)
             case HANDELN://in diesem Zustand wird gehandelt
             switch (handelZustand)
             {
+                case HAENDLER_AUSWAHL://auswählen, wer mit wem handelt
                 if (!updateLCD)//LCD einmal schreiben
                 {
-                    writeText(0,0,"beide händler   ");
-                    writeText(1,0,"taste x drücken ");
+                    writeText(0,0,"beide h"AE"ndler   ");
+                    writeText(1,0,"taste x dr"UE"cken ");
                     writeText(2,0,"                ");
+                    updateLCD = 1;
                 }
-                case HAENDLER_AUSWAHL://auswählen, wer mit wem handelt
                 //for schleife fragt alle x tasten ab
                 for (uint8_t i = 1; i <= anzahlSpieler; i = i + 1)
                 {
@@ -1790,11 +1796,24 @@ int main(void)
                 {
                     globalUpdateLCD = 0;
                     handelZustand = WARE_AUSWAEHLEN;//zustandswechsel
+                    haendlerZaehler = 0;
                 }
             	break;
                 case WARE_AUSWAEHLEN://ware die gehandelt werden soll auswählen
+                auswahlAbgeschlossen = handelWareAuswaehlen(haendlerZaehler);
+                if (auswahlAbgeschlossen)
+                {
+                    haendlerZaehler += 1;//zähler erhöhen
+                    auswahlAbgeschlossen = 0;
+                }
+                
+                if (haendlerZaehler == 2)
+                {
+                    handelZustand = HANDEL_BESTAETIGEN;//zustandswechsel
+                }
                 break;
                 case HANDEL_BESTAETIGEN://handel bestätigen
+                writeText(0,0,"   Best"AE"tigen   ");
                 break;
                 case BESITZ_UEBERTRAGEN://ausgewählte ware übertragen
                 break;
@@ -1949,11 +1968,8 @@ void warteBisGewuerfelt(void)
         }
     }
 }
-uint8_t handelbareFelder[28] = {0};
-uint8_t anzahlHandelbareFelder = 0;
-uint8_t anzahlAusgewaehlteFelder = 0;
-uint8_t handelFeld = 0;
-void handelWareAuswaehlen(uint8_t haendlerNr)
+
+uint8_t handelWareAuswaehlen(uint8_t haendlerNr)
 {
     char lcdBuffer[16] = {0};
     //flankenerkennung
@@ -1968,9 +1984,9 @@ void handelWareAuswaehlen(uint8_t haendlerNr)
         //Nachfolgender Code wird einmal durchgeführt~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         if (!globalUpdateLCD)
         {
-            sprintf(lcdBuffer,"%u",handel[haendlerNr].spielerNr);
-            writeText(0,11,lcdBuffer);
-            writeText(0,0,"   Spieler X    ");
+            /*sprintf(lcdBuffer,"%u",handel[haendlerNr].spielerNr);
+            writeText(0,11,lcdBuffer);*/
+            writeText(0,0,"   Grundst"UE"ck   ");
             writeText(1,0,"S Handel|weiter"PFEIL_R);
             writeText(2,0,"                ");
             globalUpdateLCD = 1;
@@ -2013,16 +2029,61 @@ void handelWareAuswaehlen(uint8_t haendlerNr)
             //speichert das aktuelle Feld 
             handel[haendlerNr].feldNummern[anzahlAusgewaehlteFelder] = handelbareFelder[handelFeld];
             anzahlAusgewaehlteFelder += 1;
+            handelware = AUSWAHL_BEENDEN;
+            globalUpdateLCD = 0;
+        }
+        else if (positiveFlanke & TASTE_L)//etwas anderes handeln
+        {
+            writeText(0,0,"    Bargeld     ");
+            writeText(1,0,"S Handel|weiter"PFEIL_R);
+            writeText(2,0,"                ");
+            handelware = BARGELD;
+            globalUpdateLCD = 0;
         }
     	break;
         case BARGELD:
+        //prüft ob der Spieler eine Freikarte hat
+        if ((positiveFlanke & TASTE_L) && spielerInfo[handel[haendlerNr].spielerNr].freikarte)
+        {
+            handelware = FREIKARTEN;//zustandswechsel
+            globalUpdateLCD = 0;
+        }
+        else if(positiveFlanke & TASTE_L)
+        {
+            handelware = AUSWAHL_BEENDEN;//zustandswechsel
+            globalUpdateLCD = 0;
+        }
         break;
         case FREIKARTEN:
+        if (positiveFlanke & TASTE_L)
+        {
+            handelware = AUSWAHL_BEENDEN;
+            globalUpdateLCD = 0;
+        }
         break;
         case AUSWAHL_BEENDEN:
+        if (!globalUpdateLCD)
+        {
+            writeText(0,0,"Auswahl Beenden?");
+            writeText(1,0,PFEIL_O"Beenden   mehr"PFEIL_U);
+            writeText(2,0,"                ");
+            globalUpdateLCD = 1;
+        }
+        if (positiveFlanke & TASTE_O)//Auswahl Beenden~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        {
+            handelware = GRUNDSTUECK;
+            globalUpdateLCD = 0;
+            return 1;
+        }
+        else if (positiveFlanke & TASTE_U)//mehr auswählen
+        {
+            globalUpdateLCD = 0;
+            handelware = GRUNDSTUECK;
+            //handelWareAuswaehlen(haendlerNr); //Funktion erneut aufrufen
+        }
         break;
         default:
         break;
     }
-    
+    return 0;
 }
