@@ -29,7 +29,7 @@
 *
 \*********************************************************************************/
 
-#pragma GCC optimize 0
+
 
 //Standardisierte Datentypen
 #include <stdint.h>
@@ -48,6 +48,8 @@
 #include "SPI.h"
 #include "MonopolyTreiber.h"
 #include "LCD.h"
+
+#pragma GCC optimize 0
 /*--- #define-Konstanten und Makros -----------------------------------------*/
 #define MIN_ANZAHL_SPIELER  2
 #define MAX_ANZAHL_SPIELER  4
@@ -208,7 +210,8 @@ uint8_t handelFeld = 0;
 uint8_t handelUpdateLCD = 0;
 
 
-
+uint8_t xTasten[4] = {TASTE_X1, TASTE_X2, TASTE_X3, TASTE_X4};
+uint8_t yTasten[4] = {TASTE_Y1, TASTE_Y2, TASTE_Y3, TASTE_Y4};
 
 int main(void)
 {
@@ -224,8 +227,7 @@ int main(void)
     uint8_t flagNextPlayer, flagPasch = 0;
     uint8_t flagWeiter = 1;
     uint8_t aktuellePosition = 0;
-    uint8_t xTasten[4] = {TASTE_X1, TASTE_X2, TASTE_X3, TASTE_X4};
-    uint8_t yTasten[4] = {TASTE_Y1, TASTE_Y2, TASTE_Y3, TASTE_Y4};
+    
     uint8_t flagTasteX = 0;
     uint8_t flagTasteY = 0;
     uint8_t bieter[6] = {0};//0-3 Bieter 4 anz. spieler raus 5 höchstbieter
@@ -306,6 +308,7 @@ int main(void)
     uint8_t abBauen(uint8_t feldNummer, uint8_t spielerAmZug);
     void warteBisGewuerfelt(void);
     uint8_t handelWareAuswaehlen(uint8_t haendlerNr);
+    uint8_t auswahlBestaetigen(uint8_t haendlerNr);
     /*--- Funktionsdefinitionen -------------------------------------------------*/
     
     
@@ -1810,12 +1813,32 @@ int main(void)
                 if (haendlerZaehler == 2)
                 {
                     handelZustand = HANDEL_BESTAETIGEN;//zustandswechsel
+                    globalUpdateLCD = 0;
+                    haendlerZaehler = 0;
+                    auswahlAbgeschlossen = 0;
                 }
                 break;
                 case HANDEL_BESTAETIGEN://handel bestätigen
+                //blaulicht(100,10);
                 writeText(0,0,"   Best"AE"tigen   ");
+                auswahlAbgeschlossen = auswahlBestaetigen(haendlerZaehler);
+                if (auswahlAbgeschlossen)
+                {
+                    haendlerZaehler += 1;//zähler erhöhen
+                    auswahlAbgeschlossen = 0;
+                }
+                
+                if (haendlerZaehler == 2)
+                {
+                    handelZustand = BESITZ_UEBERTRAGEN;//zustandswechsel
+                    globalUpdateLCD = 0;
+                }
                 break;
                 case BESITZ_UEBERTRAGEN://ausgewählte ware übertragen
+                clear();
+                _delay_ms(1000);
+                writeText(0,0,"   "UE"bertragen   ");
+                _delay_ms(1000);
                 break;
                 case HANDEL_ABSCHLIESSEN://handel abschliessen
                 break;
@@ -2042,20 +2065,39 @@ uint8_t handelWareAuswaehlen(uint8_t haendlerNr)
         }
     	break;
         case BARGELD:
+        if (!globalUpdateLCD)
+        {
+            writeText(0,0,"Bargeld 0       ");
+            writeText(1,0,"S Handel|weiter"PFEIL_R);
+            writeText(2,0,PFEIL_O" +10      +100"PFEIL_U);
+            globalUpdateLCD = 1;
+        }
+        if (positiveFlanke & TASTE_O)
+        {
+            handel[haendlerNr].barGeld += 10;
+            sprintf(lcdBuffer,"%4u",handel[haendlerNr].barGeld);
+            writeText(0,8,lcdBuffer);
+        }
+        else if (positiveFlanke & TASTE_U)
+        {
+            handel[haendlerNr].barGeld += 100;
+            sprintf(lcdBuffer,"%4u",handel[haendlerNr].barGeld);
+            writeText(0,8,lcdBuffer);
+        }
         //prüft ob der Spieler eine Freikarte hat
         if ((positiveFlanke & TASTE_L) && spielerInfo[handel[haendlerNr].spielerNr].freikarte)
         {
             handelware = FREIKARTEN;//zustandswechsel
             globalUpdateLCD = 0;
         }
-        else if(positiveFlanke & TASTE_L)
+        else if(positiveFlanke & TASTE_S)
         {
             handelware = AUSWAHL_BEENDEN;//zustandswechsel
             globalUpdateLCD = 0;
         }
         break;
         case FREIKARTEN:
-        if (positiveFlanke & TASTE_L)
+        if (positiveFlanke & TASTE_S)
         {
             handelware = AUSWAHL_BEENDEN;
             globalUpdateLCD = 0;
@@ -2071,6 +2113,7 @@ uint8_t handelWareAuswaehlen(uint8_t haendlerNr)
         }
         if (positiveFlanke & TASTE_O)//Auswahl Beenden~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         {
+            anzahlAusgewaehlteFelder = 0;
             handelware = GRUNDSTUECK;
             globalUpdateLCD = 0;
             return 1;
@@ -2086,4 +2129,92 @@ uint8_t handelWareAuswaehlen(uint8_t haendlerNr)
         break;
     }
     return 0;
+}
+
+uint8_t auswahlBestaetigen(uint8_t haendlerNr)
+{
+    char lcdBuffer[16] = {0};
+    uint8_t flagBestaetigt = 1;
+    if (!globalUpdateLCD)
+    {
+        writeText(0,0,"   Best"AE"tigen   ");
+        globalUpdateLCD = 1;
+    }
+    //prüft ob grundstücke gehandelt wurden
+    if (handel[haendlerNr].feldNummern[0])
+    {
+        for (uint8_t i = 0; handel[haendlerNr].feldNummern[i] > 0; i = i + 1)
+        {
+            //schreibt den Feldnamen auf das display
+            writeText(1,0,spielfeld[handel[haendlerNr].feldNummern[i]].name);
+            //wartet bis der andere spieler bestätigt hatt
+            while (!((positiveFlanke & xTasten[(handel[1 - haendlerNr].spielerNr) - 1]) || (positiveFlanke & yTasten[(handel[1 - haendlerNr].spielerNr) - 1])))
+            {
+                //Flankenerkennung
+                tasteAlt = tasteNeu;
+                tasteNeu = 0;
+                tasteNeu = (PINL << 8) | PINK;
+                positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
+                //wartet auf benutzereingabe
+            }
+            if (positiveFlanke & xTasten[(handel[1 - haendlerNr].spielerNr)])
+            {
+                writeText(0,0,"   Best"AE"tigt    ");
+                _delay_ms(1000);
+            }
+            if (positiveFlanke & yTasten[(handel[1 - haendlerNr].spielerNr)])
+            {
+                flagBestaetigt = 0;
+            }
+        }
+    }
+    //prüft ob bargeld gehandelt wird
+    if (handel[haendlerNr].barGeld)
+    {
+        writeText(0,0,"Bargeld:        ");
+        sprintf(lcdBuffer,"%4u",handel[haendlerNr].barGeld);
+        writeText(0,9,lcdBuffer);
+        while (!((positiveFlanke & xTasten[(handel[1 - haendlerNr].spielerNr) - 1]) || (positiveFlanke & yTasten[(handel[1 - haendlerNr].spielerNr) - 1])))
+        {
+            //Flankenerkennung
+            tasteAlt = tasteNeu;
+            tasteNeu = 0;
+            tasteNeu = (PINL << 8) | PINK;
+            positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
+            //wartet auf benutzereingabe
+        }
+        if (positiveFlanke & xTasten[1 - (handel[haendlerNr].spielerNr)])
+        {
+            writeText(0,0,"   Best"AE"tigt    ");
+            _delay_ms(1000);
+        }
+        if (positiveFlanke & yTasten[1 - (handel[haendlerNr].spielerNr)])
+        {
+            flagBestaetigt = 0;
+        }
+    }
+    if (handel[haendlerNr].freikarte)
+    {
+        writeText(0,0,"   Freikarte    ");
+        while (!((positiveFlanke & xTasten[(handel[1 - haendlerNr].spielerNr) - 1]) || (positiveFlanke & yTasten[(handel[1 - haendlerNr].spielerNr) - 1])))
+        {
+            //Flankenerkennung
+            tasteAlt = tasteNeu;
+            tasteNeu = 0;
+            tasteNeu = (PINL << 8) | PINK;
+            positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
+            //wartet auf benutzereingabe
+        }
+        if (positiveFlanke & xTasten[1 - (handel[haendlerNr].spielerNr)])
+        {
+            writeText(0,0,"   Best"AE"tigt    ");
+            _delay_ms(1000);
+        }
+        if (positiveFlanke & yTasten[1 - (handel[haendlerNr].spielerNr)])
+        {
+            flagBestaetigt = 0;
+        }
+    }
+    
+    return flagBestaetigt;
 }
