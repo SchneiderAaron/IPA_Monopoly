@@ -337,8 +337,15 @@ int main(void)
             zustand = BAUEN;
         }*/
         
-        
-        
+        //falls der Kontrast am LCD nicht mehr stimmt
+        //kann man während dem Spiel das LCD neu initialisieren
+        //dafür müssen alle 4 Y Tasten gleichzeitig gedrückt werden
+        if (((PINL << 8) | PINK) == (TASTE_Y1 | TASTE_Y2 | TASTE_Y3 | TASTE_Y4))
+        {
+            lcdInitAll();//LCD neu initialisieren
+            writeText(0,0,"      LCD       ")
+            writeText(1,0," Initialisiert  ")
+        }
         //verarbeitung verschiedener zustände
         switch (zustand)//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         {
@@ -509,7 +516,7 @@ int main(void)
             sprintf(lcdBuffer,"%u",spielerAmZug);
             writeText(0,11,lcdBuffer);//Ausgabe auf LCD
             writeText(1,0," w"UE"rfeln A / B ");
-            writeText(2,0,"    weiter C    ");
+            writeText(2,0,"weiter C  mehr S");
             
             //Wechselt zum Zustand in dem das hauptspiel statt findet
             zustand = SPIEL;
@@ -1368,7 +1375,7 @@ int main(void)
                         updateLCD = 0;
                         //nächstes Feld
                         feldNummer = farbgruppenErstesFeld[i];
-                        while (!(positiveFlanke & TASTE_U))
+                        while (!(positiveFlanke & TASTE_C))
                         {
                             //Flankenerkennung
                             tasteAlt = tasteNeu;
@@ -1416,17 +1423,15 @@ int main(void)
                             if (!updateLCD)
                             {
                                 clear();//lcd leeren
-                                //spieler am zug anzeigen
-                                
-                                writeText(0,0,PFEIL_L"Abbauen  Bauen"PFEIL_R);
                                 writeText(1,0,spielfeld[feldNummer].name);
-                                writeText(2,0,PFEIL_O"next    weiter"PFEIL_U);
+                                writeText(0,0,PFEIL_U"Abbauen  Bauen"PFEIL_O);
+                                writeText(2,0,"C zur"UE"ck|weiter"PFEIL_R);
                                 /*writeText(1,0," w"UE"rfeln A / B ");
                                 writeText(2,0,"    weiter C    ");*/
                                 gruppeAnzahlHaeuser = spielfeld[farbgruppenErstesFeld[i]].anzahlHaeuser; //holt die Anzahl Häuser
                                 updateLCD = 1;
                             }
-                            if ((positiveFlanke & TASTE_R))//Haus Bauen~~~~~~~~~~~~~~~~~~~~~~~~
+                            if ((positiveFlanke & TASTE_O))//Haus Bauen~~~~~~~~~~~~~~~~~~~~~~~~
                             {
                                 //Wenn auf allen felder gebaut wurde, flags zurücksetzten
                                 if (anzahlHauser[0] && anzahlHauser[1] && anzahlHauser[2])
@@ -1471,7 +1476,7 @@ int main(void)
                                 }
                                 
                             }
-                            if ((positiveFlanke & TASTE_L))//Haus Verkaufen~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                            if ((positiveFlanke & TASTE_U))//Haus Verkaufen~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                             {
                                 //Wenn auf allen felder gebaut wurde, flags zurücksetzten
                                 if (!(anzahlHauser[0] || anzahlHauser[1] || anzahlHauser[2]))
@@ -1515,7 +1520,7 @@ int main(void)
                                 }
                                 
                             }
-                            if (positiveFlanke & TASTE_O)//nächstes Feld
+                            if (positiveFlanke & TASTE_R)//nächstes Feld
                             {
                                 farbgruppenCounter = (farbgruppenCounter + 1) % 3;
                                 feldNummer = spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[farbgruppenCounter];
@@ -1534,13 +1539,14 @@ int main(void)
                 }
             }
             //Felder nach vollen Farbgruppen absuchen~~~~~~~~~~~~~~~~~~~~~~~~~
-            clear();//lcd leeren
+            /*clear();//lcd leeren
             //spieler am zug anzeigen
             writeText(0,0,"   Spieler      ");
             sprintf(lcdBuffer,"%u",spielerAmZug);
             writeText(0,11,lcdBuffer);
             writeText(1,0," w"UE"rfeln A / B ");
-            writeText(2,0,"    weiter C    ");
+            writeText(2,0,"    weiter C    ");*/
+            flagSpielLCD = 1;//Standart LCD Maske anzeigen
             minHaeuser = 5;
             maxHaeuser = 0;
             zustand = SPIEL;
@@ -1551,11 +1557,9 @@ int main(void)
                 case VERWALTUNG_BAUEN:
                 if (!updateLCD)
                 {
-                    writeText(0,0,"   Spieler      ");
-                    sprintf(lcdBuffer,"%u",spielerAmZug);
-                    writeText(0,11,lcdBuffer);
-                    writeText(1,0,"     Bauen      ");
-                    writeText(2,0,"next "PFEIL_R"  zur"UE"ck S");
+                    writeText(0,0,"   Verwaltung   ");
+                    writeText(1,0,"     Bauen?     ");
+                    writeText(2,0,"C zur"UE"ck|weiter"PFEIL_R);
                     updateLCD = 1;
                 }
                 if (positiveFlanke & TASTE_R)
@@ -1571,15 +1575,18 @@ int main(void)
                     zustand = BAUEN;
                     updateLCD = 0;
                 }
+                else if (positiveFlanke & TASTE_C)
+                {
+                    zustand = SPIEL;
+                    flagSpielLCD = 1;
+                }
                 break;
                 case HYPOTHEK:
                 if (!updateLCD)
                 {
-                    writeText(0,0,"   Spieler      ");
-                    sprintf(lcdBuffer,"%u",spielerAmZug);
-                    writeText(0,11,lcdBuffer);
-                    writeText(1,0,"   verpf"AE"nden X   ");
-                    writeText(2,0,"next "PFEIL_R"  zur"UE"ck S");
+                    writeText(0,0,"   Verwaltung   ");
+                    writeText(1,0,"    Hypothek    ");
+                    writeText(2,0,"C zur"UE"ck|weiter"PFEIL_R);
                     updateLCD = 1;
                 }
                 if (positiveFlanke & TASTE_R)
@@ -1595,6 +1602,11 @@ int main(void)
                     zustand = VERPFAENDEN;
                     updateLCD = 0;
                 }
+                else if (positiveFlanke & TASTE_C)
+                {
+                    zustand = SPIEL;
+                    flagSpielLCD = 1;
+                }
                 break;
                 default:
                 break;
@@ -1603,11 +1615,9 @@ int main(void)
             case VERPFAENDEN://~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             if (!updateLCD)
             {
-                writeText(0,0,"   Spieler      ");
-                sprintf(lcdBuffer,"%u",spielerAmZug);
-                writeText(0,11,lcdBuffer);
-                writeText(1,0,"Hyp. aufnehmen "PFEIL_O);
-                writeText(2,0,"Hyp. aufl"OE"sen  "PFEIL_U);
+                writeText(0,0,"                ");
+                writeText(1,0,PFEIL_O"Hyp.|Hyp.aufl."PFEIL_U);
+                writeText(2,0,"C zur"UE"ck|weiter"PFEIL_R);
                 updateLCD = 1;
                 //Spielerinventar zurücksetzen
                 for (uint8_t i = 0; i < 28; i = i + 1)

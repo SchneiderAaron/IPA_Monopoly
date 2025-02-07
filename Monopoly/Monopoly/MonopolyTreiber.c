@@ -1472,7 +1472,6 @@ void initialisiereKarten(Karte chanceKanzlei[])
     
     chanceKanzlei[9].typ = TELEPORTIEREN;
     chanceKanzlei[9].zielFeld = 0;
-    chanceKanzlei[9].geld = 200;
     
     chanceKanzlei[10].typ = TELEPORTIEREN;
     chanceKanzlei[10].zielFeld = 25;
@@ -1562,7 +1561,7 @@ const char kartenArray[][200] PROGMEM =
     "Ziehe vor bis   zur n"AE"chsten    Haltestelle",
     "Ziehe vor bis   Grundausbildung Elektroniker",
     "Ziehe vor bis   Mechatronik     Labor",
-    "Rücke vor auf   Start",
+    "R"UE"cke vor auf   Start",
     "Heute InformiertIhr euch "UE"ber   Studieng"AE"nge    R"UE"cke vor bis   Technikum",
     "Es ist der 25.  Du erh"AE"ltst     deinen Lohn. von70",
     "Es ist der 25.  Du erh"AE"ltst     deinen Lohn. von140",
