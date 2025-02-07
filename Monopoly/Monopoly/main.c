@@ -117,9 +117,11 @@
 /*--- Datentypen (typedef) --------------------------------------------------*/
 
 
-typedef enum {SPIELERAUSWAHL, WUERFELSTART, SPIEL, VERSTEIGERUNG, BAUEN, VERWALTEN, VERPFAENDEN} zustand_t;
+typedef enum {SPIELERAUSWAHL, WUERFELSTART, SPIEL, VERSTEIGERUNG, BAUEN, VERWALTEN, VERPFAENDEN, HANDELN} zustand_t;
 typedef enum {FREIKARTE_J_N, PASCH_J_N, BEZAHLEN_J_N, PASCH} workshopZustand_t;
-typedef enum {HYPOTHEK, VERWALTUNG_BAUEN} verwaltung_t;
+typedef enum {HYPOTHEK, VERWALTUNG_BAUEN, VERWALTUNG_HANDELN} verwaltung_t;
+typedef enum {HAENDLER_AUSWAHL, WARE_AUSWAEHLEN, HANDEL_BESTAETIGEN, BESITZ_UEBERTRAGEN, HANDEL_ABSCHLIESSEN} handel_t;
+typedef enum {GRUNDSTUECK, BARGELD, FREIKARTEN, AUSWAHL_BEENDEN} handelWare_t;
 /*--- Globale Konstanten ----------------------------------------------------*/
 
 /*--- Globale Variablen -----------------------------------------------------*/
@@ -145,6 +147,8 @@ uint8_t globalUpdateLCD = 0;
 
 Feld spielfeld[40];
 Karte chanceKanzlei[34];
+handelInventar handel[2];
+handelWare_t handelware = GRUNDSTUECK;
 uint8_t haeuserImSpiel = 0;
 uint8_t hotelsImSpiel = 0;
 
@@ -210,7 +214,7 @@ int main(void)
     /*--- Modullokale Konstanten ------------------------------------------------*/
     /*--- Modullokale Variablen -------------------------------------------------*/
     //char
-    char lcdBuffer[100];
+    char lcdBuffer[16];
     //8-Bit Variabeln
     uint8_t spielerAmZug = 1;
     uint8_t flagNextPlayer, flagPasch = 0;
@@ -281,7 +285,7 @@ int main(void)
     //Eigene Datentypen
     
     FeldTyp aktuellesFeld = FREIPARKEN;
-    
+    handel_t handelZustand = HAENDLER_AUSWAHL;
     uint8_t flagGefaengnis = 0;
     uint8_t flagGefaengnisLCD = 0;
     uint8_t flagGefaengnisWeiter = 0;
@@ -289,11 +293,15 @@ int main(void)
     uint8_t spielerInventar[28] = {0};
     uint8_t flagKeineHaeuser = 0;
     
+    uint8_t haendlerZaehler = 0;
+    uint8_t haendlerAmZug = 0;
+    
     /*--- Prototypen modullokaler Funktionen ------------------------------------*/
     uint8_t feldKaufen(uint8_t feldNummer, Feld spielfeld[40], uint8_t spielerAmZug);
     uint8_t bauen(uint8_t feldNummer, uint8_t spielerAmZug);
     uint8_t abBauen(uint8_t feldNummer, uint8_t spielerAmZug);
     void warteBisGewuerfelt(void);
+    void handelWareAuswaehlen(uint8_t haendlerNr);
     /*--- Funktionsdefinitionen -------------------------------------------------*/
     
     
@@ -303,6 +311,7 @@ int main(void)
     initialisiereSpielfeld(spielfeld);
     initSpieler(spielerInfo);
     initialisiereKarten(chanceKanzlei);
+    initialisiereHandelInventar(handel);//initialisiert das handelinventar
     SPI_init_all(9600);
     resetMonopoly();
     //random Seed setzen
@@ -343,8 +352,8 @@ int main(void)
         if (((PINL << 8) | PINK) == (TASTE_Y1 | TASTE_Y2 | TASTE_Y3 | TASTE_Y4))
         {
             lcdInitAll();//LCD neu initialisieren
-            writeText(0,0,"      LCD       ")
-            writeText(1,0," Initialisiert  ")
+            writeText(0,0,"      LCD       ");
+            writeText(1,0," Initialisiert  ");
         }
         //verarbeitung verschiedener zustände
         switch (zustand)//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1551,7 +1560,7 @@ int main(void)
             maxHaeuser = 0;
             zustand = SPIEL;
             break;
-            case VERWALTEN:
+            case VERWALTEN://in diesem zustand, kann man in andere zustände rein navigieren
             switch (verwaltung)
             {
                 case VERWALTUNG_BAUEN:
@@ -1592,7 +1601,7 @@ int main(void)
                 if (positiveFlanke & TASTE_R)
                 {
                     //zustand wechseln
-                    verwaltung = VERWALTUNG_BAUEN;
+                    verwaltung = VERWALTUNG_HANDELN;
                     updateLCD = 0;
                 }
                 else if (positiveFlanke & TASTE_S)
@@ -1600,6 +1609,33 @@ int main(void)
                     //zurück zum Spiel
                     verwaltung = VERWALTUNG_BAUEN;
                     zustand = VERPFAENDEN;
+                    updateLCD = 0;
+                }
+                else if (positiveFlanke & TASTE_C)
+                {
+                    zustand = SPIEL;
+                    flagSpielLCD = 1;
+                }
+                break;
+                case VERWALTUNG_HANDELN:
+                if (!updateLCD)
+                {
+                    writeText(0,0,"   Verwaltung   ");
+                    writeText(1,0,"    Handeln     ");
+                    writeText(2,0,"C zur"UE"ck|weiter"PFEIL_R);
+                    updateLCD = 1;
+                }
+                if (positiveFlanke & TASTE_R)
+                {
+                    //zustand wechseln
+                    verwaltung = VERWALTUNG_BAUEN;
+                    updateLCD = 0;
+                }
+                else if (positiveFlanke & TASTE_S)
+                {
+                    //zurück zum Spiel
+                    verwaltung = VERWALTUNG_BAUEN;
+                    zustand = HANDELN;
                     updateLCD = 0;
                 }
                 else if (positiveFlanke & TASTE_C)
@@ -1728,6 +1764,46 @@ int main(void)
             }
             
             break;
+            case HANDELN://in diesem Zustand wird gehandelt
+            switch (handelZustand)
+            {
+                if (!updateLCD)//LCD einmal schreiben
+                {
+                    writeText(0,0,"beide händler   ");
+                    writeText(1,0,"taste x drücken ");
+                    writeText(2,0,"                ");
+                }
+                case HAENDLER_AUSWAHL://auswählen, wer mit wem handelt
+                //for schleife fragt alle x tasten ab
+                for (uint8_t i = 1; i <= anzahlSpieler; i = i + 1)
+                {
+                    //überprüft die x tasten und stellt sicher dass der 1. händler nicht nochmal gedrückt hat
+                    if ((positiveFlanke & xTasten[i - 1]) && !(i == handel[0].spielerNr))
+                    {
+                        //Speichert die Spielernummer des haendlers
+                        handel[haendlerZaehler].spielerNr = i;//speichert die Spielernummer
+                        haendlerZaehler += 1;//zähler wird erhöt
+                    }
+                }
+                //prüft ob im 2.speicher ein händler eingetragen ist
+                if (handel[1].spielerNr)
+                {
+                    globalUpdateLCD = 0;
+                    handelZustand = WARE_AUSWAEHLEN;//zustandswechsel
+                }
+            	break;
+                case WARE_AUSWAEHLEN://ware die gehandelt werden soll auswählen
+                break;
+                case HANDEL_BESTAETIGEN://handel bestätigen
+                break;
+                case BESITZ_UEBERTRAGEN://ausgewählte ware übertragen
+                break;
+                case HANDEL_ABSCHLIESSEN://handel abschliessen
+                break;
+                default:
+                break;
+            }
+            break;
             default:
             break;
         }
@@ -1783,7 +1859,6 @@ uint8_t feldKaufen(uint8_t feldNummer, Feld spielfeld[40], uint8_t spielerAmZug)
         }
     return spielerEingabe;
 }
-
 
 uint8_t bauen(uint8_t feldNummer, uint8_t spielerAmZug)
 {
@@ -1845,7 +1920,6 @@ uint8_t abBauen(uint8_t feldNummer, uint8_t spielerAmZug)
     
 }
 
-
 void warteBisGewuerfelt(void)
 {
     //wartet bis mit beiden Würfel gewürfelt wurde
@@ -1874,4 +1948,81 @@ void warteBisGewuerfelt(void)
             
         }
     }
+}
+uint8_t handelbareFelder[28] = {0};
+uint8_t anzahlHandelbareFelder = 0;
+uint8_t anzahlAusgewaehlteFelder = 0;
+uint8_t handelFeld = 0;
+void handelWareAuswaehlen(uint8_t haendlerNr)
+{
+    char lcdBuffer[16] = {0};
+    //flankenerkennung
+    tasteAlt = tasteNeu;
+    tasteNeu = 0;
+    tasteNeu = (PINL << 8) | PINK;
+    positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
+    
+    switch (handelware)
+    {
+        case GRUNDSTUECK:
+        //Nachfolgender Code wird einmal durchgeführt~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        if (!globalUpdateLCD)
+        {
+            sprintf(lcdBuffer,"%u",handel[haendlerNr].spielerNr);
+            writeText(0,11,lcdBuffer);
+            writeText(0,0,"   Spieler X    ");
+            writeText(1,0,"S Handel|weiter"PFEIL_R);
+            writeText(2,0,"                ");
+            globalUpdateLCD = 1;
+            
+            //handelbareFelder zurücksetzen
+            for (uint8_t i = 0; i < 28; i = i + 1)
+            {
+                handelbareFelder[i] = 0;
+            }
+            anzahlHandelbareFelder = 0;
+            //sucht alle felder ab nach Felder die dem Spieler gehören
+            for (uint8_t i = 0; i < ANZAHL_FELDER; i = i + 1)
+            {
+                //sucht die spielfelder nach denen ab, die dem Spieler gehören und keine Häuser haben
+                if ((spielfeld[i].besitzer == handel[haendlerNr].spielerNr) && (spielfeld[i].anzahlHaeuser == 0))
+                {
+                    //speichert die Feldnummer im spielerinventar
+                    handelbareFelder[anzahlHandelbareFelder] = i;
+                    //anzahlHandelbareFelder erhöhen
+                    anzahlHandelbareFelder += 1;
+                }
+            }
+            //zeigt erstes handelbares Feld auf LCD an
+            handelFeld = 0;
+            writeText(2,0,"                ");
+            writeText(2,0,spielfeld[handelbareFelder[handelFeld]].name);
+            
+        }
+        //Nachfolgender Code wird mehrmals durchgeführt~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        if (positiveFlanke & TASTE_R)//nächstes Feld
+        {
+            //wechselt zum nächsten feld
+            handelFeld = (handelFeld + 1) % anzahlHandelbareFelder; 
+            //Schreibt das Aktuelle Feld auf das LCD
+            writeText(2,0,"                ");
+            writeText(2,0,spielfeld[handelbareFelder[handelFeld]].name);
+        }
+        else if (positiveFlanke & TASTE_S)//Feld bestätigt
+        {
+            //speichert das aktuelle Feld 
+            handel[haendlerNr].feldNummern[anzahlAusgewaehlteFelder] = handelbareFelder[handelFeld];
+            anzahlAusgewaehlteFelder += 1;
+        }
+    	break;
+        case BARGELD:
+        break;
+        case FREIKARTEN:
+        break;
+        case AUSWAHL_BEENDEN:
+        break;
+        default:
+        break;
+    }
+    
 }

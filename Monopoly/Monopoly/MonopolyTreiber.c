@@ -1789,5 +1789,22 @@ uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag, uin
     
 }
 
-
+void initialisiereHandelInventar(handelInventar handel[])
+{
+    handel[0].spielerNr = 0;
+    for (uint8_t i = 0; i < 28; i = i + 1)//setzt alle felder auf 0
+    {
+        handel[0].feldNummern[i] = 0;
+    }
+    handel[0].barGeld = 0;
+    handel[0].freikarte = 0;
+    
+    handel[1].spielerNr = 0;
+    for (uint8_t i = 0; i < 28; i = i + 1)//setzt alle felder auf 0
+    {
+        handel[1].feldNummern[i] = 0;
+    }
+    handel[1].barGeld = 0;
+    handel[1].freikarte = 0;
+}
 

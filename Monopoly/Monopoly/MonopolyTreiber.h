@@ -125,6 +125,14 @@ typedef struct {
 } Karte;
 
 
+typedef struct  
+{
+    uint8_t spielerNr;//in haendler werden die Händler gespeichert
+    uint8_t feldNummern[28];//in feldNummern werden die gehandelten felder gespeichert
+    uint16_t barGeld;//in barGeld wird das gehandelte Geld gespeichert
+    uint8_t freikarte;//in freikarte wird gespeichert ob eine Freikarte gehandelt wird
+}handelInventar;
+
 /*--- Globale Konstanten (extern) --------------------------------------------*/
 /*--- Globale Variablen (extern) ---------------------------------------------*/
 extern uint8_t houses[14][8];           //Globales Array zur Ausgabe der Immobilien
@@ -173,5 +181,5 @@ void initialisiereKarten(Karte chanceKanzlei[]);
 void read_string(char *buf, size_t i);
 uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uint8_t flagWeiter, Karte chanceKanzlei[]);
 uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag, uint8_t schritt);
-
+void initialisiereHandelInventar(handelInventar handel[]);
 #endif /* MONOPOLYTREIBER_H_ */
