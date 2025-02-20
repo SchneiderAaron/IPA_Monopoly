@@ -57,6 +57,6 @@ void displayCharacterAt(uint8_t zeile, uint8_t spalte, uint8_t charAddress);
 void defineCustomCharacters(void);
 void lcdInitAll(void);
 uint8_t lcdLauftext(const char *text, uint8_t schritt);
-
+void lcdReInit(void);
 
 #endif /* LCD_H_ */

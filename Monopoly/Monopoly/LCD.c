@@ -90,6 +90,7 @@ void initDisplay(void)
     {
         CmdDisplay(initCMD[Command]);
     }
+    _delay_ms(1);
 }
 
 void CmdDisplay(uint8_t Cmd)
@@ -124,6 +125,7 @@ void clear(void)
 void home(void)
 {
     CmdDisplay(CMD_RETURN_HOME);
+    _delay_ms(2);
 }
 
 void displayOnOff(uint8_t DisplayOn,uint8_t CursorOn, uint8_t BlinkOn)
@@ -132,6 +134,7 @@ void displayOnOff(uint8_t DisplayOn,uint8_t CursorOn, uint8_t BlinkOn)
     CursorOn  = (CursorOn  << 1) & 0x02;
     DisplayOn = (DisplayOn << 2) & 0x04;
     CmdDisplay(CMD_DISPLAY_ON_OFF | BlinkOn | CursorOn | DisplayOn);
+    _delay_ms(1);
 }
 
 void shift(void)
@@ -149,6 +152,7 @@ void writeText(uint8_t Zeile, uint8_t Spalte, const char *Text)
         DataDisplay(Text[i]);
         i++;
     }
+    _delay_ms(2);
 }
 void displayCharacterAt(uint8_t zeile, uint8_t spalte, uint8_t charAddress)
 {
@@ -185,10 +189,20 @@ void defineCustomCharacters(void)
 void lcdInitAll(void)
 {
     initDisplay();
-    
     clear();
     home();
     defineCustomCharacters();
+    displayOnOff(1,0,0);
+}
+void lcdReInit(void)
+{
+    RESET_ON;  // Aktiver Reset (Low)
+    _delay_ms(10);
+    RESET_OFF; // Reset deaktivieren (High)
+    _delay_ms(10);
+    initDisplay(); // Danach normal initialisieren
+    clear();
+    home();
     displayOnOff(1,0,0);
 }
 

@@ -54,6 +54,7 @@
 #define BLAULICHT_LED1_OFF ~0b10000000
 #define BLAULICHT_LED2_ON   0b01000000
 #define BLAULICHT_LED2_OFF ~0b01000000
+#define ANZAHL_KONTO_SIEBENSEGMENTE 17
 //#define SIEBENSEGMENT_OFF 0
 /*--- Datentypen (typedef) --------------------------------------------------*/
 rgb_color leds[LED_COUNT];
@@ -428,42 +429,53 @@ uint8_t ziffer[] =
 \******************************************************************************/
 void setGeld(uint16_t geld, uint8_t spieler, uint8_t siebensegmentOnOff)
 {
-    //Variablen zur Berechnung der einzelnen Ziffern (Tausender, Hunderter, Zehner, Einer)
+    //variabeln tausender, hunderter, zehner und einer auf 0 setzen
     uint8_t tausender, hunderter, zehner, einer, transmitdata = 0;
 
     //Berechnen der einzelnen Ziffern
+    //tausender ziffer berechnen und in variabel tausender speichern
     tausender = (geld / 1000) % 10;    // Tausender
+    //hunderter ziffer berechnen und in variabel hunderter speichern
     hunderter = (geld / 100) % 10;     // Hunderter
+    //zehner ziffer berechnen und in variabel zehner speichern
     zehner    = (geld / 10) % 10;      // Zehner
+    //einer ziffer berechnen und in variabel einer speichern
     einer     = geld % 10;             // Einer
 
     //Wenn das Siebensegment-Display eingeschaltet werden soll (siebensegmentOnOff = 1)
     if (siebensegmentOnOff)
     {
         //Die entsprechenden Ziffern für den Spieler im Array "siebensegment" setzen
+        //bestimmt das darzustellende symbol für die Tausender ziffer und speichert sie im siebensegment array
         siebensegment[((spieler - 1) * 4)]      = ziffer[tausender]; // Tausender
+        //bestimmt das darzustellende symbol für die Hunderter ziffer und speichert sie im siebensegment array
         siebensegment[((spieler - 1) * 4) + 1]  = ziffer[hunderter]; // Hunderter
+        //bestimmt das darzustellende symbol für die Zehner ziffer und speichert sie im siebensegment array
         siebensegment[((spieler - 1) * 4) + 2]  = ziffer[zehner];    // Zehner
+        //bestimmt das darzustellende symbol für die Einer ziffer und speichert sie im siebensegment array
         siebensegment[((spieler - 1) * 4) + 3]  = ziffer[einer];     // Einer
     }
     else
     {
         //Wenn das Siebensegment-Display ausgeschaltet werden soll (siebensegmentOnOff = 0),
         //alle Ziffern auf den Wert "10" setzen (unsichtbar, also keine Anzeige)
+        
+        //lädt ein unsichtbares symbol für die Tausender ziffer und speichert es im siebensegment array
         siebensegment[((spieler - 1) * 4)]      = ziffer[10];  //Unsichtbar
+        //lädt ein unsichtbares symbol für die Hunderter ziffer und speichert es im siebensegment array
         siebensegment[((spieler - 1) * 4) + 1]  = ziffer[10];  //Unsichtbar
+        //lädt ein unsichtbares symbol für die Zehner ziffer und speichert es im siebensegment array
         siebensegment[((spieler - 1) * 4) + 2]  = ziffer[10];  //Unsichtbar
+        //lädt ein unsichtbares symbol für die Einer ziffer und speichert es im siebensegment array
         siebensegment[((spieler - 1) * 4) + 3]  = ziffer[10];  //Unsichtbar
     }
 
     //Ausgabe der Daten an das Siebensegment-Display
-    //Es wird von hinten nach vorne durch das "siebensegment" Array iteriert (16 bis 0)
-    //Dies könnte genutzt werden, um die Anzeige der Segmente zu steuern, z.B. mit SPI oder einem anderen Kommunikationsprotokoll
-    for (uint8_t i = 0; i < 17; i++)
+    for (uint8_t i = 0; i < ANZAHL_KONTO_SIEBENSEGMENTE; i = i + 1)
     {
-        //Die Daten an das Display senden (hier über USART_Transmit mit Indexierung des Arrays)
+        //Datenausgabe an USART schnittstelle
         USART_Transmit(USART_GELD_SCHIEBEREGISTER, siebensegment[16 - i]);
-        _delay_us(500);  //Kurze Verzögerung, um sicherzustellen, dass die Daten korrekt übertragen werden
+        _delay_us(500);  //500?s warten um korrekte übermittlung zu gewährleisten
     }
 
     // Latch (Synchronisation des Displays)
@@ -494,7 +506,7 @@ void updateKontostand(uint8_t anzahlSpieler, Spieler spielerInfo[5])
         //Der dritte Parameter ist 1, was möglicherweise eine Aktivierung bedeutet
         setGeld(spielerInfo[i].geld, i, 1);
     }
-
+    
     //Iteriere über die restlichen Spieler (die nicht aktiv sind)
     for (uint8_t i = anzahlSpieler + 1; i <= 4; i = i + 1)
     {
@@ -515,9 +527,11 @@ void updateKontostand(uint8_t anzahlSpieler, Spieler spielerInfo[5])
 \******************************************************************************/
 uint8_t zufallsGenerator(void)
 {
+    //Variabel zufallszahl initialisieren
     uint8_t zufallszahl = 0;
-    //Generiert eine Zufallszahl zwischen 1 und 6
+    //zufällige Zahl zwischen 1 und 6 generieren
     zufallszahl = (rand() % 6) + 1;
+    //zufallszahl zurückgeben
     return zufallszahl;
 }
 
@@ -579,49 +593,74 @@ void wuerfel(void)
 }
 void wuerfelAB(uint8_t wuerfelNummer, uint8_t flagWuerfel1, uint8_t flagWuerfel2)
 {
+    //Variabeln für zufallszahl 1 und zufallszahl 2 initialisieren
     uint8_t zufallszahl1, zufallszahl2 = 10;
+    //wenn mit würfel A gewürfelt werden soll und
+    //bereits mit würfel B gewürfelt wurde
     if((wuerfelNummer == 1) && flagWuerfel2)
     {
         //Simuliert mehrere Würfeln-Animationen
+        //erhöhe i um 1 solange i < 50 ist. Starte mit i = 1
         for (uint8_t i = 0; i < 50; i = i + 1)
         {
+            //zufällige Zahl generieren und als zufallszahl1 speichern
             zufallszahl1 = zufallsGenerator(); //Erste Zufallszahl
+            //zufallszahl1 und 2 auf Siebensegment des Würfels A und B ausgeben
             wuerfelTransmit(zufallszahl1,wuerfelArray[1]);
             //Verzögert den nächsten Durchgang
+            //warte zwischen 15ms und 115ms
             _delay_ms(15 + i * 2);
         }
+        //letzte generierte zufallszahl speichern
         wuerfelArray[0] = zufallszahl1;
     }
+    //wenn mit würfel A gewürfelt werden soll und
+    //noch nicht mit würfel B gewürfelt wurde
     else if((wuerfelNummer == 1) && !flagWuerfel2)
     {
         //Simuliert mehrere Würfeln-Animationen
-        for (uint8_t i = 0; i < 25; i = i + 1)
+        //erhöhe i um 1 solange i < 50 ist. Starte mit i = 1
+        for (uint8_t i = 0; i < 50; i = i + 1)
         {
+            //zufällige Zahl generieren und als zufallszahl1 speichern
             zufallszahl1 = zufallsGenerator(); //Erste Zufallszahl
+            //zufallszahl1 auf Siebensegment des Würfels A ausgeben
+            //auf Siebensegment des Würfels B nichts anzeigen
             wuerfelTransmit(zufallszahl1,SIEBENSEGMENT_OFF);
             //Verzögert den nächsten Durchgang
             _delay_ms(15 + i * 2);
         }
         wuerfelArray[0] = zufallszahl1;
     }
+    //wenn mit würfel B gewürfelt werden soll und
+    //bereits mit würfel A gewürfelt wurde
     else if((wuerfelNummer == 2) && flagWuerfel1)
     {
         //Simuliert mehrere Würfeln-Animationen
-        for (uint8_t i = 0; i < 25; i = i + 1)
+        //erhöhe i um 1 solange i < 50 ist. Starte mit i = 1
+        for (uint8_t i = 0; i < 50; i = i + 1)
         {
+            //zufällige Zahl generieren und als zufallszahl2 speichern
             zufallszahl2 = zufallsGenerator(); //Erste Zufallszahl
+            //zufallszahl1 und 2 auf Siebensegment des Würfels A und B ausgeben
             wuerfelTransmit(wuerfelArray[0],zufallszahl2);
             //Verzögert den nächsten Durchgang
             _delay_ms(15 + i * 3);
         }
         wuerfelArray[1] = zufallszahl2;
     }
+    //wenn mit würfel B gewürfelt werden soll und
+    //noch nicht mit würfel A gewürfelt wurde
     else if((wuerfelNummer == 2) && !flagWuerfel1)
     {
         //Simuliert mehrere Würfeln-Animationen
+        //erhöhe i um 1 solange i < 50 ist. Starte mit i = 1
         for (uint8_t i = 0; i < 50; i = i + 1)
         {
+            //zufällige Zahl generieren und als zufallszahl2 speichern
             zufallszahl2 = zufallsGenerator(); //Erste Zufallszahl
+            //zufallszahl2 auf Siebensegment des Würfels B ausgeben
+            //auf Siebensegment des Würfels A nichts anzeigen
             wuerfelTransmit(SIEBENSEGMENT_OFF,zufallszahl2);
             //Verzögert den nächsten Durchgang
             _delay_ms(15 + i * 2);
@@ -632,8 +671,9 @@ void wuerfelAB(uint8_t wuerfelNummer, uint8_t flagWuerfel1, uint8_t flagWuerfel2
 
 void wuerfelTransmit(uint8_t zahl1, uint8_t zahl2)
 {
-    //Sendet die finale zweite zahl2 an das Display
+    //Ausgabe der Zahl für Würfel B über USART Schnitstelle
     USART_Transmit(3, ziffer[zahl2]);
+    //500?s warten um korrekte übermittlung zu garantieren
     _delay_us(500);
     
     //Sendet die finale erste zahl1 an das Display
@@ -786,19 +826,24 @@ void PortInitialisierung(void)
 void startGeldAnimation(uint8_t anzahlSpieler)
 {
     //Die Zahlen im Array sind die banknoten die man als starkapital erhält
+    //die Banknoten 500,500,100,100,100,100,50,20,10,10,5,1,1,1,1,1 werden im startGeld array hinterlegt
     uint16_t startgeld[16] = {500,500,100,100,100,100,50,20,10,10,5,1,1,1,1,1};
     //die 16 bezieht sich auf die anzahl banknoten die man bekommt
+    //erhöhe i um 1 solange i < 16 ist. Starte mit i = 0
     for (uint8_t i = 0; i < 16; i = i + 1)
     {
         //verteilt die Banknoten an die Spieler
+        //erhöhe j um 1 solange j <= anzahlSpieler ist. Starte mit j = 1
         for (uint8_t j = 1; j <= anzahlSpieler; j = j + 1)
         {
-            //Speichert den kotostand
+            //erhöhe den Kontostand von spieler j um den betrag der an position i im startGeld array hinterlegt ist
             spielerInfo[j].geld = spielerInfo[j].geld + startgeld[i];
+            //warte 75ms 
             _delay_ms(75); //Delay dient zu animationszwecken
-            //Aktualisiert den Kontostand
+            //aktualisiere den Kontostand
             updateKontostand(anzahlSpieler,spielerInfo); 
         }
+        //warte 50 ms
         _delay_ms(50); //Delay dient zu animationszwecken
     }
 }
