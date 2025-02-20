@@ -48,13 +48,56 @@
 #define SPIELER_START_FELD 40 //Alle Spieler werden ausgeblendet
 #define ANZAHL_GRUNDSTUEKE 28
 #define SIEBENSEGMENT_OFF 10
-
+#define ANZAHL_FELDER 40
 #define BLAULICHT_OFF      ~0b11000000
 #define BLAULICHT_LED1_ON   0b10000000
 #define BLAULICHT_LED1_OFF ~0b10000000
 #define BLAULICHT_LED2_ON   0b01000000
 #define BLAULICHT_LED2_OFF ~0b01000000
 #define ANZAHL_KONTO_SIEBENSEGMENTE 17
+
+
+//Taster an PORT K
+#define TASTE1     (1<<0)
+#define TASTE2     (1<<1)
+#define TASTE3     (1<<2)
+#define TASTE4     (1<<3)
+#define TASTE5     (1<<4)
+#define TASTE6     (1<<5)
+#define TASTE7     (1<<6)
+#define TASTE8     (1<<7)
+
+//Taster an PORT L
+#define TASTE9     (1<<8)
+#define TASTE10    (1<<9)
+#define TASTE11    (1<<10)
+#define TASTE12    (1<<11)
+#define TASTE13    (1<<12)
+#define TASTE14    (1<<13)
+#define TASTE15    (1<<14)
+#define TASTE16    (1<<15)
+
+#define TASTE_A TASTE9  //Taste A
+#define TASTE_B TASTE10 //Taste B
+#define TASTE_C TASTE11 //Taste C
+
+#define TASTE_O TASTE12 //Taste Hoch
+#define TASTE_S TASTE13 //Taste Select
+#define TASTE_U TASTE16 //Taste Runter
+#define TASTE_L TASTE14 //Taste Links
+#define TASTE_R TASTE15 //Taste Rechts
+
+#define TASTE_X1 TASTE2 //Taste X Spieler 1
+#define TASTE_X2 TASTE3 //Taste X Spieler 2
+#define TASTE_X3 TASTE6 //Taste X Spieler 3
+#define TASTE_X4 TASTE8 //Taste X Spieler 4
+
+#define TASTE_Y1 TASTE1 //Taste Y Spieler 1
+#define TASTE_Y2 TASTE4 //Taste Y Spieler 2
+#define TASTE_Y3 TASTE5 //Taste Y Spieler 3
+#define TASTE_Y4 TASTE7 //Taste Y Spieler 4
+
+
 //#define SIEBENSEGMENT_OFF 0
 /*--- Datentypen (typedef) --------------------------------------------------*/
 rgb_color leds[LED_COUNT];
@@ -62,6 +105,7 @@ rgb_color leds[LED_COUNT];
 /*--- Globale Variablen -----------------------------------------------------*/
 /*--- Modullokale Konstanten ------------------------------------------------*/
 /*--- Modullokale Variablen -------------------------------------------------*/
+
 /*--- Prototypen modullokaler Funktionen ------------------------------------*/
 /*--- Funktionsdefinitionen -------------------------------------------------*/
  
@@ -1802,7 +1846,9 @@ uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag, uin
         }
         else //wenn es sich der Spieler nicht leisten kann
         {
-            return 2; //zahlung fehlgeschlagen
+            flagGeldBeschaffen = 1;
+            geldBeschaffen(zahler, betrag - spielerInfo[zahler].geld);
+            //return 2; //zahlung fehlgeschlagen
         }
     }
     else if (!empfaenger) //wenn spieler 0 als empfänger eingegeben wurde, wird an die Bank überwiesen
@@ -1819,7 +1865,9 @@ uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag, uin
         }
         else //wenn es sich der Spieler nicht leisten kann
         {
-            return 2; //zahlung fehlgeschlagen
+            flagGeldBeschaffen = 1;
+            geldBeschaffen(zahler, betrag - spielerInfo[zahler].geld);
+            //return 2; //zahlung fehlgeschlagen
         }
     }
     else if (!zahler)//wenn spieler 0 als zahler eingegeben wurde, kommt das Geld von der Bank
@@ -1853,3 +1901,260 @@ void initialisiereHandelInventar(handelInventar handel[])
     handel[1].freikarte = 0;
 }
 
+uint8_t geldBeschaffen(uint8_t spielerNr, uint16_t mindestBetrag)
+{
+    uint8_t flagHaeuser = 0;
+    char lcdBuffer[16];
+    writeText(0,0,"   Spieler      ");
+    sprintf(lcdBuffer,"%u",spielerNr);
+    writeText(0,11,lcdBuffer);
+    writeText(1,0,"Beschaffe       ");
+    sprintf(lcdBuffer,"%4u",mindestBetrag);
+    writeText(1,10,lcdBuffer);
+    
+    while (flagGeldBeschaffen)
+    {
+        for (uint8_t i = 0; i < ANZAHL_FELDER; i = i + 1)
+        {
+            //wenn spielfeld i dem spieler gehört, es Häuser hat und nicht belastet ist
+            if ((spielfeld[i].besitzer == spielerNr) && (spielfeld[i].anzahlHaeuser > 0) && (spielfeld[i].feldBelastet))
+            {
+                flagHaeuser = 1;
+                break;
+            }
+        }
+        if (flagHaeuser)
+        {
+            while (!positiveFlanke & TASTE_S)
+            {
+                //Flankenerkennung
+                tasteAlt = tasteNeu;
+                tasteNeu = 0;
+                tasteNeu = (PINL << 8) | PINK;
+                positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
+                hausBauen(spielerNr);
+            }
+        }
+    }
+}
+
+void hausBauen(uint8_t spielerAmZug)
+{
+    uint8_t farbgruppenCounter = 0;
+    uint8_t updateLCD = 0;
+    uint8_t minHaeuser = 5;
+    uint8_t maxHaeuser = 0;
+    uint8_t volleFarbgruppen[8] = {0};
+    uint8_t haeuser = 0;
+    uint8_t gruppeAnzahlHaeuser = 0;
+    uint8_t flagFarbgruppeKomplett = 0;
+    uint8_t flagBauErfolgreich = 0;
+    uint8_t feldNummer = 0;
+    uint8_t farbgruppenErstesFeld[8] = {1,6,11,16,21,26,31,37}; //Jeweil das erste Feld einer Strassen Farbgruppe
+    uint8_t anzahlHauser[3] = {0};
+    //Felder nach vollen Farbgruppen absuchen~~~~~~~~~~~~~~~~~~~~~~~~~
+    for (uint8_t i = 0; i < 8; i = i + 1)//Alle Farbgruppen werden als voll markiert
+    {
+        volleFarbgruppen[i] = 1;
+    }
+    for (uint8_t i = 0; i < 3; i = i + 1)//Alle Farbgruppen werden als voll markiert
+    {
+        anzahlHauser[i] = 0;
+    }
+    for (uint8_t i = 0;  i < 8; i = i + 1)
+    {
+        //Flankenerkennung
+        tasteAlt = tasteNeu;
+        tasteNeu = 0;
+        tasteNeu = (PINL << 8) | PINK;
+        positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
+        flagFarbgruppeKomplett = 1;
+        if (spielfeld[farbgruppenErstesFeld[i]].besitzer == spielerAmZug) //überprüft ob erstes feld einer Farbgruppe dem Spieler gehört
+        {
+            for (uint8_t j = 0; j < 3; j = j + 1)//Prüft ob Farbgruppen tatsächlich voll sind
+            {
+                //besitzer des spielfeldes mit dem spieler am zug vergleichen                                             Was dieser teil macht weiss ich grade auch nicht mehr         Dieser Teil prüft ob ein Feld der Farbgruppe belastet ist. Wenn ja, kann man nicht bauen
+                if (((!(spielfeld[spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j]].besitzer == spielerAmZug)) && (spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j])) || spielfeld[spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j]].feldBelastet)//prüft alle Felder der Farbgruppe
+                {
+                    flagFarbgruppeKomplett = 0; //setzt flag auf 0 wenn ein Feld nicht dem Spieler gehört
+                    volleFarbgruppen[i] = 0; //Markiert Farbgruppe als unvollständig
+                }
+            }
+            if (flagFarbgruppeKomplett)//Wenn farbgruppe komplett
+            {
+                updateLCD = 0;
+                //nächstes Feld
+                feldNummer = farbgruppenErstesFeld[i];
+                while (!(positiveFlanke & TASTE_C))
+                {
+                    //Flankenerkennung
+                    tasteAlt = tasteNeu;
+                    tasteNeu = 0;
+                    tasteNeu = (PINL << 8) | PINK;
+                    positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
+                    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    minHaeuser = 255;
+                    maxHaeuser = 0;
+                    for (uint8_t j = 0; j < 3; j = j + 1)
+                    {
+                        if (spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j] > 0)
+                        {
+                            haeuser = spielfeld[spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j]].anzahlHaeuser;
+                            if ((haeuser < minHaeuser))
+                            {
+                                minHaeuser = haeuser;
+                            }
+                            if (haeuser > maxHaeuser)
+                            {
+                                maxHaeuser = haeuser;
+                            }
+                        }
+                    }
+                    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    for (uint8_t j = 0; j < 3; j = j + 1)
+                    {
+                        haeuser = spielfeld[spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j]].anzahlHaeuser;
+                        if (haeuser == maxHaeuser)
+                        {
+                            anzahlHauser[j] = 1;
+                        }
+                        //else if (spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j])
+                        else if (haeuser == minHaeuser)
+                        {
+                            anzahlHauser[j] = 0;
+                        }
+                        else
+                        {
+                            anzahlHauser[j] = 1;
+                        }
+                    }
+                            
+                            
+                    if (!updateLCD)
+                    {
+                        clear();//lcd leeren
+                        writeText(1,0,spielfeld[feldNummer].name);
+                        writeText(0,0,PFEIL_U"Abbauen  Bauen"PFEIL_O);
+                        writeText(2,0,"C zur"UE"ck|weiter"PFEIL_R);
+                        /*writeText(1,0," w"UE"rfeln A / B ");
+                        writeText(2,0,"    weiter C    ");*/
+                        gruppeAnzahlHaeuser = spielfeld[farbgruppenErstesFeld[i]].anzahlHaeuser; //holt die Anzahl Häuser
+                        updateLCD = 1;
+                    }
+                    if ((positiveFlanke & TASTE_O))//Haus Bauen~~~~~~~~~~~~~~~~~~~~~~~~
+                    {
+                        //Wenn auf allen felder gebaut wurde, flags zurücksetzten
+                        if (anzahlHauser[0] && anzahlHauser[1] && anzahlHauser[2])
+                        {
+                            anzahlHauser[0] = 0;
+                            anzahlHauser[1] = 0;
+                            anzahlHauser[2] = 0;
+                        }
+                        switch (farbgruppenCounter)
+                        {
+                            case 0:
+                            if (!anzahlHauser[0])
+                            {
+                                flagBauErfolgreich = bauen(feldNummer, spielerAmZug);
+                                if (flagBauErfolgreich)
+                                {
+                                    anzahlHauser[0] = 1;
+                                }
+                                        
+                            }
+                            break;
+                            case 1:
+                            if (!anzahlHauser[1])
+                            {
+                                flagBauErfolgreich = bauen(feldNummer, spielerAmZug);
+                                if (flagBauErfolgreich)
+                                {
+                                    anzahlHauser[1] = 1;
+                                }
+                            }
+                            break;
+                            case 2:
+                            if (!anzahlHauser[2])
+                            {
+                                flagBauErfolgreich = bauen(feldNummer, spielerAmZug);
+                                if (flagBauErfolgreich)
+                                {
+                                    anzahlHauser[2] = 1;
+                                }
+                            }
+                            break;
+                        }
+                                
+                    }
+                    if ((positiveFlanke & TASTE_U))//Haus Verkaufen~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    {
+                        //Wenn auf allen felder gebaut wurde, flags zurücksetzten
+                        if (!(anzahlHauser[0] || anzahlHauser[1] || anzahlHauser[2]))
+                        {
+                            anzahlHauser[0] = 1;
+                            anzahlHauser[1] = 1;
+                            anzahlHauser[2] = 1;
+                        }
+                        switch (farbgruppenCounter)
+                        {
+                            case 0:
+                            if (anzahlHauser[0])
+                            {
+                                flagBauErfolgreich = abBauen(feldNummer, spielerAmZug);
+                                if (flagBauErfolgreich)
+                                {
+                                    anzahlHauser[0] = 0;
+                                } 
+                            }
+                            break;
+                            case 1:
+                            if (anzahlHauser[1])
+                            {
+                                flagBauErfolgreich = abBauen(feldNummer, spielerAmZug);
+                                if (flagBauErfolgreich)
+                                {
+                                    anzahlHauser[1] = 0;
+                                }
+                            }
+                            break;
+                            case 2:
+                            if (anzahlHauser[2])
+                            {
+                                flagBauErfolgreich = abBauen(feldNummer, spielerAmZug);
+                                if (flagBauErfolgreich)
+                                {
+                                    anzahlHauser[2] = 0;
+                                }
+                            }
+                            break;
+                        }
+                                
+                    }
+                    if (positiveFlanke & TASTE_R)//nächstes Feld
+                    {
+                        farbgruppenCounter = (farbgruppenCounter + 1) % 3;
+                        feldNummer = spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[farbgruppenCounter];
+                        if (!feldNummer)//Sonderfall bei Farbgruppen mit nur 2 Feldern
+                        {
+                            farbgruppenCounter = 0;
+                            feldNummer = spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[farbgruppenCounter];
+                            anzahlHauser[2] = anzahlHauser[1];
+                        }
+                        updateLCD = 0;
+                    }
+                }
+                        
+            }
+                    
+        }
+    }
+    //Felder nach vollen Farbgruppen absuchen~~~~~~~~~~~~~~~~~~~~~~~~~
+    /*clear();//lcd leeren
+    //spieler am zug anzeigen
+    writeText(0,0,"   Spieler      ");
+    sprintf(lcdBuffer,"%u",spielerAmZug);
+    writeText(0,11,lcdBuffer);
+    writeText(1,0," w"UE"rfeln A / B ");
+    writeText(2,0,"    weiter C    ");*/
+    
+}
