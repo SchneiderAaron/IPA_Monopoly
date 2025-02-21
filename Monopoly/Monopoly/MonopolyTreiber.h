@@ -189,6 +189,6 @@ void read_string(char *buf, size_t i);
 uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uint8_t flagWeiter, Karte chanceKanzlei[]);
 uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag, uint8_t schritt);
 void initialisiereHandelInventar(handelInventar handel[]);
-uint8_t geldBeschaffen(uint8_t spielerNr, uint8_t schuldenBei, uint8_t mindestBetrag);
+uint8_t geldBeschaffen(uint8_t spielerNr, uint8_t schuldenBei, uint16_t mindestBetrag);
 void hausBauen(uint8_t spielerAmZug);
 #endif /* MONOPOLYTREIBER_H_ */

@@ -1907,13 +1907,14 @@ void initialisiereHandelInventar(handelInventar handel[])
     handel[1].freikarte = 0;
 }
 
-uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint8_t mindestBetrag)
+uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetrag)
 {
-    uint8_t flagHaeuser, flagBelastebar, flagFarbgruppe = 0;
+    uint8_t flagHaeuser, flagBelastebar, flagFarbgruppe, flagFeldBelastet, feldZaehler = 0;
     uint8_t felderMitHaeuser[40] = {0};
     uint8_t felderBelastbar[40] = {0};
     uint8_t anzahlFelderMitHaeuser, anzahlFelderBelastbar = 0;
     uint16_t schuldBetrag = 0;
+    uint16_t hypothekBetrag = 0;
     //uint8_t farbgruppenErstesFeld[8] = {1,6,11,16,21,26,31,37};
     char lcdBuffer[16];
     //Solange das Flag gesetzt ist
@@ -2011,9 +2012,96 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint8_t mindestBetrag
             }//wenn Taste Y betätigt wurde --> Haus nicht verkaufen
             else if (positiveFlanke & yTasten[zahler - 1])
             {
+                //prüft ob der Spieler Felder Belasten kann
+                if (flagBelastebar)
+                {
+                    writeText(0,0,"   Spieler      ");
+                    sprintf(lcdBuffer,"%u",zahler);
+                    writeText(0,11,lcdBuffer);
+                    writeText(1,0," Feld Belasten? ");
+                    writeText(2,0,"X Ja      Nein Y");
+                    pleiteZustand = BELASTEN;
+                }//Wenn der Spieler kein Feld belasten kann
+                else
+                {
+                    writeText(0,0,"   Spieler      ");
+                    sprintf(lcdBuffer,"%u",zahler);
+                    writeText(0,11,lcdBuffer);
+                    writeText(1,0," Du must Häuser ");
+                    writeText(2,0,"   verkaufen!   ");
+                    _delay_ms(3000);
+                }
             }
             break;
             case BELASTEN:
+            //wenn Taste X betätigt wurde --> Feld Belasten
+            if (positiveFlanke & xTasten[zahler - 1])
+            {
+                writeText(0,0,"   Spieler      ");
+                sprintf(lcdBuffer,"%u",zahler);
+                writeText(0,11,lcdBuffer);
+                writeText(1,0,PFEIL_O"Hyp. | weiter "PFEIL_R);
+                writeText(2,0,"                ");
+                writeText(2,0,spielfeld[felderBelastbar[0]].name);//Name von erstem Feld ausgeben;
+                
+                //Schleife, bis ein Feld Belastet wurde
+                while (!flagFeldBelastet)
+                {
+                    //Flankenerkennung
+                    tasteAlt = tasteNeu;
+                    tasteNeu = 0;
+                    tasteNeu = (PINL << 8) | PINK;
+                    positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
+                    
+                    //wenn nächstes Feld angezeigt werden soll
+                    if (positiveFlanke & TASTE_R)
+                    {
+                        //prüft ob es noch belastbare Felder in der liste hat
+                        //und ob der zähler noch erhöt werden darf
+                        if (felderBelastbar[feldZaehler] && feldZaehler < 39)
+                        {
+                            feldZaehler += 1;
+                            writeText(2,0,"                ");
+                            writeText(2,0,spielfeld[felderBelastbar[feldZaehler]].name);//Name von erstem Feld ausgeben;
+                        }
+                    }
+                    else if (positiveFlanke & TASTE_O)//Wenn das Feld belastet werden soll
+                    {
+                        //Feld als Belastet speichern
+                        spielfeld[felderBelastbar[feldZaehler]].feldBelastet = 1;
+                        //Hypothek Wert berechnen
+                        hypothekBetrag = spielfeld[felderBelastbar[feldZaehler]].preis / 2;
+                        geldUeberweisen(0,zahler,hypothekBetrag,1);
+                    }
+                }
+                
+                
+                
+                pleiteZustand = GENUG_GELD;
+            }//wenn Taste Y betätigt wurde --> Feld nicht belasten
+            else if (positiveFlanke & yTasten[zahler - 1])
+            {
+                //prüft ob der Spieler Häuser verkaufen kann
+                if (flagHaeuser)
+                {
+                    writeText(0,0,"   Spieler      ");
+                    sprintf(lcdBuffer,"%u",zahler);
+                    writeText(0,11,lcdBuffer);
+                    writeText(1,0,"Haus verkaufen? ");
+                    writeText(2,0,"X Ja      Nein Y");
+                    pleiteZustand = HAEUSER;
+                }//Wenn der Spieler kein Feld belasten kann
+                else
+                {
+                    writeText(0,0,"   Spieler      ");
+                    sprintf(lcdBuffer,"%u",zahler);
+                    writeText(0,11,lcdBuffer);
+                    writeText(1,0," Du must Felder ");
+                    writeText(2,0,"   belasten!    ");
+                    _delay_ms(3000);
+                }
+            }
+            
             break;
             case GENUG_GELD:
             //prüft ob der Spieler das minimum auftreiben konnte
@@ -2028,6 +2116,7 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint8_t mindestBetrag
                 writeText(1,0,"                ");
                 writeText(2,0,"Schuld beglichen");
                 _delay_ms(5000);
+                flagGeldBeschaffen = 0;
             }
             else
             {
@@ -2042,7 +2131,7 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint8_t mindestBetrag
                 writeText(2,0,"                ");
                 sprintf(lcdBuffer,"%4u",schuldBetrag);
                 writeText(2,6,lcdBuffer);
-                blaulicht(200,25);//Blaulicht gesammt delay 5000ms
+                blaulicht(100,12);//Blaulicht gesammt delay 5000ms
                 pleiteZustand = INVENTAR_PRUEFEN;
             }
             break;
