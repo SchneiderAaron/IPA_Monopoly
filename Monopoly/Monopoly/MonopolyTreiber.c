@@ -101,11 +101,12 @@
 //#define SIEBENSEGMENT_OFF 0
 /*--- Datentypen (typedef) --------------------------------------------------*/
 rgb_color leds[LED_COUNT];
+typedef enum {INVENTAR_PRUEFEN, HAEUSER_J_N, HAEUSER, BELASTEN_J_N, BELASTEN, GENUG_GELD, PLEITE, GROSSVERSTEIGERUNG, FELDER_ABGEBEN}pleite_t;
 /*--- Globale Konstanten ----------------------------------------------------*/
 /*--- Globale Variablen -----------------------------------------------------*/
 /*--- Modullokale Konstanten ------------------------------------------------*/
 /*--- Modullokale Variablen -------------------------------------------------*/
-
+pleite_t pleiteZustand = GENUG_GELD; 
 /*--- Prototypen modullokaler Funktionen ------------------------------------*/
 /*--- Funktionsdefinitionen -------------------------------------------------*/
  
@@ -919,7 +920,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[1].farbgruppenFelder[1] = 3;
     spielfeld[1].farbgruppenFelder[2] = 0;
     spielfeld[1].hausnummer = 0;
-    spielfeld[1].anzahlHaeuser = 0;
+    spielfeld[1].anzahlHaeuser = 5;
     spielfeld[1].kostenHaus = 50;
     spielfeld[1].rgbNummer = 0;
     spielfeld[1].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -946,7 +947,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[3].farbgruppenFelder[1] = 3;
     spielfeld[3].farbgruppenFelder[2] = 0;
     spielfeld[3].hausnummer = 1;
-    spielfeld[3].anzahlHaeuser = 0;
+    spielfeld[3].anzahlHaeuser = 5;
     spielfeld[3].kostenHaus = 50;
     spielfeld[3].rgbNummer = 1;
     spielfeld[3].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -992,7 +993,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[6].farbgruppenFelder[1] = 8;
     spielfeld[6].farbgruppenFelder[2] = 9;
     spielfeld[6].hausnummer = 2;
-    spielfeld[6].anzahlHaeuser = 0;
+    spielfeld[6].anzahlHaeuser = 5;
     spielfeld[6].kostenHaus = 50;
     spielfeld[6].rgbNummer = 3;
     spielfeld[6].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -1019,7 +1020,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[8].farbgruppenFelder[1] = 8;
     spielfeld[8].farbgruppenFelder[2] = 9;
     spielfeld[8].hausnummer = 3;
-    spielfeld[8].anzahlHaeuser = 0;
+    spielfeld[8].anzahlHaeuser = 5;
     spielfeld[8].kostenHaus = 50;
     spielfeld[8].rgbNummer = 4;
     spielfeld[8].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -1043,7 +1044,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[9].farbgruppenFelder[1] = 8;
     spielfeld[9].farbgruppenFelder[2] = 9;
     spielfeld[9].hausnummer = 4;
-    spielfeld[9].anzahlHaeuser = 0;
+    spielfeld[9].anzahlHaeuser = 5;
     spielfeld[9].kostenHaus = 50;
     spielfeld[9].rgbNummer = 5;
     spielfeld[9].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -1831,6 +1832,7 @@ uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uin
 
 uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag, uint8_t schritt)
 {
+    uint16_t restBetrag = 0;
     if (empfaenger && zahler) //wenn der empfänger nicht spieler 0 ist
     {
         //wenn der Zahlende Spieler genug geld hat
@@ -1846,8 +1848,11 @@ uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag, uin
         }
         else //wenn es sich der Spieler nicht leisten kann
         {
-            flagGeldBeschaffen = 1;
-            geldBeschaffen(zahler, betrag - spielerInfo[zahler].geld);
+            flagGeldBeschaffen = 1;//flag setzen
+            restBetrag = betrag - spielerInfo[zahler].geld;//restbetrag berechnen
+            geldUeberweisen(zahler,empfaenger,spielerInfo[zahler].geld,1);//gesammtes Geld überweisen
+            geldBeschaffen(zahler, empfaenger, restBetrag);//restbetrag beschaffen
+            //geldUeberweisen(zahler,empfaenger,betrag,1);//restlichesGeld überweisen
             //return 2; //zahlung fehlgeschlagen
         }
     }
@@ -1865,8 +1870,10 @@ uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag, uin
         }
         else //wenn es sich der Spieler nicht leisten kann
         {
-            flagGeldBeschaffen = 1;
-            geldBeschaffen(zahler, betrag - spielerInfo[zahler].geld);
+            flagGeldBeschaffen = 1;//flag setzen
+            restBetrag = betrag - spielerInfo[zahler].geld;//restbetrag berechnen
+            geldUeberweisen(zahler,empfaenger,spielerInfo[zahler].geld,1);//gesammtes Geld überweisen
+            geldBeschaffen(zahler, empfaenger, restBetrag);//restbetrag beschaffen
             //return 2; //zahlung fehlgeschlagen
         }
     }
@@ -1879,7 +1886,6 @@ uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag, uin
         }
         return 1; //zahlung erfolgreich
     }
-    
 }
 
 void initialisiereHandelInventar(handelInventar handel[])
@@ -1901,39 +1907,153 @@ void initialisiereHandelInventar(handelInventar handel[])
     handel[1].freikarte = 0;
 }
 
-uint8_t geldBeschaffen(uint8_t spielerNr, uint16_t mindestBetrag)
+uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint8_t mindestBetrag)
 {
-    uint8_t flagHaeuser = 0;
+    uint8_t flagHaeuser, flagBelastebar, flagFarbgruppe = 0;
+    uint8_t felderMitHaeuser[40] = {0};
+    uint8_t felderBelastbar[40] = {0};
+    uint8_t anzahlFelderMitHaeuser, anzahlFelderBelastbar = 0;
+    uint16_t schuldBetrag = 0;
+    //uint8_t farbgruppenErstesFeld[8] = {1,6,11,16,21,26,31,37};
     char lcdBuffer[16];
-    writeText(0,0,"   Spieler      ");
-    sprintf(lcdBuffer,"%u",spielerNr);
-    writeText(0,11,lcdBuffer);
-    writeText(1,0,"Beschaffe       ");
-    sprintf(lcdBuffer,"%4u",mindestBetrag);
-    writeText(1,10,lcdBuffer);
-    
+    //Solange das Flag gesetzt ist
     while (flagGeldBeschaffen)
     {
-        for (uint8_t i = 0; i < ANZAHL_FELDER; i = i + 1)
+        //Flankenerkennung
+        tasteAlt = tasteNeu;
+        tasteNeu = 0;
+        tasteNeu = (PINL << 8) | PINK;
+        positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
+        
+        switch (pleiteZustand)
         {
-            //wenn spielfeld i dem spieler gehört, es Häuser hat und nicht belastet ist
-            if ((spielfeld[i].besitzer == spielerNr) && (spielfeld[i].anzahlHaeuser > 0) && (spielfeld[i].feldBelastet))
+            case INVENTAR_PRUEFEN://überprüft ob der Spieler etwas besitzt, das man verkaufen kann
+            anzahlFelderMitHaeuser = 0; //anzahlFelderMitHaeuser zurücksetzen
+            anzahlFelderBelastbar = 0;  //anzahlFelderBelastbar zurücksetzen
+            flagHaeuser = 0;
+            flagBelastebar = 0;
+            flagFarbgruppe = 0;
+            //geht alle Felder durch
+            for (uint8_t i = 0; i < ANZAHL_FELDER; i = i + 1)
             {
-                flagHaeuser = 1;
-                break;
+                //Position "i" in der Liste zurücksetzen
+                felderMitHaeuser[i] = 0;    //position "i" in felderMitHaeuser zurücksetzen
+                felderBelastbar[i] = 0;     //position "i" in felderBelastbar zurücksetzen
+                //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Häuser~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                //Wenn das Feld dem Spieler gehört, es Häuser hat und nicht belastet ist
+                if ((spielfeld[i].besitzer == zahler) && spielfeld[i].anzahlHaeuser && (!spielfeld[i].feldBelastet))
+                {
+                    //wenn die bedingung eintrifft, wird das Feld in die Liste aufgenommen
+                    felderMitHaeuser[anzahlFelderMitHaeuser] = i;//Speichert die Feldnummer in dem Array
+                    anzahlFelderMitHaeuser += 1; //anzahlFelderMitHaeuser erhöhen
+                    flagHaeuser = 1;//flagHaeuser setzen, da mindestens 1 Haus verkauft werden kann
+                }
+                //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~BELASTEN~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                //Wenn das Feld dem Spieler gehört und es nicht belastet ist
+                if ((spielfeld[i].besitzer == zahler) && !spielfeld[i].feldBelastet)
+                {
+                    flagFarbgruppe = 1; //flagFarbgruppe Setzen
+                    //überprüft ob es auf den anderen Farbgruppenfelder Häuser hat
+                    for (uint8_t j = 0; j < 3; j = j + 1)
+                    {
+                        //Wenn es auf einem Feld der Farbgruppe ein Haus hat
+                        if (!spielfeld[spielfeld[i].farbgruppenFelder[j]].anzahlHaeuser)
+                        {
+                            //flag zurücksetzen | Feld kann erst belastet werden,
+                            //wenn alle Häuser der Farbgruppe verkauft sind
+                            flagFarbgruppe = 0;
+                        }
+                    }
+                    //prüfe ob flagFarbgruppe noch gesetzt ist
+                    if (flagFarbgruppe)
+                    {
+                        //speichert die aktuelle Feldnummer
+                        felderBelastbar[anzahlFelderBelastbar] = i;
+                        anzahlFelderBelastbar += 1; //anzahlFelderBelastbar erhöhen
+                        flagBelastebar = 1; //flagBelastbar setzen, da mindestens ein Feld belastet werden kann
+                    }
+                }
             }
-        }
-        if (flagHaeuser)
-        {
-            while (!positiveFlanke & TASTE_S)
+            //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~nächsten Zustand bestimmen~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            //wenn flagHaeuser gesetzt ist
+            if (flagHaeuser)
             {
-                //Flankenerkennung
-                tasteAlt = tasteNeu;
-                tasteNeu = 0;
-                tasteNeu = (PINL << 8) | PINK;
-                positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
-                hausBauen(spielerNr);
+                writeText(0,0,"   Spieler      ");
+                sprintf(lcdBuffer,"%u",zahler);
+                writeText(0,11,lcdBuffer);
+                writeText(1,0,"Haus verkaufen? ");
+                writeText(2,0,"X Ja      Nein Y");
+                pleiteZustand = HAEUSER;
+            }//wenn flagBelastebar gesetzt ist
+            else if (flagBelastebar)
+            {
+                writeText(0,0,"   Spieler      ");
+                sprintf(lcdBuffer,"%u",zahler);
+                writeText(0,11,lcdBuffer);
+                writeText(1,0," Feld Belasten? ");
+                writeText(2,0,"X Ja      Nein Y");
+                pleiteZustand = BELASTEN;
+            }//wenn weder flagHaeuser noch flagBelastebar gesetzt ist
+            else
+            {
+                //der Spieler kann nichts mehr verkaufen oder belasten!
+                //der Spieler scheidet aus dem Spiel aus
+                pleiteZustand = PLEITE;
             }
+            break;
+            case HAEUSER:
+            //wenn Taste X betätigt wurde --> Haus verkaufen
+            if (positiveFlanke & xTasten[zahler - 1])
+            {
+                //lässt den Spieler ein Haus verkaufen
+                hausBauen(zahler);
+                pleiteZustand = GENUG_GELD;
+            }//wenn Taste Y betätigt wurde --> Haus nicht verkaufen
+            else if (positiveFlanke & yTasten[zahler - 1])
+            {
+            }
+            break;
+            case BELASTEN:
+            break;
+            case GENUG_GELD:
+            //prüft ob der Spieler das minimum auftreiben konnte
+            if (spielerInfo[zahler].geld >= mindestBetrag)
+            {
+                //Überweist den restlichen betrag
+                geldUeberweisen(zahler,empfaenger,mindestBetrag,1);
+                //Spieler Nummer an LCD anzeigen
+                writeText(0,0,"   Spieler      ");
+                sprintf(lcdBuffer,"%u",zahler);
+                writeText(0,11,lcdBuffer);
+                writeText(1,0,"                ");
+                writeText(2,0,"Schuld beglichen");
+                _delay_ms(5000);
+            }
+            else
+            {
+                //berechnet die restlichen Schulden die der Spieler hat
+                schuldBetrag = mindestBetrag - spielerInfo[zahler].geld;
+                //Spieler Nummer an LCD anzeigen
+                writeText(0,0,"   Spieler      ");
+                sprintf(lcdBuffer,"%u",zahler);
+                writeText(0,11,lcdBuffer);
+                
+                writeText(1,0,"  Du schuldest  ");
+                writeText(2,0,"                ");
+                sprintf(lcdBuffer,"%4u",schuldBetrag);
+                writeText(2,6,lcdBuffer);
+                blaulicht(200,25);//Blaulicht gesammt delay 5000ms
+                pleiteZustand = INVENTAR_PRUEFEN;
+            }
+            break;
+            case PLEITE:
+            break;
+            case GROSSVERSTEIGERUNG:
+            break;
+            case FELDER_ABGEBEN:
+            break;
+            default:
+            break;
         }
     }
 }
@@ -1952,6 +2072,7 @@ void hausBauen(uint8_t spielerAmZug)
     uint8_t feldNummer = 0;
     uint8_t farbgruppenErstesFeld[8] = {1,6,11,16,21,26,31,37}; //Jeweil das erste Feld einer Strassen Farbgruppe
     uint8_t anzahlHauser[3] = {0};
+    uint8_t flagZurueck = 0;
     //Felder nach vollen Farbgruppen absuchen~~~~~~~~~~~~~~~~~~~~~~~~~
     for (uint8_t i = 0; i < 8; i = i + 1)//Alle Farbgruppen werden als voll markiert
     {
@@ -1985,7 +2106,10 @@ void hausBauen(uint8_t spielerAmZug)
                 updateLCD = 0;
                 //nächstes Feld
                 feldNummer = farbgruppenErstesFeld[i];
-                while (!(positiveFlanke & TASTE_C))
+                //flagZurück wird verwendet, wenn Geld aufgetrieben werden muss.
+                //Es wird gesetzt, wenn ein Haus verkauft wurde um die while
+                //schleife zu verlassen
+                while (!(positiveFlanke & TASTE_C) && ! flagZurueck)
                 {
                     //Flankenerkennung
                     tasteAlt = tasteNeu;
@@ -2034,14 +2158,23 @@ void hausBauen(uint8_t spielerAmZug)
                     {
                         clear();//lcd leeren
                         writeText(1,0,spielfeld[feldNummer].name);
-                        writeText(0,0,PFEIL_U"Abbauen  Bauen"PFEIL_O);
-                        writeText(2,0,"C zur"UE"ck|weiter"PFEIL_R);
+                        //LCD ausgabe abhängig ob der Spieler schulden hat oder nicht
+                        if (flagGeldBeschaffen)
+                        {
+                            writeText(0,0,PFEIL_U"Abbauen        ");
+                            writeText(2,0,"         weiter"PFEIL_R);
+                        }
+                        else
+                        {
+                            writeText(0,0,PFEIL_U"Abbauen  Bauen"PFEIL_O);
+                            writeText(2,0,"C zur"UE"ck|weiter"PFEIL_R); 
+                        }
                         /*writeText(1,0," w"UE"rfeln A / B ");
                         writeText(2,0,"    weiter C    ");*/
                         gruppeAnzahlHaeuser = spielfeld[farbgruppenErstesFeld[i]].anzahlHaeuser; //holt die Anzahl Häuser
                         updateLCD = 1;
                     }
-                    if ((positiveFlanke & TASTE_O))//Haus Bauen~~~~~~~~~~~~~~~~~~~~~~~~
+                    if ((positiveFlanke & TASTE_O) && !flagGeldBeschaffen)//Haus Bauen nur möglich wenn der Spieler nicht verschuldet ist
                     {
                         //Wenn auf allen felder gebaut wurde, flags zurücksetzten
                         if (anzahlHauser[0] && anzahlHauser[1] && anzahlHauser[2])
@@ -2130,6 +2263,14 @@ void hausBauen(uint8_t spielerAmZug)
                         }
                                 
                     }
+                    //Wenn Geld bschafft werden muss, darf nur 1 Haus aufs mal verkauft werden
+                    //Wenn flagGeldBeschaffen gesetzt ist und ein Haus abgebaut wurde
+                    if (flagGeldBeschaffen && flagBauErfolgreich)
+                    {
+                        //BauModus Verlassen
+                        flagZurueck = 1;
+                    }
+                    
                     if (positiveFlanke & TASTE_R)//nächstes Feld
                     {
                         farbgruppenCounter = (farbgruppenCounter + 1) % 3;
@@ -2143,18 +2284,11 @@ void hausBauen(uint8_t spielerAmZug)
                         updateLCD = 0;
                     }
                 }
+                flagZurueck = 0;
                         
             }
                     
         }
     }
-    //Felder nach vollen Farbgruppen absuchen~~~~~~~~~~~~~~~~~~~~~~~~~
-    /*clear();//lcd leeren
-    //spieler am zug anzeigen
-    writeText(0,0,"   Spieler      ");
-    sprintf(lcdBuffer,"%u",spielerAmZug);
-    writeText(0,11,lcdBuffer);
-    writeText(1,0," w"UE"rfeln A / B ");
-    writeText(2,0,"    weiter C    ");*/
-    
+
 }

@@ -127,6 +127,8 @@ typedef enum {FREIKARTE_J_N, PASCH_J_N, BEZAHLEN_J_N, PASCH} workshopZustand_t;
 typedef enum {HYPOTHEK, VERWALTUNG_BAUEN, VERWALTUNG_HANDELN} verwaltung_t;
 typedef enum {HAENDLER_AUSWAHL, WARE_AUSWAEHLEN, HANDEL_BESTAETIGEN, BESITZ_UEBERTRAGEN, HANDEL_ABSCHLIESSEN} handel_t;
 typedef enum {GRUNDSTUECK, BARGELD, FREIKARTEN, AUSWAHL_BEENDEN} handelWare_t;
+
+
 /*--- Globale Konstanten ----------------------------------------------------*/
 
 /*--- Globale Variablen -----------------------------------------------------*/
@@ -146,6 +148,7 @@ uint16_t tasteAlt, tasteNeu, positiveFlanke = 0; //Variabeln Flankenerkennung
 zustand_t zustand = SPIEL;//Spielzustand auf SPIELERAUSWAHL setzen
 workshopZustand_t workshopZustand = PASCH_J_N;//Workshopzustand auf PASH_J_N setzen
 verwaltung_t verwaltung = VERWALTUNG_BAUEN;//Verwaltung auf VERWALTUNG_BAUEN Setzen
+
 uint8_t anzahlSpieler = 2;//Anzahl Spieler auf 2 setzen
 
 uint8_t globalUpdateLCD = 0;
@@ -1035,6 +1038,8 @@ int main(void)
                             spielerInfo[spielerAmZug].rundenImGefaengnis = 0;
                             flagFertigGewuerfelt = 0;//lässt spieler würfeln
                             flagGefaengnis = 0;
+                            writeText(1,0," w"UE"rfeln A / B ");
+                            writeText(2,0,"                ");
                         }
                         break;
                         case PASCH_J_N:
