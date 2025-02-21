@@ -175,6 +175,7 @@ void initSpieler(Spieler spielerInfo[])
     spielerInfo[1].freikarte = 0;
     spielerInfo[1].haeuser = 0;
     spielerInfo[1].hotels = 0;
+    spielerInfo[1].pleite = 0;
     
     //Eigenschaften Spieler 2
     strcpy(spielerInfo[2].name, "Spieler 2");
@@ -185,6 +186,7 @@ void initSpieler(Spieler spielerInfo[])
     spielerInfo[2].freikarte = 0;
     spielerInfo[2].haeuser = 0;
     spielerInfo[2].hotels = 0;
+    spielerInfo[2].pleite = 0;
     
     //Eigenschaften Spieler 3
     strcpy(spielerInfo[3].name, "Spieler 3");
@@ -195,6 +197,7 @@ void initSpieler(Spieler spielerInfo[])
     spielerInfo[3].freikarte = 0;
     spielerInfo[3].haeuser = 0;
     spielerInfo[3].hotels = 0;
+    spielerInfo[3].pleite = 0;
     
     //Eigenschaften Spieler 4
     strcpy(spielerInfo[4].name, "Spieler 4");
@@ -205,6 +208,7 @@ void initSpieler(Spieler spielerInfo[])
     spielerInfo[4].freikarte = 0;
     spielerInfo[4].haeuser = 0;
     spielerInfo[4].hotels = 0;
+    spielerInfo[4].pleite = 0;
 }
 Spieler spielerInfo[5];
 
@@ -303,6 +307,7 @@ int main(void)
     uint8_t flagGefaengnis = 0;
     uint8_t flagGefaengnisLCD = 0;
     uint8_t flagGefaengnisWeiter = 0;
+    uint8_t flagSpielerPleite = 0;
     
     uint8_t spielerInventar[28] = {0};
     uint8_t flagKeineHaeuser = 0;
@@ -609,7 +614,8 @@ int main(void)
             //wenn Taste C betätigt wurde oder flagGefaengnisWeiter = 0 und
             //flagFertigGewuerfelt, flagZahlungAbgeschlossen, flagKaufAbgeschlossen,
             //flagEreignisAbgeschlossen gesetzt sind
-            if(((positiveFlanke & TASTE_C) || flagGefaengnisWeiter) && flagFertigGewuerfelt && flagZahlungAbgeschlossen && flagKaufAbgechlossen && flagEreignisAbgeschlossen)
+            //flagSpieler Pleite --> wenn spieler pleite ist, ist automatisch der nächste Spieler an der Reihe
+            if(((positiveFlanke & TASTE_C) || flagGefaengnisWeiter || flagSpielerPleite) && flagFertigGewuerfelt && flagZahlungAbgeschlossen && flagKaufAbgechlossen && flagEreignisAbgeschlossen)
             {
                 //beide Würfel Siebensegment Anzeigen ausschalten
                 wuerfelTransmit(SIEBENSEGMENT_OFF,SIEBENSEGMENT_OFF);
@@ -637,6 +643,7 @@ int main(void)
                 flagGefaengnis = 0; //flag wird gesetzt wenn spieler im gefängnis ist
                 flagGefaengnisLCD = 0;//flag wird im gefängnis verwendet bez. LCD
                 flagGefaengnisWeiter = 0;//flag um spiel weiterlaufen zulassen nach entlassung aus gefängnis
+                flagSpielerPleite = 0;//flag wird gesetzt um einen Spieler der pleite ist zu überspringen
                 //überprüft ob der Spieler im gefängnis ist
                 if ((aktuellesFeld == GEFAENGNIS) && spielerInfo[spielerAmZug].gefaengnis)//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Ãktuelles feld kann weggelassen werden
                 {
@@ -645,6 +652,11 @@ int main(void)
                     //flag blockiert würfeln
                     //flagFertigGewuerfelt auf 1 setzen um würfeln zu blockieren
                     flagFertigGewuerfelt = 1; //wenn dieses Flag gesetzt ist kann nicht gewürfelt werden
+                }
+                //prüft ob der spielerAmZug pleite ist
+                if (spielerInfo[spielerAmZug].pleite)
+                {
+                    flagSpielerPleite = 1;//Der spieler, der am zug ist ist bereits aus dem Spiel ausgeschieden
                 }
             }
             //ermöglicht es dem spieler bei Pasch zu kaufen
@@ -832,7 +844,7 @@ int main(void)
                     }
                 }
                 //prüft ob das feld belastet ist
-                feldbelastet = spielfeld[aktuellePosition].hypothek;
+                feldbelastet = spielfeld[aktuellePosition].feldBelastet;
                 //wenn das Aktuelle feld einem spieler gehört muss man bezahlen
                 //ausser es gehört einem selbst oder es ist belastet
                 if((spielfeld[aktuellePosition].besitzer && !(spielfeld[aktuellePosition].besitzer == spielerAmZug)) && !(bezahlStatus == 1) && !feldbelastet)
@@ -948,7 +960,7 @@ int main(void)
                         break;
                     }
                 }
-                feldbelastet = spielfeld[aktuellePosition].hypothek;
+                feldbelastet = spielfeld[aktuellePosition].feldBelastet;
                 if((spielfeld[aktuellePosition].besitzer && !(spielfeld[aktuellePosition].besitzer == spielerAmZug)) && !(bezahlStatus == 1) && !feldbelastet)
                 {
                     flagZahlungAbgeschlossen = 0;
@@ -1210,7 +1222,7 @@ int main(void)
                         break;
                     }
                 }
-                feldbelastet = spielfeld[aktuellePosition].hypothek;
+                feldbelastet = spielfeld[aktuellePosition].feldBelastet;
                 if((spielfeld[aktuellePosition].besitzer && !(spielfeld[aktuellePosition].besitzer == spielerAmZug)) && !(bezahlStatus == 1) && !feldbelastet)
                 {
                     flagZahlungAbgeschlossen = 0;
@@ -1315,7 +1327,7 @@ int main(void)
             for (uint8_t i = 0; i < anzahlSpieler; i = i + 1)
             {
                 //Gebot wird abgegeben, wenn der spieler noch dabei ist und er genug geld hat
-                if (((positiveFlanke & xTasten[i]) && !bieter[i]) && (spielerInfo[i+1].geld > (aktuellesGebot + 1))) 
+                if (((positiveFlanke & xTasten[i]) && !bieter[i]) && (spielerInfo[i+1].geld > (aktuellesGebot))) 
                 {
                     aktuellesGebot = aktuellesGebot + 1; //aktuelles Gebot erhöhen
                     for (uint8_t j = 1; j <= anzahlSpieler; j = j + 1)
@@ -1324,13 +1336,13 @@ int main(void)
                     }
                     //Geld Siebensegmente vom höchstbieter einschalten
                     setGeld(aktuellesGebot,i + 1,1); 
-                    bieter[5] = i + 1; //Speichert Spieler Nummer vom Höchstbieter
+                    bieter[5] = i + 1; //Speichert Spieler Nummer vom Höchstbieter      bieter[5] speicher höchstbieter
                 }
                 //wenn ein spieler die Taste Y betätigt bietet er nicht mehr mit
                 if ((positiveFlanke & yTasten[i]) && !bieter[i])
                 {
-                    bieter[i] = 1; //schliesst spieler aus auktion aus
-                    bieter[4] = bieter[4] + 1; //erhöht anzahl zurückgezogene spieler
+                    bieter[i] = 1; //schliesst spieler aus auktion aus                  bieter 0 - 3 spieler zurückgetreten
+                    bieter[4] = bieter[4] + 1; //erhöht anzahl zurückgezogene spieler   bieter 4 anzahl zurückgetretene Spieler
                 }
             }
             if (bieter[4] == anzahlSpieler) //wenn alle Spieler aus der Auktion zurückgetretn sind

@@ -58,6 +58,7 @@ typedef struct {
     uint8_t freikarte;
     uint8_t haeuser;
     uint8_t hotels;
+    uint8_t pleite;
 } Spieler;
 
 typedef enum {

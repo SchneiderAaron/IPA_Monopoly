@@ -454,7 +454,8 @@ uint8_t ziffer[] =
     (SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F | SEG_G),                    //8
     (SEG_A | SEG_B | SEG_C | SEG_F | SEG_G | SEG_D),                            //9
     (0),                                                                        //10 (unsichtbar, z.B. für ein Leerzeichen oder Null)
-    (PUNKT)                                                                     //11
+    (PUNKT),                                                                    //11
+    (SEG_G)                                                                     //12 - (---- = Spieler ist aus versteigerung zurückgetreten)
 };
 
 
@@ -488,7 +489,7 @@ void setGeld(uint16_t geld, uint8_t spieler, uint8_t siebensegmentOnOff)
     einer     = geld % 10;             // Einer
 
     //Wenn das Siebensegment-Display eingeschaltet werden soll (siebensegmentOnOff = 1)
-    if (siebensegmentOnOff)
+    if (siebensegmentOnOff == 1)//ON
     {
         //Die entsprechenden Ziffern für den Spieler im Array "siebensegment" setzen
         //bestimmt das darzustellende symbol für die Tausender ziffer und speichert sie im siebensegment array
@@ -500,7 +501,7 @@ void setGeld(uint16_t geld, uint8_t spieler, uint8_t siebensegmentOnOff)
         //bestimmt das darzustellende symbol für die Einer ziffer und speichert sie im siebensegment array
         siebensegment[((spieler - 1) * 4) + 3]  = ziffer[einer];     // Einer
     }
-    else
+    else if(!siebensegmentOnOff)
     {
         //Wenn das Siebensegment-Display ausgeschaltet werden soll (siebensegmentOnOff = 0),
         //alle Ziffern auf den Wert "10" setzen (unsichtbar, also keine Anzeige)
@@ -513,6 +514,17 @@ void setGeld(uint16_t geld, uint8_t spieler, uint8_t siebensegmentOnOff)
         siebensegment[((spieler - 1) * 4) + 2]  = ziffer[10];  //Unsichtbar
         //lädt ein unsichtbares symbol für die Einer ziffer und speichert es im siebensegment array
         siebensegment[((spieler - 1) * 4) + 3]  = ziffer[10];  //Unsichtbar
+    }
+    else if(!siebensegmentOnOff == 2)//Markierung um anzuzeigen wer aus der versteigerung zurückgetreten ist
+    {
+        //lädt ein unsichtbares symbol für die Tausender ziffer und speichert es im siebensegment array
+        siebensegment[((spieler - 1) * 4)]      = ziffer[12];  //Unsichtbar
+        //lädt ein unsichtbares symbol für die Hunderter ziffer und speichert es im siebensegment array
+        siebensegment[((spieler - 1) * 4) + 1]  = ziffer[12];  //Unsichtbar
+        //lädt ein unsichtbares symbol für die Zehner ziffer und speichert es im siebensegment array
+        siebensegment[((spieler - 1) * 4) + 2]  = ziffer[12];  //Unsichtbar
+        //lädt ein unsichtbares symbol für die Einer ziffer und speichert es im siebensegment array
+        siebensegment[((spieler - 1) * 4) + 3]  = ziffer[12];  //Unsichtbar
     }
 
     //Ausgabe der Daten an das Siebensegment-Display
@@ -1852,6 +1864,7 @@ uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag, uin
             restBetrag = betrag - spielerInfo[zahler].geld;//restbetrag berechnen
             geldUeberweisen(zahler,empfaenger,spielerInfo[zahler].geld,1);//gesammtes Geld überweisen
             geldBeschaffen(zahler, empfaenger, restBetrag);//restbetrag beschaffen
+            return 1;
             //geldUeberweisen(zahler,empfaenger,betrag,1);//restlichesGeld überweisen
             //return 2; //zahlung fehlgeschlagen
         }
@@ -1874,6 +1887,7 @@ uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag, uin
             restBetrag = betrag - spielerInfo[zahler].geld;//restbetrag berechnen
             geldUeberweisen(zahler,empfaenger,spielerInfo[zahler].geld,1);//gesammtes Geld überweisen
             geldBeschaffen(zahler, empfaenger, restBetrag);//restbetrag beschaffen
+            return 1;
             //return 2; //zahlung fehlgeschlagen
         }
     }
@@ -1915,6 +1929,15 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
     uint8_t anzahlFelderMitHaeuser, anzahlFelderBelastbar = 0;
     uint16_t schuldBetrag = 0;
     uint16_t hypothekBetrag = 0;
+    
+    uint8_t flagNeuesFeld = 0;
+    uint8_t bieter[6] = {0};//array zur speicherung von zurückgetretenen Spielern und höchstbieter
+    uint16_t hoechstGebot = 0;
+    uint8_t inventar[40] = {0}; //array dient zur speicherung von den Feldern, welche versteigert werden
+    uint8_t inventatZaehler = 0;//wird verwendet um die Felder am richtigen Ort im Inventar zu speichern
+    uint8_t anzahlVersteigerteFelder = 0;//Zählt wie viele Felder bereits versteigert wurden.
+    uint32_t systemZeit = 0;
+    uint32_t startZeit = 0;
     //uint8_t farbgruppenErstesFeld[8] = {1,6,11,16,21,26,31,37};
     char lcdBuffer[16];
     //Solange das Flag gesetzt ist
@@ -1958,7 +1981,7 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
                     for (uint8_t j = 0; j < 3; j = j + 1)
                     {
                         //Wenn es auf einem Feld der Farbgruppe ein Haus hat
-                        if (!spielfeld[spielfeld[i].farbgruppenFelder[j]].anzahlHaeuser)
+                        if (spielfeld[spielfeld[i].farbgruppenFelder[j]].anzahlHaeuser)
                         {
                             //flag zurücksetzen | Feld kann erst belastet werden,
                             //wenn alle Häuser der Farbgruppe verkauft sind
@@ -2027,9 +2050,14 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
                     writeText(0,0,"   Spieler      ");
                     sprintf(lcdBuffer,"%u",zahler);
                     writeText(0,11,lcdBuffer);
-                    writeText(1,0," Du must Häuser ");
+                    writeText(1,0," Du must H"AE"user ");
                     writeText(2,0,"   verkaufen!   ");
                     _delay_ms(3000);
+                    writeText(0,0,"   Spieler      ");
+                    sprintf(lcdBuffer,"%u",zahler);
+                    writeText(0,11,lcdBuffer);
+                    writeText(1,0,"Haus verkaufen? ");
+                    writeText(2,0,"X Ja      Nein Y");
                 }
             }
             break;
@@ -2043,7 +2071,8 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
                 writeText(1,0,PFEIL_O"Hyp. | weiter "PFEIL_R);
                 writeText(2,0,"                ");
                 writeText(2,0,spielfeld[felderBelastbar[0]].name);//Name von erstem Feld ausgeben;
-                
+                flagFeldBelastet = 0;
+                feldZaehler = 0;
                 //Schleife, bis ein Feld Belastet wurde
                 while (!flagFeldBelastet)
                 {
@@ -2058,11 +2087,17 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
                     {
                         //prüft ob es noch belastbare Felder in der liste hat
                         //und ob der zähler noch erhöt werden darf
-                        if (felderBelastbar[feldZaehler] && feldZaehler < 39)
+                        if (felderBelastbar[feldZaehler + 1] && feldZaehler < 39)
                         {
-                            feldZaehler += 1;
+                            feldZaehler += 1; //feldzähler erhöhen
                             writeText(2,0,"                ");
-                            writeText(2,0,spielfeld[felderBelastbar[feldZaehler]].name);//Name von erstem Feld ausgeben;
+                            writeText(2,0,spielfeld[felderBelastbar[feldZaehler]].name);//Name von nächsten Feld ausgeben;
+                        }
+                        else //wenn das aktuelle Feld das letzte in der liste ist
+                        {
+                            feldZaehler = 0;
+                            writeText(2,0,"                ");
+                            writeText(2,0,spielfeld[felderBelastbar[feldZaehler]].name);//Name von nächsten Feld ausgeben;
                         }
                     }
                     else if (positiveFlanke & TASTE_O)//Wenn das Feld belastet werden soll
@@ -2072,12 +2107,23 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
                         //Hypothek Wert berechnen
                         hypothekBetrag = spielfeld[felderBelastbar[feldZaehler]].preis / 2;
                         geldUeberweisen(0,zahler,hypothekBetrag,1);
+                        
+                        if (spielfeld[felderBelastbar[feldZaehler]].typ == STRASSE)//wenn es eine Strase ist
+                        {
+                            //Markiert das Feld als verpfändet
+                            //alle 5 haus LEDs werden eingeschaltet
+                            setHaus(spielfeld[felderBelastbar[feldZaehler]].hausnummer,6);
+                        }
+                        else //wenn es keine strasse ist
+                        {
+                            //wenn es keine häuser hat, die man als Markierung nutzen kann
+                            // wird die RGB auf weiss gestellt.
+                            setPropertyRgb(spielfeld[felderBelastbar[feldZaehler]].rgbNummer,5);
+                        }
+                        flagFeldBelastet = 1;//Flag setzen um loop zu verlassen
                     }
                 }
-                
-                
-                
-                pleiteZustand = GENUG_GELD;
+                pleiteZustand = GENUG_GELD; // Zustandswechsel
             }//wenn Taste Y betätigt wurde --> Feld nicht belasten
             else if (positiveFlanke & yTasten[zahler - 1])
             {
@@ -2099,6 +2145,11 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
                     writeText(1,0," Du must Felder ");
                     writeText(2,0,"   belasten!    ");
                     _delay_ms(3000);
+                    writeText(0,0,"   Spieler      ");
+                    sprintf(lcdBuffer,"%u",zahler);
+                    writeText(0,11,lcdBuffer);
+                    writeText(1,0," Feld Belasten? ");
+                    writeText(2,0,"X Ja      Nein Y");
                 }
             }
             
@@ -2131,15 +2182,127 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
                 writeText(2,0,"                ");
                 sprintf(lcdBuffer,"%4u",schuldBetrag);
                 writeText(2,6,lcdBuffer);
-                blaulicht(100,12);//Blaulicht gesammt delay 5000ms
+                blaulicht(100,4);//Blaulicht
                 pleiteZustand = INVENTAR_PRUEFEN;
             }
             break;
             case PLEITE:
+            //Der Spieler hat alle seine Felder belastet und alle Häuser verkauft. 
+            //Da der spieler nichts mehr besitzt scheidet er aus dem Spiel aus
+            //Wenn der spieler schulden bei einem Mitspieler hat geht sein ganzer Besitz an
+            //den Mitspieler. d.h. alle Felder und Freikarten und restliches Geld.
+            //Bei Schulden bei der Bank, werden alle Felder Versteigert. Restliches Geld geht an die Bank
+            writeText(0,0,"   Spieler      ");
+            sprintf(lcdBuffer,"%u",zahler);
+            writeText(0,11,lcdBuffer);
+            writeText(1,0," CRAZY  BLINKEN ");
+            writeText(2,0," du bist PLEITE ");
+            spielerInfo[zahler].pleite = 1;//Markiert den Spieler als Pleite. Er spielt nicht mehr mit
+            _delay_ms(5000);
+            
+            
+            //Sucht alle Felder nach Feldern ab, die dem Spieler gehörten
+            for(uint8_t i = 0; i < ANZAHL_FELDER; i = i + 1)
+            {
+                //wenn das aktuelle Feld dem Spieler gehörte
+                if (spielfeld[i].besitzer == zahler)
+                {
+                    spielfeld[i].feldBelastet = 0;//entfernt die Hypothek vom Haus
+                    //Wenn es sich bei dem Feld um eine STrasse Handelt
+                    if (spielfeld[i].typ == STRASSE)
+                    {
+                        setHaus(spielfeld[i].hausnummer,0);//entfernt die Markierung vom Feld
+                    }
+                    else
+                    {
+                        //Entfernt die RGB Markierung
+                        setPropertyRgb(spielfeld[i].rgbNummer,0);
+                    }
+                    inventar[inventatZaehler] = i;//speichert die Feldnummer im Inventar
+                    inventatZaehler += 1; //erhöt den Inventarzähler um 1
+                    
+                }
+            }
+            
+            
+            //bestimmen ob der Spieler Schulden bei der Bank oder bei einem Mitspieler hatte.
+            //Wenn der Empfänger die Bank ist
+            if (!empfaenger)
+            {
+                //Der Spieler hatte Schulden bei der Bank
+                //Sein Ganzes restliches Geld wird überwiesen an die Bank
+                geldUeberweisen(zahler,0,spielerInfo[zahler].geld,1);
+                //freikarten löschen
+                spielerInfo[zahler].freikarte = 0; 
+                //alle Felder des Spielers werden in der Grossversteigerung versteigert.
+                pleiteZustand = GROSSVERSTEIGERUNG;
+                flagNeuesFeld = 1;
+            }
+            else
+            {
+                //Der Spieler hatte Schulden bei einem Mitspieler. Sein Besitz wird dem Mitspieler übergeben
+                pleiteZustand = FELDER_ABGEBEN;
+            }
             break;
             case GROSSVERSTEIGERUNG:
+            //Wenn ein neues Feld versteigert wird
+            if(flagNeuesFeld)
+            {
+                for (uint8_t i = 0; i < 6; i = i + 1)
+                {
+                    bieter[i] = 0; //array zurücksetzen
+                }
+                for (uint8_t i = 1; i <= anzahlSpieler; i = i + 1)
+                {
+                    //wenn der spieler Pleite ist, darf er nicht mitbieten
+                    if (spielerInfo[i].pleite)
+                    {
+                        bieter[i - 1] = 1; //Schliesst den Spieler aus der versteigerung aus
+                    }
+                }
+                clear();
+                writeText(0,0," VERSTEIGERUNG  ");
+                writeText(1,0,spielfeld[inventar[anzahlVersteigerteFelder]].name);
+                writeText(2,0,"bieten X sonst Y");
+                hoechstGebot = 10;//STARTGEBOT --> danach 10er Schritte
+                flagNeuesFeld = 0; 
+            }
+            //prüft alle eingaben der SPieler
+            for (uint8_t i = 0; i < anzahlSpieler; i = i + 1)
+            {
+                //wenn der Spieler noch in der versteigerung dabei ist und er mehr Geld hat als das Höchstgebot
+                if ((positiveFlanke & xTasten[i]) && !bieter[i] && (spielerInfo[i + 1].geld >= hoechstGebot + 10))
+                {
+                    hoechstGebot += 10;//gebot um 10 erhöhen
+                    bieter[5] = i + 1; //Speichert die Spielernummer des spielers mit dem Höchsten gebot
+                }
+            }
+            //siebensegment ausgabe 
+            for (uint8_t i = 0; i < anzahlSpieler; i = i + 1)
+            {
+                //wenn der spieler nicht mehr bietet
+                if (bieter[i])
+                {
+                }
+            }
+            
+            //wenn alle 4 Spieler nicht mehr bieten
+            if (bieter[4] == 4)
+            {
+                flagNeuesFeld = 1;
+                spielfeld[inventar[anzahlVersteigerteFelder]].besitzer = bieter[5];//Höchstbieter wird als neuer besitzer gespeichert
+                //rgb Farbe auf die Farbe des neuen Besitzers schreiben
+                setPropertyRgb(spielfeld[inventar[anzahlVersteigerteFelder]].rgbNummer,bieter[5]);
+                anzahlVersteigerteFelder += 1;
+                flagNeuesFeld = 1;
+                
+            }
             break;
             case FELDER_ABGEBEN:
+            //Der Spieler hatte Schulden bei einem Mitspieler
+            //Sein Restliches Geld wird an den Mitspieler überwiesen
+            geldUeberweisen(zahler,empfaenger,spielerInfo[zahler].geld,1);
+            //FREIKARTE NICHT VERGESSEN
             break;
             default:
             break;
