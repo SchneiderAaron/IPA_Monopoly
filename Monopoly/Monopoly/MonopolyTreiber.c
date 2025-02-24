@@ -2258,6 +2258,7 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
                     if (spielerInfo[i].pleite)
                     {
                         bieter[i - 1] = 1; //Schliesst den Spieler aus der versteigerung aus
+                        bieter[4] = bieter[4] + 1; //erhöht anzahl zurückgezogene spieler 
                     }
                 }
                 clear();
@@ -2275,14 +2276,23 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
                 {
                     hoechstGebot += 10;//gebot um 10 erhöhen
                     bieter[5] = i + 1; //Speichert die Spielernummer des spielers mit dem Höchsten gebot
+                    for (uint8_t j = 0; j < anzahlSpieler; j = j + 1)
+                    {
+                        //wenn der Spieler noch am bieten ist und nicht der höchstbieter ist
+                        if (!bieter[j] && !(bieter[5] == j + 1))
+                        {
+                            setGeld(0,i,0);//wenn der Spieler kein Gebot abgegeben hat aber noch mitbietet siebensegmente abschalten
+                        }
+                    }
+                    setGeld(hoechstGebot,i,1);//Ausgabe Höchstgebot
+
                 }
-            }
-            //siebensegment ausgabe 
-            for (uint8_t i = 0; i < anzahlSpieler; i = i + 1)
-            {
-                //wenn der spieler nicht mehr bietet
-                if (bieter[i])
+                //wenn der Spieler die Taste Y zum ersten mal in diese versteigerungsrunde betätigt hat
+                if ((positiveFlanke & yTasten[i]) && !bieter[i])
                 {
+                    bieter[i] = 1; //schliesst spieler aus auktion aus                  bieter 0 - 3 spieler zurückgetreten
+                    bieter[4] = bieter[4] + 1; //erhöht anzahl zurückgezogene spieler   bieter 4 anzahl zurückgetretene Spieler
+                    setGeld(0,i,2);//---- anzeigen
                 }
             }
             
