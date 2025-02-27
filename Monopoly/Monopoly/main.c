@@ -149,7 +149,7 @@ zustand_t zustand = SPIEL;//Spielzustand auf SPIELERAUSWAHL setzen
 workshopZustand_t workshopZustand = PASCH_J_N;//Workshopzustand auf PASH_J_N setzen
 verwaltung_t verwaltung = VERWALTUNG_BAUEN;//Verwaltung auf VERWALTUNG_BAUEN Setzen
 
-uint8_t anzahlSpieler = 2;//Anzahl Spieler auf 2 setzen
+uint8_t anzahlSpieler = 4;//Anzahl Spieler auf 2 setzen NORMALERWEISE 2
 
 uint8_t globalUpdateLCD = 0;
 
@@ -190,7 +190,7 @@ void initSpieler(Spieler spielerInfo[])
     
     //Eigenschaften Spieler 3
     strcpy(spielerInfo[3].name, "Spieler 3");
-    spielerInfo[3].geld = 3333;
+    spielerInfo[3].geld = 30;
     spielerInfo[3].position = 40;
     spielerInfo[3].gefaengnis = 0;
     spielerInfo[3].rundenImGefaengnis = 0;
@@ -201,7 +201,7 @@ void initSpieler(Spieler spielerInfo[])
     
     //Eigenschaften Spieler 4
     strcpy(spielerInfo[4].name, "Spieler 4");
-    spielerInfo[4].geld = 4444;
+    spielerInfo[4].geld = 30;
     spielerInfo[4].position = 40;
     spielerInfo[4].gefaengnis = 0;
     spielerInfo[4].rundenImGefaengnis = 0;

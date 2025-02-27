@@ -101,7 +101,7 @@
 //#define SIEBENSEGMENT_OFF 0
 /*--- Datentypen (typedef) --------------------------------------------------*/
 rgb_color leds[LED_COUNT];
-typedef enum {INVENTAR_PRUEFEN, HAEUSER_J_N, HAEUSER, BELASTEN_J_N, BELASTEN, GENUG_GELD, PLEITE, GROSSVERSTEIGERUNG, FELDER_ABGEBEN}pleite_t;
+typedef enum {INVENTAR_PRUEFEN, HAEUSER_J_N, HAEUSER, BELASTEN_J_N, BELASTEN, GENUG_GELD, PLEITE, GROSSVERSTEIGERUNG, FELDER_ABGEBEN, ENDE_VERSTEIGERUNG}pleite_t;
 /*--- Globale Konstanten ----------------------------------------------------*/
 /*--- Globale Variablen -----------------------------------------------------*/
 /*--- Modullokale Konstanten ------------------------------------------------*/
@@ -282,6 +282,12 @@ void setPropertyRgb(uint8_t FeldNummer, uint8_t spielerNr)
         rot = 50;
         gruen = 50;
         blau = 50;
+        break;
+        case 9://9 --> Bank
+        rot = 50;
+        gruen = 0;
+        blau = 50;
+        break;
     }
     leds[FeldNummer] = (rgb_color){rot,gruen,blau}; //Setzt die RGB werte im leds Array
     for (uint8_t i = 0; i < LED_COUNT; i = i + 1)   //die for loop übermittelt die Daten an die WS2812 RGB Leds
@@ -515,7 +521,7 @@ void setGeld(uint16_t geld, uint8_t spieler, uint8_t siebensegmentOnOff)
         //lädt ein unsichtbares symbol für die Einer ziffer und speichert es im siebensegment array
         siebensegment[((spieler - 1) * 4) + 3]  = ziffer[10];  //Unsichtbar
     }
-    else if(!siebensegmentOnOff == 2)//Markierung um anzuzeigen wer aus der versteigerung zurückgetreten ist
+    else if(siebensegmentOnOff == 2)//Markierung um anzuzeigen wer aus der versteigerung zurückgetreten ist
     {
         //lädt ein unsichtbares symbol für die Tausender ziffer und speichert es im siebensegment array
         siebensegment[((spieler - 1) * 4)]      = ziffer[12];  //Unsichtbar
@@ -932,7 +938,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[1].farbgruppenFelder[1] = 3;
     spielfeld[1].farbgruppenFelder[2] = 0;
     spielfeld[1].hausnummer = 0;
-    spielfeld[1].anzahlHaeuser = 5;
+    spielfeld[1].anzahlHaeuser = 0;
     spielfeld[1].kostenHaus = 50;
     spielfeld[1].rgbNummer = 0;
     spielfeld[1].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -959,7 +965,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[3].farbgruppenFelder[1] = 3;
     spielfeld[3].farbgruppenFelder[2] = 0;
     spielfeld[3].hausnummer = 1;
-    spielfeld[3].anzahlHaeuser = 5;
+    spielfeld[3].anzahlHaeuser = 0;
     spielfeld[3].kostenHaus = 50;
     spielfeld[3].rgbNummer = 1;
     spielfeld[3].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -978,7 +984,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[5].mieten[1] = 50;    //wenn man 2 Bahnen besitzt
     spielfeld[5].mieten[2] = 100;   //wenn man 3 Bahnen besitzt
     spielfeld[5].mieten[3] = 200;   //wenn man 4 Bahnen besitzt
-    spielfeld[5].besitzer = 1;
+    spielfeld[5].besitzer = 4;
     spielfeld[5].farbGruppe = FARBLOS;
     spielfeld[5].farbgruppenFelder[0] = 5;
     spielfeld[5].farbgruppenFelder[1] = 15;
@@ -1085,7 +1091,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[11].farbgruppenFelder[1] = 13;
     spielfeld[11].farbgruppenFelder[2] = 14;
     spielfeld[11].hausnummer = 5;
-    spielfeld[11].anzahlHaeuser = 0;
+    spielfeld[11].anzahlHaeuser = 5;
     spielfeld[11].kostenHaus = 100;
     spielfeld[11].rgbNummer = 6;
     spielfeld[11].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -1116,7 +1122,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[13].farbgruppenFelder[1] = 13;
     spielfeld[13].farbgruppenFelder[2] = 14;
     spielfeld[13].hausnummer = 6;
-    spielfeld[13].anzahlHaeuser = 0;
+    spielfeld[13].anzahlHaeuser = 5;
     spielfeld[13].kostenHaus = 100;
     spielfeld[13].rgbNummer = 8;
     spielfeld[13].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -1138,7 +1144,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[14].farbgruppenFelder[1] = 13;
     spielfeld[14].farbgruppenFelder[2] = 14;
     spielfeld[14].hausnummer = 7;
-    spielfeld[14].anzahlHaeuser = 0;
+    spielfeld[14].anzahlHaeuser = 5;
     spielfeld[14].kostenHaus = 100;
     spielfeld[14].rgbNummer = 9;
     spielfeld[14].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -1151,7 +1157,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[15].mieten[1] = 50;   //wenn man 2 Bahnen besitzt
     spielfeld[15].mieten[2] = 100;  //wenn man 3 Bahnen besitzt
     spielfeld[15].mieten[3] = 200;  //wenn man 4 Bahnen besitzt
-    spielfeld[15].besitzer = 1;
+    spielfeld[15].besitzer = 4;
     spielfeld[15].farbGruppe = FARBLOS;
     spielfeld[15].farbgruppenFelder[0] = 5;
     spielfeld[15].farbgruppenFelder[1] = 15;
@@ -1177,7 +1183,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[16].farbgruppenFelder[1] = 18;
     spielfeld[16].farbgruppenFelder[2] = 19;
     spielfeld[16].hausnummer = 8;
-    spielfeld[16].anzahlHaeuser = 0;
+    spielfeld[16].anzahlHaeuser = 5;
     spielfeld[16].kostenHaus = 100;
     spielfeld[16].rgbNummer = 11;
     spielfeld[16].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -1203,7 +1209,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[18].farbgruppenFelder[1] = 18;
     spielfeld[18].farbgruppenFelder[2] = 19;
     spielfeld[18].hausnummer = 9;
-    spielfeld[18].anzahlHaeuser = 0;
+    spielfeld[18].anzahlHaeuser = 5;
     spielfeld[18].kostenHaus = 100;
     spielfeld[18].rgbNummer = 12;
     spielfeld[18].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -1225,7 +1231,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[19].farbgruppenFelder[1] = 18;
     spielfeld[19].farbgruppenFelder[2] = 19;
     spielfeld[19].hausnummer = 10;
-    spielfeld[19].anzahlHaeuser = 0;
+    spielfeld[19].anzahlHaeuser = 5;
     spielfeld[19].kostenHaus = 100;
     spielfeld[19].rgbNummer = 13;
     spielfeld[19].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -1312,7 +1318,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[25].mieten[1] = 50;   //wenn man 2 Bahnen besitzt
     spielfeld[25].mieten[2] = 100;  //wenn man 3 Bahnen besitzt
     spielfeld[25].mieten[3] = 200;  //wenn man 4 Bahnen besitzt
-    spielfeld[25].besitzer = 1;
+    spielfeld[25].besitzer = 2;
     spielfeld[25].farbGruppe = FARBLOS;
     spielfeld[25].farbgruppenFelder[0] = 5;
     spielfeld[25].farbgruppenFelder[1] = 15;
@@ -1478,7 +1484,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[35].mieten[1] = 50;   //wenn man 2 Bahnen besitzt
     spielfeld[35].mieten[2] = 100;  //wenn man 3 Bahnen besitzt
     spielfeld[35].mieten[3] = 200;  //wenn man 4 Bahnen besitzt
-    spielfeld[35].besitzer = 0;
+    spielfeld[35].besitzer = 3;
     spielfeld[35].farbGruppe = FARBLOS;
     spielfeld[35].farbgruppenFelder[0] = 5;
     spielfeld[35].farbgruppenFelder[1] = 15;
@@ -1934,7 +1940,7 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
     uint8_t bieter[6] = {0};//array zur speicherung von zurückgetretenen Spielern und höchstbieter
     uint16_t hoechstGebot = 0;
     uint8_t inventar[40] = {0}; //array dient zur speicherung von den Feldern, welche versteigert werden
-    uint8_t inventatZaehler = 0;//wird verwendet um die Felder am richtigen Ort im Inventar zu speichern
+    uint8_t inventarZaehler = 0;//wird verwendet um die Felder am richtigen Ort im Inventar zu speichern
     uint8_t anzahlVersteigerteFelder = 0;//Zählt wie viele Felder bereits versteigert wurden.
     uint32_t systemZeit = 0;
     uint32_t startZeit = 0;
@@ -1999,18 +2005,20 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
                 }
             }
             //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~nächsten Zustand bestimmen~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            //wenn flagHaeuser gesetzt ist
+            //wenn flagHaeuser gesetzt ist d.h. der spieler besitzt häuser
             if (flagHaeuser)
             {
+                //LCD ausgabe spieler am Zug und Navigation
                 writeText(0,0,"   Spieler      ");
                 sprintf(lcdBuffer,"%u",zahler);
                 writeText(0,11,lcdBuffer);
                 writeText(1,0,"Haus verkaufen? ");
                 writeText(2,0,"X Ja      Nein Y");
                 pleiteZustand = HAEUSER;
-            }//wenn flagBelastebar gesetzt ist
+            }//wenn flagBelastebar gesetzt ist d.h. der spieler hat belastbare Felder
             else if (flagBelastebar)
             {
+                //LCD ausgabe spieler am Zug und Navigation
                 writeText(0,0,"   Spieler      ");
                 sprintf(lcdBuffer,"%u",zahler);
                 writeText(0,11,lcdBuffer);
@@ -2031,7 +2039,7 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
             {
                 //lässt den Spieler ein Haus verkaufen
                 hausBauen(zahler);
-                pleiteZustand = GENUG_GELD;
+                pleiteZustand = GENUG_GELD;//zustandswechsel
             }//wenn Taste Y betätigt wurde --> Haus nicht verkaufen
             else if (positiveFlanke & yTasten[zahler - 1])
             {
@@ -2204,11 +2212,12 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
             //Sucht alle Felder nach Feldern ab, die dem Spieler gehörten
             for(uint8_t i = 0; i < ANZAHL_FELDER; i = i + 1)
             {
+                inventar[i] = 0; // inventar zurücksetzen
                 //wenn das aktuelle Feld dem Spieler gehörte
                 if (spielfeld[i].besitzer == zahler)
                 {
-                    spielfeld[i].feldBelastet = 0;//entfernt die Hypothek vom Haus
-                    //Wenn es sich bei dem Feld um eine STrasse Handelt
+                    /*spielfeld[i].feldBelastet = 0;//entfernt die Hypothek vom Haus
+                    //Wenn es sich bei dem Feld um eine Strasse Handelt
                     if (spielfeld[i].typ == STRASSE)
                     {
                         setHaus(spielfeld[i].hausnummer,0);//entfernt die Markierung vom Feld
@@ -2217,23 +2226,37 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
                     {
                         //Entfernt die RGB Markierung
                         setPropertyRgb(spielfeld[i].rgbNummer,0);
-                    }
-                    inventar[inventatZaehler] = i;//speichert die Feldnummer im Inventar
-                    inventatZaehler += 1; //erhöt den Inventarzähler um 1
+                    }*/
+                    inventar[inventarZaehler] = i;//speichert die Feldnummer im Inventar
+                    inventarZaehler += 1; //erhöt den Inventarzähler um 1
                     
                 }
             }
             
             
             //bestimmen ob der Spieler Schulden bei der Bank oder bei einem Mitspieler hatte.
-            //Wenn der Empfänger die Bank ist
-            if (!empfaenger)
+            if (!empfaenger) //Wenn der Empfänger die Bank ist
             {
+                //die Hypotheken verfallen. Alle felder die versteigert werden sind automatisch nicht mehr belastet
                 //Der Spieler hatte Schulden bei der Bank
                 //Sein Ganzes restliches Geld wird überwiesen an die Bank
                 geldUeberweisen(zahler,0,spielerInfo[zahler].geld,1);
                 //freikarten löschen
                 spielerInfo[zahler].freikarte = 0; 
+                for (uint8_t i = 0; i < inventarZaehler; i = i + 1)
+                {
+                    spielfeld[inventar[i]].feldBelastet = 0;//Hypothek vom Feld entfernen
+                    if (spielfeld[inventar[i]].typ == STRASSE)//Prüft ob das Feld eine Strasse ist
+                    {
+                        //wenn es eine Strasse ist ist die Hypothek mit 6 Häusern markiert
+                        setHaus(spielfeld[inventar[i]].hausnummer,0);//Entfernt die Markierung auf dem Feld
+                    }
+                    else
+                    {
+                        //wenn das Feld keine Strasse ist, ist die Hypothek mit einer weissen rgb gekennzeichnet
+                        setPropertyRgb(spielfeld[inventar[i]].rgbNummer,RGB_BANK);//schaltet die RGB auf die Farbe der Bank
+                    }
+                }
                 //alle Felder des Spielers werden in der Grossversteigerung versteigert.
                 pleiteZustand = GROSSVERSTEIGERUNG;
                 flagNeuesFeld = 1;
@@ -2241,7 +2264,28 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
             else
             {
                 //Der Spieler hatte Schulden bei einem Mitspieler. Sein Besitz wird dem Mitspieler übergeben
-                pleiteZustand = FELDER_ABGEBEN;
+                //Sein Restliches Geld wird an den Mitspieler überwiesen
+                geldUeberweisen(zahler,empfaenger,spielerInfo[zahler].geld,1);
+                //pleiteZustand = FELDER_ABGEBEN;
+                //wird alles wieder rausgelöscht nur zum testen ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                for (uint8_t i = 0; i < inventarZaehler; i = i + 1)
+                {
+                    spielfeld[inventar[i]].feldBelastet = 0;//Hypothek vom Feld entfernen
+                    if (spielfeld[inventar[i]].typ == STRASSE)//Prüft ob das Feld eine Strasse ist
+                    {
+                        //wenn es eine Strasse ist ist die Hypothek mit 6 Häusern markiert
+                        setHaus(spielfeld[inventar[i]].hausnummer,0);//Entfernt die Markierung auf dem Feld
+                    }
+                    else
+                    {
+                        //wenn das Feld keine Strasse ist, ist die Hypothek mit einer weissen rgb gekennzeichnet
+                        setPropertyRgb(spielfeld[inventar[i]].rgbNummer,RGB_BANK);//schaltet die RGB auf die Farbe der Bank
+                    }
+                }
+                //alle Felder des Spielers werden in der Grossversteigerung versteigert.
+                pleiteZustand = GROSSVERSTEIGERUNG;
+                flagNeuesFeld = 1;
+                //wird alles wieder rausgelöscht nur zum testen ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             }
             break;
             case GROSSVERSTEIGERUNG:
@@ -2250,41 +2294,47 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
             {
                 for (uint8_t i = 0; i < 6; i = i + 1)
                 {
+                    //bieter array --> speichert welche Spieler von der Versteiogerung zurückgetreten sind = 0 - 3
+                    //anzahl zurückgetretene Spieler = 4
+                    //höchstbietender Spieler = 5
                     bieter[i] = 0; //array zurücksetzen
                 }
                 for (uint8_t i = 1; i <= anzahlSpieler; i = i + 1)
                 {
                     //wenn der spieler Pleite ist, darf er nicht mitbieten
+                    setGeld(0,i,0);//Siebensegmente aller Spieler ausschalten
                     if (spielerInfo[i].pleite)
                     {
+                        setGeld(0,i,2);//Spieler spielt nicht mehr mit => ---- anzeigen
                         bieter[i - 1] = 1; //Schliesst den Spieler aus der versteigerung aus
                         bieter[4] = bieter[4] + 1; //erhöht anzahl zurückgezogene spieler 
                     }
                 }
                 clear();
+                //LCD ausgabe des aktuellen Feldes
                 writeText(0,0," VERSTEIGERUNG  ");
                 writeText(1,0,spielfeld[inventar[anzahlVersteigerteFelder]].name);
                 writeText(2,0,"bieten X sonst Y");
                 hoechstGebot = 10;//STARTGEBOT --> danach 10er Schritte
                 flagNeuesFeld = 0; 
             }
-            //prüft alle eingaben der SPieler
+            //prüft alle eingaben der Spieler
             for (uint8_t i = 0; i < anzahlSpieler; i = i + 1)
             {
-                //wenn der Spieler noch in der versteigerung dabei ist und er mehr Geld hat als das Höchstgebot
+                //wenn der Spieler noch in der versteigerung dabei ist und er mehr Geld hat als das Höchstgebot + 10
                 if ((positiveFlanke & xTasten[i]) && !bieter[i] && (spielerInfo[i + 1].geld >= hoechstGebot + 10))
                 {
-                    hoechstGebot += 10;//gebot um 10 erhöhen
+                    hoechstGebot += 10;//höchstgebot um 10 erhöhen
                     bieter[5] = i + 1; //Speichert die Spielernummer des spielers mit dem Höchsten gebot
-                    for (uint8_t j = 0; j < anzahlSpieler; j = j + 1)
+                    for (uint8_t j = 1; j <= anzahlSpieler; j = j + 1)
                     {
                         //wenn der Spieler noch am bieten ist und nicht der höchstbieter ist
-                        if (!bieter[j] && !(bieter[5] == j + 1))
+                        if (!bieter[j - 1] && !(bieter[5] == j))
                         {
-                            setGeld(0,i,0);//wenn der Spieler kein Gebot abgegeben hat aber noch mitbietet siebensegmente abschalten
+                            setGeld(0,i + 1,0);//wenn der Spieler kein Gebot abgegeben hat aber noch mitbietet siebensegmente abschalten
                         }
                     }
-                    setGeld(hoechstGebot,i,1);//Ausgabe Höchstgebot
+                    setGeld(hoechstGebot,i + 1,1);//Ausgabe Höchstgebot
 
                 }
                 //wenn der Spieler die Taste Y zum ersten mal in diese versteigerungsrunde betätigt hat
@@ -2292,26 +2342,44 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
                 {
                     bieter[i] = 1; //schliesst spieler aus auktion aus                  bieter 0 - 3 spieler zurückgetreten
                     bieter[4] = bieter[4] + 1; //erhöht anzahl zurückgezogene spieler   bieter 4 anzahl zurückgetretene Spieler
-                    setGeld(0,i,2);//---- anzeigen
+                    setGeld(0,i + 1,2);//---- anzeigen
                 }
             }
             
-            //wenn alle 4 Spieler nicht mehr bieten
-            if (bieter[4] == 4)
+            //wenn alle Spieler nicht mehr bieten
+            if (bieter[4] == anzahlSpieler)
             {
-                flagNeuesFeld = 1;
+                writeText(0,0," versteigert an ");
+                writeText(1,0,"   Spieler      ");
+                sprintf(lcdBuffer,"%u",zahler);
+                writeText(1,11,lcdBuffer);
+                
                 spielfeld[inventar[anzahlVersteigerteFelder]].besitzer = bieter[5];//Höchstbieter wird als neuer besitzer gespeichert
                 //rgb Farbe auf die Farbe des neuen Besitzers schreiben
                 setPropertyRgb(spielfeld[inventar[anzahlVersteigerteFelder]].rgbNummer,bieter[5]);
                 anzahlVersteigerteFelder += 1;
-                flagNeuesFeld = 1;
-                
+                //wenn es noch Felder zu versteigern gibt
+                if (inventar[anzahlVersteigerteFelder])
+                {
+                    flagNeuesFeld = 1;//flag ermöglicht es, dass das nächste Feld versteigert wird
+                }
+                else
+                {
+                    //wenn es nichts mehr zu versteigern gibt, ist die Versteigerung beendet
+                    pleiteZustand = ENDE_VERSTEIGERUNG;
+                }
+                _delay_ms(1000);//1s warten
             }
+            break;
+            case ENDE_VERSTEIGERUNG:
+            writeText(0,0," VERSTEIGERUNG  ");
+            writeText(1,0,"    BEENDET     ");
+            writeText(2,0,"                ");
+            flagGeldBeschaffen = 0; // flag auf 0 setzen um aus der while Schleife rauszukommen
             break;
             case FELDER_ABGEBEN:
             //Der Spieler hatte Schulden bei einem Mitspieler
-            //Sein Restliches Geld wird an den Mitspieler überwiesen
-            geldUeberweisen(zahler,empfaenger,spielerInfo[zahler].geld,1);
+            writeText(0,0,"    ABGEBEN     ");
             //FREIKARTE NICHT VERGESSEN
             break;
             default:

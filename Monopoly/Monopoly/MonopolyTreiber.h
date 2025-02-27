@@ -48,6 +48,7 @@
 #define CHANCE1 7
 #define CHANCE2 22
 #define CHANCE3 36
+#define RGB_BANK 9
 /*--- Datentypen (typedef) ---------------------------------------------------*/
 typedef struct {
     char name[50];      // Name des Spielers
