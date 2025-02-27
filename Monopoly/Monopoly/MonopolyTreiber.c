@@ -2315,7 +2315,7 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
                 writeText(0,0," VERSTEIGERUNG  ");
                 writeText(1,0,spielfeld[inventar[anzahlVersteigerteFelder]].name);
                 writeText(2,0,"bieten X sonst Y");
-                hoechstGebot = 10;//STARTGEBOT --> danach 10er Schritte
+                hoechstGebot = 0;//STARTGEBOT auf 0 setzen --> danach 10er Schritte
                 flagNeuesFeld = 0; 
             }
             //prüft alle eingaben der Spieler
@@ -2331,14 +2331,14 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
                         //wenn der Spieler noch am bieten ist und nicht der höchstbieter ist
                         if (!bieter[j - 1] && !(bieter[5] == j))
                         {
-                            setGeld(0,i + 1,0);//wenn der Spieler kein Gebot abgegeben hat aber noch mitbietet siebensegmente abschalten
+                            setGeld(0,j,0);//wenn der Spieler kein Gebot abgegeben hat aber noch mitbietet siebensegmente abschalten
                         }
                     }
                     setGeld(hoechstGebot,i + 1,1);//Ausgabe Höchstgebot
 
                 }
-                //wenn der Spieler die Taste Y zum ersten mal in diese versteigerungsrunde betätigt hat
-                if ((positiveFlanke & yTasten[i]) && !bieter[i])
+                //wenn der Spieler die Taste Y zum ersten mal in diese versteigerungsrunde betätigt hat & nicht der höchstbieter geboten hat
+                if ((positiveFlanke & yTasten[i]) && !bieter[i] && !(positiveFlanke & yTasten[bieter[5] - 1]))
                 {
                     bieter[i] = 1; //schliesst spieler aus auktion aus                  bieter 0 - 3 spieler zurückgetreten
                     bieter[4] = bieter[4] + 1; //erhöht anzahl zurückgezogene spieler   bieter 4 anzahl zurückgetretene Spieler
@@ -2346,8 +2346,8 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
                 }
             }
             
-            //wenn alle Spieler nicht mehr bieten
-            if (bieter[4] == anzahlSpieler)
+            //wenn alle Spieler ausser der höchstbieter nicht mehr bieten
+            if (bieter[4] == anzahlSpieler - 1)
             {
                 writeText(0,0," versteigert an ");
                 writeText(1,0,"   Spieler      ");

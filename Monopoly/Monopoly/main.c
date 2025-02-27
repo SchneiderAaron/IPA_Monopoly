@@ -179,7 +179,7 @@ void initSpieler(Spieler spielerInfo[])
     
     //Eigenschaften Spieler 2
     strcpy(spielerInfo[2].name, "Spieler 2");
-    spielerInfo[2].geld = 30;
+    spielerInfo[2].geld = 1000;
     spielerInfo[2].position = 40;
     spielerInfo[2].gefaengnis = 0;
     spielerInfo[2].rundenImGefaengnis = 0;
@@ -190,7 +190,7 @@ void initSpieler(Spieler spielerInfo[])
     
     //Eigenschaften Spieler 3
     strcpy(spielerInfo[3].name, "Spieler 3");
-    spielerInfo[3].geld = 30;
+    spielerInfo[3].geld = 1000;
     spielerInfo[3].position = 40;
     spielerInfo[3].gefaengnis = 0;
     spielerInfo[3].rundenImGefaengnis = 0;
@@ -201,7 +201,7 @@ void initSpieler(Spieler spielerInfo[])
     
     //Eigenschaften Spieler 4
     strcpy(spielerInfo[4].name, "Spieler 4");
-    spielerInfo[4].geld = 30;
+    spielerInfo[4].geld = 1000;
     spielerInfo[4].position = 40;
     spielerInfo[4].gefaengnis = 0;
     spielerInfo[4].rundenImGefaengnis = 0;
@@ -672,7 +672,8 @@ int main(void)
             //lässt den Spieler einmal würfel
             //Wenn flagWeiter nicht gesetzt ist, kann man nicht würfeln das
             //flag braucht es, da man ansonsten bei einem pasch nichts kaufen kann
-            if (!flagFertigGewuerfelt && flagWeiter) 
+            //wenn flagSpielerPleite = 1 ist spielt der spieler nicht mehr mit
+            if (!flagFertigGewuerfelt && flagWeiter && !flagSpielerPleite) 
             {
                 //wartet bis mit beiden Würfel gewürfelt wurde
                 warteBisGewuerfelt();//lässt den spieler würfeln
