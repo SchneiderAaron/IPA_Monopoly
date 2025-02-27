@@ -145,11 +145,11 @@ uint8_t spielerImGefaengnis[5] = {0};
 
 uint16_t tasteAlt, tasteNeu, positiveFlanke = 0; //Variabeln Flankenerkennung
 
-zustand_t zustand = SPIEL;//Spielzustand auf SPIELERAUSWAHL setzen
+zustand_t zustand = SPIELERAUSWAHL;//Spielzustand auf SPIELERAUSWAHL setzen
 workshopZustand_t workshopZustand = PASCH_J_N;//Workshopzustand auf PASH_J_N setzen
 verwaltung_t verwaltung = VERWALTUNG_BAUEN;//Verwaltung auf VERWALTUNG_BAUEN Setzen
 
-uint8_t anzahlSpieler = 4;//Anzahl Spieler auf 2 setzen NORMALERWEISE 2
+uint8_t anzahlSpieler = 2;//Anzahl Spieler auf 2 setzen NORMALERWEISE 2
 
 uint8_t globalUpdateLCD = 0;
 
@@ -168,7 +168,7 @@ void initSpieler(Spieler spielerInfo[])
 {
     //Eigenschaften Spieler 1
     strcpy(spielerInfo[1].name, "Spieler 1");
-    spielerInfo[1].geld = 30;
+    spielerInfo[1].geld = 1111;
     spielerInfo[1].position = 40;
     spielerInfo[1].gefaengnis = 0;
     spielerInfo[1].rundenImGefaengnis = 0;
@@ -179,7 +179,7 @@ void initSpieler(Spieler spielerInfo[])
     
     //Eigenschaften Spieler 2
     strcpy(spielerInfo[2].name, "Spieler 2");
-    spielerInfo[2].geld = 1000;
+    spielerInfo[2].geld = 2222;
     spielerInfo[2].position = 40;
     spielerInfo[2].gefaengnis = 0;
     spielerInfo[2].rundenImGefaengnis = 0;
@@ -190,7 +190,7 @@ void initSpieler(Spieler spielerInfo[])
     
     //Eigenschaften Spieler 3
     strcpy(spielerInfo[3].name, "Spieler 3");
-    spielerInfo[3].geld = 1000;
+    spielerInfo[3].geld = 3333;
     spielerInfo[3].position = 40;
     spielerInfo[3].gefaengnis = 0;
     spielerInfo[3].rundenImGefaengnis = 0;
@@ -201,7 +201,7 @@ void initSpieler(Spieler spielerInfo[])
     
     //Eigenschaften Spieler 4
     strcpy(spielerInfo[4].name, "Spieler 4");
-    spielerInfo[4].geld = 1000;
+    spielerInfo[4].geld = 4444;
     spielerInfo[4].position = 40;
     spielerInfo[4].gefaengnis = 0;
     spielerInfo[4].rundenImGefaengnis = 0;
@@ -329,6 +329,8 @@ int main(void)
     uint8_t handelWareAuswaehlen(uint8_t haendlerNr);
     uint8_t auswahlBestaetigen(uint8_t haendlerNr);
     
+    uint32_t seed = 0;
+    uint32_t adcWert = 0;
     /*--- Funktionsdefinitionen -------------------------------------------------*/
     
     
@@ -344,8 +346,21 @@ int main(void)
     //random Seed setzen
     //ADC initialisieren
     adm_ADC_init();//ADC Initialisieren während vorbereitung erstellt!!
-    //rando seed anhand von nicht angeschlossenem ADC Pin setzen
-    srand(adm_ADC_read(0));
+    for (uint8_t i = 0; i < 4; i = i + 1)
+    {
+        _delay_us(500);
+        adcWert = adm_ADC_read(i);
+        seed ^= adcWert << 22;
+        seed ^= ~adcWert << 12;
+        seed ^= adcWert << 2;
+    }
+    srand(seed);
+    writeText(0,0,"      seed      ");
+    sprintf(lcdBuffer,"%lu",seed);
+    writeText(1,3,lcdBuffer);
+    
+    
+    _delay_ms(1000);
     //for schleife setzt die RGB auf jedem spielfeld
     for (uint8_t i = 0; i < ANZAHL_FELDER; i = i + 1)
     {
@@ -383,7 +398,25 @@ int main(void)
             DDRD = 0xFF;		// Port D auf Ausgang initialisieren (alle Pins)
             PORTD = 0x00;
             lcdReInit();
+            //seed neu setzen
+            for (uint8_t i = 0; i < 4; i = i + 1)
+            {
+                _delay_us(500);
+                adcWert = adm_ADC_read(i);
+                seed ^= adcWert << 22;
+                seed ^= ~adcWert << 12;
+                seed ^= adcWert << 2;
+            }
+            srand(seed);
+            writeText(0,0,"      seed      ");
+            sprintf(lcdBuffer,"%lu",seed);
+            writeText(1,3,lcdBuffer);
 
+        }
+        //Prüft ob der Spieler am zug pleite ist
+        if (spielerInfo[spielerAmZug].pleite)
+        {
+            flagSpielerPleite = 1;//Der spieler, der am zug ist ist bereits aus dem Spiel ausgeschieden
         }
         //verarbeitung verschiedener zustände
         switch (zustand)//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -657,6 +690,8 @@ int main(void)
                 if (spielerInfo[spielerAmZug].pleite)
                 {
                     flagSpielerPleite = 1;//Der spieler, der am zug ist ist bereits aus dem Spiel ausgeschieden
+                    flagFertigGewuerfelt = 1;
+                    aktuellesFeld = FREIPARKEN;
                 }
             }
             //ermöglicht es dem spieler bei Pasch zu kaufen
@@ -723,17 +758,16 @@ int main(void)
                  //wenn die aktuelle spition des Spielers + wüfelsumme grösser gleich 40 ist
                  // erhält der spieler 200 CHF
                  //Prüft ob der Spieler über los kommt
-                 if (spielerInfo[spielerAmZug].position + (wuerfelArray[0] + wuerfelArray[1]) >= ANZAHL_FELDER )
-                 {
-                     //wenn der SPieler über los kommt, erhält er 200
-                     spielerInfo[spielerAmZug].geld += RUNDEN_GELD; //konntostand wird um 200 erhöht
-                     //neuer Kontostand ausgeben
-                     updateKontostand(anzahlSpieler,spielerInfo);
-                 }
+                 
                  //animiert die fortbewegung des spielers
-                 for (uint8_t i = spielerInfo[spielerAmZug].position; i < (spielerInfo[spielerAmZug].position + (wuerfelArray[0] + wuerfelArray[1])); i = i + 1)
+                 for (uint8_t i = spielerInfo[spielerAmZug].position + 1; i <= (spielerInfo[spielerAmZug].position + (wuerfelArray[0] + wuerfelArray[1])); i = i + 1)
                  {
                      setPlayerPosition(i % ANZAHL_FELDER,spielerAmZug);
+                     if ((i % ANZAHL_FELDER) == 0)
+                     {
+                         geldUeberweisen(0,spielerAmZug,RUNDEN_GELD);
+                     }
+                     //wenn der Spieler auf Feld 
                      _delay_ms(100); //delay dient zu animationszwecken
                  }
                  //addiert die würfelsumme zur aktuellen position dazu
@@ -766,11 +800,7 @@ int main(void)
                 updateLCD = 0;//LCD ausgabe blockieren
                 zustand = VERWALTEN;//Zustandswechsel
             }
-            //Prüft ob der Spieler am zug pleite ist
-            if (spielerInfo[spielerAmZug].pleite)
-            {
-                flagSpielerPleite = 1;//Der spieler, der am zug ist ist bereits aus dem Spiel ausgeschieden
-            }
+            
             switch (aktuellesFeld) //verarbeitung aufgrund aktuellem feldtyp
             {
                 //wenn das aktuelle Feld ein Ereignissfeld ist
@@ -899,7 +929,7 @@ int main(void)
                     if (positiveFlanke & xTasten[spielerAmZug - 1])
                     {
                         //geld überweisen
-                        bezahlStatus = geldUeberweisen(spielerAmZug,feldBesitzer,zahlBetrag,1);
+                        bezahlStatus = geldUeberweisen(spielerAmZug,feldBesitzer,zahlBetrag);
                         //prüfen ob zahlung erfolgreich
                         if (bezahlStatus == 1)
                         {
@@ -933,7 +963,7 @@ int main(void)
                     if (positiveFlanke & xTasten[spielerAmZug - 1])
                     {
                         //geld an die Bank überweisen
-                        bezahlStatus = geldUeberweisen(spielerAmZug,0,zahlBetrag,10);
+                        bezahlStatus = geldUeberweisen(spielerAmZug,0,zahlBetrag);
                         if (bezahlStatus == 1)
                         {
                             updateLCD = 0;
@@ -1001,7 +1031,7 @@ int main(void)
                     //spieler am zug muss Taste X drücken um zu bezahlen
                     if (positiveFlanke & xTasten[spielerAmZug - 1])
                     {
-                        bezahlStatus = geldUeberweisen(spielerAmZug,feldBesitzer,zahlBetrag,5);
+                        bezahlStatus = geldUeberweisen(spielerAmZug,feldBesitzer,zahlBetrag);
                         if (bezahlStatus == 1)
                         {
                             updateLCD = 0;
@@ -1095,7 +1125,7 @@ int main(void)
                         else if (flagTasteX)//Spieler will bezahlen
                         {
                             //zieht den betrag vom spieler ab
-                            bezahlStatus = geldUeberweisen(spielerAmZug,0,50,1);
+                            bezahlStatus = geldUeberweisen(spielerAmZug,0,50);
                             //prüft ob zahlung erfolgreich
                             if (bezahlStatus == ZAHLUNG_ERFOLGREICH)
                             {
@@ -1161,7 +1191,7 @@ int main(void)
                             if (spielerInfo[spielerAmZug].rundenImGefaengnis == 3)
                             {
                                 //nach 3 Runden muss bezahlt werden
-                                bezahlStatus = geldUeberweisen(spielerAmZug,0,50,1);
+                                bezahlStatus = geldUeberweisen(spielerAmZug,0,50);
                                 spielerInfo[spielerAmZug].rundenImGefaengnis = 0;
                                 spielerInfo[spielerAmZug].gefaengnis = 0;
                                 //läst den spieler mit dem letzten wurf fahren
@@ -1294,7 +1324,7 @@ int main(void)
                     //spieler am zug muss Taste X drücken um zu bezahlen
                     if (positiveFlanke & xTasten[spielerAmZug - 1])
                     {
-                        bezahlStatus = geldUeberweisen(spielerAmZug,feldBesitzer,zahlBetrag,1);
+                        bezahlStatus = geldUeberweisen(spielerAmZug,feldBesitzer,zahlBetrag);
                         if (bezahlStatus == 1)
                         {
                             updateLCD = 0;
@@ -1563,7 +1593,7 @@ int main(void)
                 {
                     //berechnet den Wert des Feldes
                     zahlBetrag = spielfeld[spielerInventar[feldZaehler]].preis / 2;
-                    bezahlStatus = geldUeberweisen(0,spielerAmZug,zahlBetrag,1);
+                    bezahlStatus = geldUeberweisen(0,spielerAmZug,zahlBetrag);
                     if (bezahlStatus == 1) //wenn die Bezahlung erfolgreich war
                     {
                         //vermerkt das feld als verpfändet
@@ -1595,7 +1625,7 @@ int main(void)
                     //berechnet den Preis um eine Hypothek aufzulösen
                     zahlBetrag = (spielfeld[spielerInventar[feldZaehler]].preis / 2) * 1.1;
                     //Geld wird an Bank überwiesen
-                    bezahlStatus = geldUeberweisen(spielerAmZug,0,zahlBetrag,1);
+                    bezahlStatus = geldUeberweisen(spielerAmZug,0,zahlBetrag);
                     if (bezahlStatus == 1) //wenn die Zahlung erfolgreich war
                     {
                         //vermerkt das feld als nicht mehr verpfändet
@@ -1756,7 +1786,7 @@ int main(void)
                                     }
                                     if (positiveFlanke & TASTE_S)
                                     {
-                                        handelzahlungErfolgreich = geldUeberweisen(handelSpielerNummern[1 - i],0,handelBezahlBetrag,1);
+                                        handelzahlungErfolgreich = geldUeberweisen(handelSpielerNummern[1 - i],0,handelBezahlBetrag);
                                     }
                                     else
                                     {
@@ -1809,7 +1839,7 @@ int main(void)
                     if (handel[i].barGeld)
                     {
                         //überweist das Geld
-                        geldUeberweisen(handelSpielerNummern[i],handelSpielerNummern[1 - i],handel[i].barGeld,10);
+                        geldUeberweisen(handelSpielerNummern[i],handelSpielerNummern[1 - i],handel[i].barGeld);
                     }
                 }
                 for (uint8_t i = 0; i < 2; i = i + 1)
@@ -1862,7 +1892,8 @@ uint8_t feldKaufen(uint8_t feldNummer, Feld spielfeld[40], uint8_t spielerAmZug)
             if(spielerInfo[spielerAmZug].geld >= spielfeld[feldNummer].preis)
             {
                 //zieht den betrag vom Konto des spielers ab
-                spielerInfo[spielerAmZug].geld = spielerInfo[spielerAmZug].geld - spielfeld[feldNummer].preis;
+                geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].preis);
+                //spielerInfo[spielerAmZug].geld = spielerInfo[spielerAmZug].geld - spielfeld[feldNummer].preis;
                 //besitz wird umgeschrieben
                 spielfeld[feldNummer].besitzer = spielerAmZug;
                 //Besitz RGB setzen
@@ -1902,7 +1933,7 @@ uint8_t bauen(uint8_t feldNummer, uint8_t spielerAmZug)
             haeuserImSpiel -= 4;
             hotelsImSpiel += 1;
             
-            kaufStatus = geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus,10);
+            kaufStatus = geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus);
             setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser + 1); //Anzahl Häuser um 1 erhöhen
             spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser + 1;//Neue anzahl Häuser speichern
             return 1;//Erfolgreich
@@ -1912,7 +1943,7 @@ uint8_t bauen(uint8_t feldNummer, uint8_t spielerAmZug)
         {
             haeuserImSpiel += 1;
             
-            kaufStatus = geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus,10);
+            kaufStatus = geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus);
             setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser + 1); //Anzahl Häuser um 1 erhöhen
             spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser + 1;//Neue anzahl Häuser speichern
             return 1;//Erfolgreich
@@ -1933,7 +1964,7 @@ uint8_t abBauen(uint8_t feldNummer, uint8_t spielerAmZug)
         hotelsImSpiel -= 1;
         setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser - 1); //Anzahl Häuser um 1 erhöhen
         spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser - 1;//Neue anzahl Häuser speichern
-        kaufStatus = geldUeberweisen(0,spielerAmZug,spielfeld[feldNummer].kostenHaus / 2, 5);
+        kaufStatus = geldUeberweisen(0,spielerAmZug,spielfeld[feldNummer].kostenHaus / 2);
         return 1;
     }
     else if (spielfeld[feldNummer].anzahlHaeuser > 0)
@@ -1941,7 +1972,7 @@ uint8_t abBauen(uint8_t feldNummer, uint8_t spielerAmZug)
         haeuserImSpiel -= 1;
         setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser - 1); //Anzahl Häuser um 1 erhöhen
         spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser - 1;//Neue anzahl Häuser speichern
-        kaufStatus = geldUeberweisen(0,spielerAmZug,spielfeld[feldNummer].kostenHaus / 2, 5);
+        kaufStatus = geldUeberweisen(0,spielerAmZug,spielfeld[feldNummer].kostenHaus / 2);
         return 1;
     }
     else

@@ -101,7 +101,7 @@
 //#define SIEBENSEGMENT_OFF 0
 /*--- Datentypen (typedef) --------------------------------------------------*/
 rgb_color leds[LED_COUNT];
-typedef enum {INVENTAR_PRUEFEN, HAEUSER_J_N, HAEUSER, BELASTEN_J_N, BELASTEN, GENUG_GELD, PLEITE, GROSSVERSTEIGERUNG, FELDER_ABGEBEN, ENDE_VERSTEIGERUNG}pleite_t;
+typedef enum {INVENTAR_PRUEFEN, HAEUSER_J_N, HAEUSER, BELASTEN_J_N, BELASTEN, GENUG_GELD, PLEITE, GROSSVERSTEIGERUNG, FELDER_ABGEBEN, ENDE_VERSTEIGERUNG, ENDE_FELDER_ABGEBEN}pleite_t;
 /*--- Globale Konstanten ----------------------------------------------------*/
 /*--- Globale Variablen -----------------------------------------------------*/
 /*--- Modullokale Konstanten ------------------------------------------------*/
@@ -932,7 +932,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[1].mieten[4] = 160;   //Feld mit 4 Häuser
     spielfeld[1].mieten[5] = 250;   //Feld mit 1 Hotel
     spielfeld[1].mieten[6] = 4;     //Feld mit Farbgrupp
-    spielfeld[1].besitzer = 1;
+    spielfeld[1].besitzer = 0;
     spielfeld[1].farbGruppe = BRAUN;
     spielfeld[1].farbgruppenFelder[0] = 1;
     spielfeld[1].farbgruppenFelder[1] = 3;
@@ -959,7 +959,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[3].mieten[4] = 320;   //Feld mit 4 Häuser
     spielfeld[3].mieten[5] = 450;   //Feld mit 1 Hotel
     spielfeld[3].mieten[6] = 4;     //Feld mit Farbgruppe
-    spielfeld[3].besitzer = 1;
+    spielfeld[3].besitzer = 0;
     spielfeld[3].farbGruppe = BRAUN;
     spielfeld[3].farbgruppenFelder[0] = 1;
     spielfeld[3].farbgruppenFelder[1] = 3;
@@ -984,7 +984,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[5].mieten[1] = 50;    //wenn man 2 Bahnen besitzt
     spielfeld[5].mieten[2] = 100;   //wenn man 3 Bahnen besitzt
     spielfeld[5].mieten[3] = 200;   //wenn man 4 Bahnen besitzt
-    spielfeld[5].besitzer = 4;
+    spielfeld[5].besitzer = 0;
     spielfeld[5].farbGruppe = FARBLOS;
     spielfeld[5].farbgruppenFelder[0] = 5;
     spielfeld[5].farbgruppenFelder[1] = 15;
@@ -1005,13 +1005,13 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[6].mieten[4] = 400;   //Feld mit 4 Häuser
     spielfeld[6].mieten[5] = 550;   //Feld mit 5 Häuser
     spielfeld[6].mieten[6] = 12;    //Feld mit Farbgruppe
-    spielfeld[6].besitzer = 2;
+    spielfeld[6].besitzer = 0;
     spielfeld[6].farbGruppe = HELLBLAU;
     spielfeld[6].farbgruppenFelder[0] = 6;
     spielfeld[6].farbgruppenFelder[1] = 8;
     spielfeld[6].farbgruppenFelder[2] = 9;
     spielfeld[6].hausnummer = 2;
-    spielfeld[6].anzahlHaeuser = 5;
+    spielfeld[6].anzahlHaeuser = 0;
     spielfeld[6].kostenHaus = 50;
     spielfeld[6].rgbNummer = 3;
     spielfeld[6].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -1032,13 +1032,13 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[8].mieten[4] = 400;   //Feld mit 4 Häuser
     spielfeld[8].mieten[5] = 550;   //Feld mit 5 Häuser
     spielfeld[8].mieten[6] = 12;    //Feld mit Farbgruppe
-    spielfeld[8].besitzer = 2;
+    spielfeld[8].besitzer = 0;
     spielfeld[8].farbGruppe = HELLBLAU;
     spielfeld[8].farbgruppenFelder[0] = 6;
     spielfeld[8].farbgruppenFelder[1] = 8;
     spielfeld[8].farbgruppenFelder[2] = 9;
     spielfeld[8].hausnummer = 3;
-    spielfeld[8].anzahlHaeuser = 5;
+    spielfeld[8].anzahlHaeuser = 0;
     spielfeld[8].kostenHaus = 50;
     spielfeld[8].rgbNummer = 4;
     spielfeld[8].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -1056,13 +1056,13 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[9].mieten[4] = 450;   //Feld mit 4 Häuser
     spielfeld[9].mieten[5] = 600;   //Feld mit 5 Häuser
     spielfeld[9].mieten[6] = 16;    //Feld mit Farbgruppe
-    spielfeld[9].besitzer = 2;
+    spielfeld[9].besitzer = 0;
     spielfeld[9].farbGruppe = HELLBLAU;
     spielfeld[9].farbgruppenFelder[0] = 6;
     spielfeld[9].farbgruppenFelder[1] = 8;
     spielfeld[9].farbgruppenFelder[2] = 9;
     spielfeld[9].hausnummer = 4;
-    spielfeld[9].anzahlHaeuser = 5;
+    spielfeld[9].anzahlHaeuser = 0;
     spielfeld[9].kostenHaus = 50;
     spielfeld[9].rgbNummer = 5;
     spielfeld[9].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -1085,13 +1085,13 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[11].mieten[4] = 625;  //Feld mit 4 Häuser
     spielfeld[11].mieten[5] = 750;  //Feld mit 5 Häuser
     spielfeld[11].mieten[6] = 20;   //Feld mit Farbgruppe
-    spielfeld[11].besitzer = 3;
+    spielfeld[11].besitzer = 0;
     spielfeld[11].farbGruppe = ROSA;
     spielfeld[11].farbgruppenFelder[0] = 11;
     spielfeld[11].farbgruppenFelder[1] = 13;
     spielfeld[11].farbgruppenFelder[2] = 14;
     spielfeld[11].hausnummer = 5;
-    spielfeld[11].anzahlHaeuser = 5;
+    spielfeld[11].anzahlHaeuser = 0;
     spielfeld[11].kostenHaus = 100;
     spielfeld[11].rgbNummer = 6;
     spielfeld[11].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -1100,7 +1100,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     strcpy(spielfeld[12].name, "Informatikdienst");
     spielfeld[12].typ = WERK;
     spielfeld[12].preis = 150;
-    spielfeld[12].besitzer = 2;
+    spielfeld[12].besitzer = 0;
     spielfeld[12].farbGruppe = FARBLOS;
     spielfeld[12].rgbNummer = 7;
     spielfeld[12].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -1116,13 +1116,13 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[13].mieten[4] = 625;  //Feld mit 4 Häuser
     spielfeld[13].mieten[5] = 750;  //Feld mit 5 Häuser
     spielfeld[13].mieten[6] = 20;   //Feld mit Farbgruppe
-    spielfeld[13].besitzer = 3;
+    spielfeld[13].besitzer = 0;
     spielfeld[13].farbGruppe = ROSA;
     spielfeld[13].farbgruppenFelder[0] = 11;
     spielfeld[13].farbgruppenFelder[1] = 13;
     spielfeld[13].farbgruppenFelder[2] = 14;
     spielfeld[13].hausnummer = 6;
-    spielfeld[13].anzahlHaeuser = 5;
+    spielfeld[13].anzahlHaeuser = 0;
     spielfeld[13].kostenHaus = 100;
     spielfeld[13].rgbNummer = 8;
     spielfeld[13].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -1138,13 +1138,13 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[14].mieten[4] = 700;  //Feld mit 4 Häuser
     spielfeld[14].mieten[5] = 900;  //Feld mit 5 Häuser
     spielfeld[14].mieten[6] = 24;   //Feld mit Farbgruppe
-    spielfeld[14].besitzer = 3;
+    spielfeld[14].besitzer = 0;
     spielfeld[14].farbGruppe = ROSA;
     spielfeld[14].farbgruppenFelder[0] = 11;
     spielfeld[14].farbgruppenFelder[1] = 13;
     spielfeld[14].farbgruppenFelder[2] = 14;
     spielfeld[14].hausnummer = 7;
-    spielfeld[14].anzahlHaeuser = 5;
+    spielfeld[14].anzahlHaeuser = 0;
     spielfeld[14].kostenHaus = 100;
     spielfeld[14].rgbNummer = 9;
     spielfeld[14].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -1157,7 +1157,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[15].mieten[1] = 50;   //wenn man 2 Bahnen besitzt
     spielfeld[15].mieten[2] = 100;  //wenn man 3 Bahnen besitzt
     spielfeld[15].mieten[3] = 200;  //wenn man 4 Bahnen besitzt
-    spielfeld[15].besitzer = 4;
+    spielfeld[15].besitzer = 0;
     spielfeld[15].farbGruppe = FARBLOS;
     spielfeld[15].farbgruppenFelder[0] = 5;
     spielfeld[15].farbgruppenFelder[1] = 15;
@@ -1177,13 +1177,13 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[16].mieten[4] = 750;  //Feld mit 4 Häuser
     spielfeld[16].mieten[5] = 950;  //Feld mit 5 Häuser
     spielfeld[16].mieten[6] = 28;   //Feld mit Farbgruppe
-    spielfeld[16].besitzer = 4;
+    spielfeld[16].besitzer = 0;
     spielfeld[16].farbGruppe = ORANGE;
     spielfeld[16].farbgruppenFelder[0] = 16;
     spielfeld[16].farbgruppenFelder[1] = 18;
     spielfeld[16].farbgruppenFelder[2] = 19;
     spielfeld[16].hausnummer = 8;
-    spielfeld[16].anzahlHaeuser = 5;
+    spielfeld[16].anzahlHaeuser = 0;
     spielfeld[16].kostenHaus = 100;
     spielfeld[16].rgbNummer = 11;
     spielfeld[16].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -1203,13 +1203,13 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[18].mieten[4] = 750;  //Feld mit 4 Häuser
     spielfeld[18].mieten[5] = 950;  //Feld mit 5 Häuser
     spielfeld[18].mieten[6] = 28;   //Feld mit Farbgruppe
-    spielfeld[18].besitzer = 4;
+    spielfeld[18].besitzer = 0;
     spielfeld[18].farbGruppe = ORANGE;
     spielfeld[18].farbgruppenFelder[0] = 16;
     spielfeld[18].farbgruppenFelder[1] = 18;
     spielfeld[18].farbgruppenFelder[2] = 19;
     spielfeld[18].hausnummer = 9;
-    spielfeld[18].anzahlHaeuser = 5;
+    spielfeld[18].anzahlHaeuser = 0;
     spielfeld[18].kostenHaus = 100;
     spielfeld[18].rgbNummer = 12;
     spielfeld[18].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -1225,13 +1225,13 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[19].mieten[4] = 800;  //Feld mit 4 Häuser
     spielfeld[19].mieten[5] = 1000; //Feld mit 5 Häuser
     spielfeld[19].mieten[6] = 32;   //Feld mit Farbgruppe
-    spielfeld[19].besitzer = 4;
+    spielfeld[19].besitzer = 0;
     spielfeld[19].farbGruppe = ORANGE;
     spielfeld[19].farbgruppenFelder[0] = 16;
     spielfeld[19].farbgruppenFelder[1] = 18;
     spielfeld[19].farbgruppenFelder[2] = 19;
     spielfeld[19].hausnummer = 10;
-    spielfeld[19].anzahlHaeuser = 5;
+    spielfeld[19].anzahlHaeuser = 0;
     spielfeld[19].kostenHaus = 100;
     spielfeld[19].rgbNummer = 13;
     spielfeld[19].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -1318,7 +1318,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[25].mieten[1] = 50;   //wenn man 2 Bahnen besitzt
     spielfeld[25].mieten[2] = 100;  //wenn man 3 Bahnen besitzt
     spielfeld[25].mieten[3] = 200;  //wenn man 4 Bahnen besitzt
-    spielfeld[25].besitzer = 2;
+    spielfeld[25].besitzer = 0;
     spielfeld[25].farbGruppe = FARBLOS;
     spielfeld[25].farbgruppenFelder[0] = 5;
     spielfeld[25].farbgruppenFelder[1] = 15;
@@ -1375,7 +1375,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     strcpy(spielfeld[28].name, "Putzdienst");
     spielfeld[28].typ = WERK;
     spielfeld[28].preis = 150;
-    spielfeld[28].besitzer = 2;
+    spielfeld[28].besitzer = 0;
     spielfeld[28].farbGruppe = FARBLOS;
     spielfeld[28].rgbNummer = 20;
     spielfeld[28].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -1417,7 +1417,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[31].mieten[4] = 1100; //Feld mit 4 Häuser
     spielfeld[31].mieten[5] = 1275; //Feld mit 5 Häuser
     spielfeld[31].mieten[6] = 52;   //Feld mit Farbgruppe
-    spielfeld[31].besitzer = 1;
+    spielfeld[31].besitzer = 0;
     spielfeld[31].farbGruppe = GRUEN;
     spielfeld[31].farbgruppenFelder[0] = 31;
     spielfeld[31].farbgruppenFelder[1] = 32;
@@ -1426,7 +1426,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[31].anzahlHaeuser = 0;
     spielfeld[31].kostenHaus = 200;
     spielfeld[31].rgbNummer = 22;
-    spielfeld[31].feldBelastet = 1;  //wenn das Feld belastet ist = 1
+    spielfeld[31].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
     //Eigenschaften des Feldes: Produktion Elektroniker
     strcpy(spielfeld[32].name, "Produktion EK");
@@ -1439,7 +1439,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[32].mieten[4] = 1100; //Feld mit 4 Häuser
     spielfeld[32].mieten[5] = 1275; //Feld mit 5 Häuser
     spielfeld[32].mieten[6] = 52;   //Feld mit Farbgruppe
-    spielfeld[32].besitzer = 1;
+    spielfeld[32].besitzer = 0;
     spielfeld[32].farbGruppe = GRUEN;
     spielfeld[32].farbgruppenFelder[0] = 31;
     spielfeld[32].farbgruppenFelder[1] = 32;
@@ -1448,7 +1448,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[32].anzahlHaeuser = 0;
     spielfeld[32].kostenHaus = 200;
     spielfeld[32].rgbNummer = 23;
-    spielfeld[32].feldBelastet = 1;  //wenn das Feld belastet ist = 1
+    spielfeld[32].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
     //Eigenschaften des Feldes: Kanzlei
     strcpy(spielfeld[33].name, "Kanzlei");
@@ -1465,7 +1465,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[34].mieten[4] = 1200; //Feld mit 4 Häuser
     spielfeld[34].mieten[5] = 1400; //Feld mit 5 Häuser
     spielfeld[34].mieten[6] = 56;   //Feld mit Farbgruppe
-    spielfeld[34].besitzer = 1;
+    spielfeld[34].besitzer = 0;
     spielfeld[34].farbGruppe = GRUEN;
     spielfeld[34].farbgruppenFelder[0] = 31;
     spielfeld[34].farbgruppenFelder[1] = 32;
@@ -1474,7 +1474,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[34].anzahlHaeuser = 0;
     spielfeld[34].kostenHaus = 200;
     spielfeld[34].rgbNummer = 24;
-    spielfeld[34].feldBelastet = 1;  //wenn das Feld belastet ist = 1
+    spielfeld[34].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
     //Eigenschaften des Feldes: Gewerbeschule
     strcpy(spielfeld[35].name, "Gewerbeschule");
@@ -1484,7 +1484,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[35].mieten[1] = 50;   //wenn man 2 Bahnen besitzt
     spielfeld[35].mieten[2] = 100;  //wenn man 3 Bahnen besitzt
     spielfeld[35].mieten[3] = 200;  //wenn man 4 Bahnen besitzt
-    spielfeld[35].besitzer = 3;
+    spielfeld[35].besitzer = 0;
     spielfeld[35].farbGruppe = FARBLOS;
     spielfeld[35].farbgruppenFelder[0] = 5;
     spielfeld[35].farbgruppenFelder[1] = 15;
@@ -1508,7 +1508,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[37].mieten[4] = 1300; //Feld mit 4 Häuser
     spielfeld[37].mieten[5] = 1500; //Feld mit 5 Häuser
     spielfeld[37].mieten[6] = 70;   //Feld mit Farbgruppe
-    spielfeld[37].besitzer = 1;
+    spielfeld[37].besitzer = 0;
     spielfeld[37].farbGruppe = BLAU;
     spielfeld[37].farbgruppenFelder[0] = 37;
     spielfeld[37].farbgruppenFelder[1] = 39;
@@ -1517,7 +1517,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[37].anzahlHaeuser = 0;
     spielfeld[37].kostenHaus = 200;
     spielfeld[37].rgbNummer = 26;
-    spielfeld[37].feldBelastet = 1;  //wenn das Feld belastet ist = 1
+    spielfeld[37].feldBelastet = 0;  //wenn das Feld belastet ist = 1
     
     //Eigenschaften des Feldes: Schulmaterialkosten
     strcpy(spielfeld[38].name, "Schulmaterial");
@@ -1535,7 +1535,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[39].mieten[4] = 1700; //Feld mit 4 Häuser
     spielfeld[39].mieten[5] = 2000; //Feld mit 5 Häuser
     spielfeld[39].mieten[6] = 100;   //Feld mit Farbgruppe
-    spielfeld[39].besitzer = 1;
+    spielfeld[39].besitzer = 0;
     spielfeld[39].farbGruppe = BLAU;
     spielfeld[39].farbgruppenFelder[0] = 37;
     spielfeld[39].farbgruppenFelder[1] = 37;
@@ -1545,7 +1545,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[39].anzahlHaeuser = 0;
     spielfeld[39].kostenHaus = 200;
     spielfeld[39].rgbNummer = 27;
-    spielfeld[39].feldBelastet = 1;  //wenn das Feld belastet ist = 1
+    spielfeld[39].feldBelastet = 0;  //wenn das Feld belastet ist = 1
 }
 
 void initialisiereKarten(Karte chanceKanzlei[])
@@ -1749,20 +1749,20 @@ uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uin
             hausBetrag = spielerInfo[spielerAmZug].haeuser * chanceKanzlei[zufallsNummer].geld;
             hausBetrag = spielerInfo[spielerAmZug].hotels * chanceKanzlei[zufallsNummer].geld2;
             //zieht den berechneten betrag vom spieler ab
-            geldUeberweisen(spielerAmZug,0,(hausBetrag + hotelBetrag),1);
+            geldUeberweisen(spielerAmZug,0,(hausBetrag + hotelBetrag));
             break;
             case GELD_AN_BANK:
-            geldUeberweisen(spielerAmZug,0,chanceKanzlei[zufallsNummer].geld,1);
+            geldUeberweisen(spielerAmZug,0,chanceKanzlei[zufallsNummer].geld);
             break;
             case GELD_VON_BANK:
-            geldUeberweisen(0,spielerAmZug,chanceKanzlei[zufallsNummer].geld,1);
+            geldUeberweisen(0,spielerAmZug,chanceKanzlei[zufallsNummer].geld);
             break;
             case GELD_AN_MITSPIELER:
             for (uint8_t i = 1; i <= anzahlSpieler; i = i + 1)
             {
                 if (!(i == spielerAmZug))
                 {
-                    geldUeberweisen(spielerAmZug,i,chanceKanzlei[zufallsNummer].geld,1);
+                    geldUeberweisen(spielerAmZug,i,chanceKanzlei[zufallsNummer].geld);
                 }
                 
             }
@@ -1772,7 +1772,7 @@ uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uin
             {
                 if (i == spielerAmZug)
                 {
-                    geldUeberweisen(i,spielerAmZug,chanceKanzlei[zufallsNummer].geld,1);
+                    geldUeberweisen(i,spielerAmZug,chanceKanzlei[zufallsNummer].geld);
                 }
             }
             break;
@@ -1793,7 +1793,7 @@ uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uin
                     setPlayerPosition(neuePosition, spielerAmZug);
                     if (neuePosition == 0)
                     {
-                        geldUeberweisen(0,spielerAmZug,200,10);
+                        geldUeberweisen(0,spielerAmZug,200);
                     }
                     _delay_ms(100);
                 }
@@ -1817,7 +1817,7 @@ uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uin
                     setPlayerPosition(i % 40,spielerAmZug);
                     _delay_ms(100); //delay dient zu animationszwecken
                 }
-                geldUeberweisen(0,spielerAmZug,startGeld,10);
+                geldUeberweisen(0,spielerAmZug,startGeld);
             }
             for (uint8_t i = spielerInfo[spielerAmZug].position; i < chanceKanzlei[zufallsNummer].zielFeld; i = i + 1)
             {
@@ -1847,10 +1847,23 @@ uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uin
     return 0;
     
 }
-
-uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag, uint8_t schritt)
+uint8_t getUeberweisungsSchritt(uint16_t betrag)
+{
+    uint8_t schritt = 20;
+    uint8_t rest = 1;
+    //solange rest nicht 0 ist
+    while (rest)
+    {
+        schritt -= 1;
+        rest = betrag % schritt;
+    }
+    return schritt;
+}
+uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag)
 {
     uint16_t restBetrag = 0;
+    uint8_t schritt = 0;
+    schritt = getUeberweisungsSchritt(betrag);
     if (empfaenger && zahler) //wenn der empfänger nicht spieler 0 ist
     {
         //wenn der Zahlende Spieler genug geld hat
@@ -1861,6 +1874,7 @@ uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag, uin
                 spielerInfo[zahler].geld -= schritt;
                 spielerInfo[empfaenger].geld += schritt;
                 updateKontostand(anzahlSpieler,spielerInfo);
+                _delay_ms(10);
             }
             return 1; //zahlung erfolgreich
         }
@@ -1868,7 +1882,7 @@ uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag, uin
         {
             flagGeldBeschaffen = 1;//flag setzen
             restBetrag = betrag - spielerInfo[zahler].geld;//restbetrag berechnen
-            geldUeberweisen(zahler,empfaenger,spielerInfo[zahler].geld,1);//gesammtes Geld überweisen
+            geldUeberweisen(zahler,empfaenger,spielerInfo[zahler].geld);//gesammtes Geld überweisen
             geldBeschaffen(zahler, empfaenger, restBetrag);//restbetrag beschaffen
             return 1;
             //geldUeberweisen(zahler,empfaenger,betrag,1);//restlichesGeld überweisen
@@ -1884,6 +1898,7 @@ uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag, uin
             {
                 spielerInfo[zahler].geld -= schritt;
                 updateKontostand(anzahlSpieler,spielerInfo);
+                _delay_ms(2);
             }
             return 1; //zahlung erfolgreich
         }
@@ -1891,7 +1906,7 @@ uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag, uin
         {
             flagGeldBeschaffen = 1;//flag setzen
             restBetrag = betrag - spielerInfo[zahler].geld;//restbetrag berechnen
-            geldUeberweisen(zahler,empfaenger,spielerInfo[zahler].geld,1);//gesammtes Geld überweisen
+            geldUeberweisen(zahler,empfaenger,spielerInfo[zahler].geld);//gesammtes Geld überweisen
             geldBeschaffen(zahler, empfaenger, restBetrag);//restbetrag beschaffen
             return 1;
             //return 2; //zahlung fehlgeschlagen
@@ -2123,7 +2138,7 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
                         spielfeld[felderBelastbar[feldZaehler]].feldBelastet = 1;
                         //Hypothek Wert berechnen
                         hypothekBetrag = spielfeld[felderBelastbar[feldZaehler]].preis / 2;
-                        geldUeberweisen(0,zahler,hypothekBetrag,1);
+                        geldUeberweisen(0,zahler,hypothekBetrag);
                         
                         if (spielfeld[felderBelastbar[feldZaehler]].typ == STRASSE)//wenn es eine Strase ist
                         {
@@ -2176,7 +2191,7 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
             if (spielerInfo[zahler].geld >= mindestBetrag)
             {
                 //Überweist den restlichen betrag
-                geldUeberweisen(zahler,empfaenger,mindestBetrag,1);
+                geldUeberweisen(zahler,empfaenger,mindestBetrag);
                 //Spieler Nummer an LCD anzeigen
                 writeText(0,0,"   Spieler      ");
                 sprintf(lcdBuffer,"%u",zahler);
@@ -2252,7 +2267,7 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
                 //die Hypotheken verfallen. Alle felder die versteigert werden sind automatisch nicht mehr belastet
                 //Der Spieler hatte Schulden bei der Bank
                 //Sein Ganzes restliches Geld wird überwiesen an die Bank
-                geldUeberweisen(zahler,0,spielerInfo[zahler].geld,1);
+                geldUeberweisen(zahler,0,spielerInfo[zahler].geld);
                 //freikarten löschen
                 spielerInfo[zahler].freikarte = 0; 
                 for (uint8_t i = 0; i < inventarZaehler; i = i + 1)
@@ -2277,27 +2292,8 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
             {
                 //Der Spieler hatte Schulden bei einem Mitspieler. Sein Besitz wird dem Mitspieler übergeben
                 //Sein Restliches Geld wird an den Mitspieler überwiesen
-                geldUeberweisen(zahler,empfaenger,spielerInfo[zahler].geld,1);
+                geldUeberweisen(zahler,empfaenger,spielerInfo[zahler].geld);
                 pleiteZustand = FELDER_ABGEBEN;
-                //wird alles wieder rausgelöscht nur zum testen ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                /*for (uint8_t i = 0; i < inventarZaehler; i = i + 1)
-                {
-                    spielfeld[inventar[i]].feldBelastet = 0;//Hypothek vom Feld entfernen
-                    if (spielfeld[inventar[i]].typ == STRASSE)//Prüft ob das Feld eine Strasse ist
-                    {
-                        //wenn es eine Strasse ist ist die Hypothek mit 6 Häusern markiert
-                        setHaus(spielfeld[inventar[i]].hausnummer,0);//Entfernt die Markierung auf dem Feld
-                    }
-                    else
-                    {
-                        //wenn das Feld keine Strasse ist, ist die Hypothek mit einer weissen rgb gekennzeichnet
-                        setPropertyRgb(spielfeld[inventar[i]].rgbNummer,RGB_BANK);//schaltet die RGB auf die Farbe der Bank
-                    }
-                }
-                //alle Felder des Spielers werden in der Grossversteigerung versteigert.
-                pleiteZustand = GROSSVERSTEIGERUNG;
-                flagNeuesFeld = 1;*/
-                //wird alles wieder rausgelöscht nur zum testen ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             }
             break;
             case GROSSVERSTEIGERUNG:
@@ -2393,7 +2389,12 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
             break;
             case FELDER_ABGEBEN:
             //Der Spieler hatte Schulden bei einem Mitspieler
-            writeText(0,0,"    ABGEBEN     ");
+            writeText(0,0,"   Spieler      ");
+            sprintf(lcdBuffer,"%u",empfaenger);
+            writeText(0,11,lcdBuffer);
+            writeText(1,0,"Auswahl treffen ");
+            writeText(2,0,"                ");
+            _delay_ms(3000);
             //geht alle Felder die übertragen werden durch
             for (uint8_t i = 0; i < inventarZaehler; i = i + 1)
             {
@@ -2496,7 +2497,7 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
                             //prüft ob der neue besitzer Taste S betätigt hat
                             if (positiveFlanke & TASTE_S)
                             {
-                                zahlungErfolgreich = geldUeberweisen(empfaenger,0,bezahlBetrag,1);
+                                zahlungErfolgreich = geldUeberweisen(empfaenger,0,bezahlBetrag);
                             }
                             else
                             {
@@ -2525,6 +2526,14 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
                                     }
                                     setPropertyRgb(spielfeld[feldNummer].rgbNummer,empfaenger);
                                     
+                                }
+                                else
+                                {
+                                    spielfeld[feldNummer].besitzer = empfaenger;
+                                    if (spielfeld[feldNummer].typ == STRASSE)
+                                    {
+                                        setPropertyRgb(spielfeld[feldNummer].rgbNummer,empfaenger);
+                                    }
                                 }
                                 //flagHandelBelastet auf 0 setzen um aus der schleife raus zu kommen
                                 flagFeldBelastet = 0;
@@ -2569,7 +2578,15 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
                 //Löscht die Freikarten aus dem Inventar des Spielers
                 spielerInfo[zahler].freikarte = 0;
             }
-            pleiteZustand = ENDE_VERSTEIGERUNG;
+            pleiteZustand = ENDE_FELDER_ABGEBEN;
+            break;
+            case ENDE_FELDER_ABGEBEN:
+            writeText(0,0,"  ALLE FELDER   ");
+            writeText(1,0,"   ABGEGEBEN    ");
+            writeText(2,0,"                ");
+            _delay_ms(3000);
+            flagGeldBeschaffen = 0; // flag auf 0 setzen um aus der while Schleife rauszukommen
+            pleiteZustand = GENUG_GELD;//startzustand festlegen
             break;
             default:
             break;
