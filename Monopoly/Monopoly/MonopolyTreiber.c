@@ -1417,7 +1417,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[31].mieten[4] = 1100; //Feld mit 4 Häuser
     spielfeld[31].mieten[5] = 1275; //Feld mit 5 Häuser
     spielfeld[31].mieten[6] = 52;   //Feld mit Farbgruppe
-    spielfeld[31].besitzer = 0;
+    spielfeld[31].besitzer = 1;
     spielfeld[31].farbGruppe = GRUEN;
     spielfeld[31].farbgruppenFelder[0] = 31;
     spielfeld[31].farbgruppenFelder[1] = 32;
@@ -1426,7 +1426,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[31].anzahlHaeuser = 0;
     spielfeld[31].kostenHaus = 200;
     spielfeld[31].rgbNummer = 22;
-    spielfeld[31].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+    spielfeld[31].feldBelastet = 1;  //wenn das Feld belastet ist = 1
     
     //Eigenschaften des Feldes: Produktion Elektroniker
     strcpy(spielfeld[32].name, "Produktion EK");
@@ -1439,7 +1439,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[32].mieten[4] = 1100; //Feld mit 4 Häuser
     spielfeld[32].mieten[5] = 1275; //Feld mit 5 Häuser
     spielfeld[32].mieten[6] = 52;   //Feld mit Farbgruppe
-    spielfeld[32].besitzer = 0;
+    spielfeld[32].besitzer = 1;
     spielfeld[32].farbGruppe = GRUEN;
     spielfeld[32].farbgruppenFelder[0] = 31;
     spielfeld[32].farbgruppenFelder[1] = 32;
@@ -1448,7 +1448,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[32].anzahlHaeuser = 0;
     spielfeld[32].kostenHaus = 200;
     spielfeld[32].rgbNummer = 23;
-    spielfeld[32].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+    spielfeld[32].feldBelastet = 1;  //wenn das Feld belastet ist = 1
     
     //Eigenschaften des Feldes: Kanzlei
     strcpy(spielfeld[33].name, "Kanzlei");
@@ -1465,7 +1465,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[34].mieten[4] = 1200; //Feld mit 4 Häuser
     spielfeld[34].mieten[5] = 1400; //Feld mit 5 Häuser
     spielfeld[34].mieten[6] = 56;   //Feld mit Farbgruppe
-    spielfeld[34].besitzer = 0;
+    spielfeld[34].besitzer = 1;
     spielfeld[34].farbGruppe = GRUEN;
     spielfeld[34].farbgruppenFelder[0] = 31;
     spielfeld[34].farbgruppenFelder[1] = 32;
@@ -1474,7 +1474,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[34].anzahlHaeuser = 0;
     spielfeld[34].kostenHaus = 200;
     spielfeld[34].rgbNummer = 24;
-    spielfeld[34].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+    spielfeld[34].feldBelastet = 1;  //wenn das Feld belastet ist = 1
     
     //Eigenschaften des Feldes: Gewerbeschule
     strcpy(spielfeld[35].name, "Gewerbeschule");
@@ -1508,7 +1508,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[37].mieten[4] = 1300; //Feld mit 4 Häuser
     spielfeld[37].mieten[5] = 1500; //Feld mit 5 Häuser
     spielfeld[37].mieten[6] = 70;   //Feld mit Farbgruppe
-    spielfeld[37].besitzer = 0;
+    spielfeld[37].besitzer = 1;
     spielfeld[37].farbGruppe = BLAU;
     spielfeld[37].farbgruppenFelder[0] = 37;
     spielfeld[37].farbgruppenFelder[1] = 39;
@@ -1517,7 +1517,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[37].anzahlHaeuser = 0;
     spielfeld[37].kostenHaus = 200;
     spielfeld[37].rgbNummer = 26;
-    spielfeld[37].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+    spielfeld[37].feldBelastet = 1;  //wenn das Feld belastet ist = 1
     
     //Eigenschaften des Feldes: Schulmaterialkosten
     strcpy(spielfeld[38].name, "Schulmaterial");
@@ -1535,7 +1535,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[39].mieten[4] = 1700; //Feld mit 4 Häuser
     spielfeld[39].mieten[5] = 2000; //Feld mit 5 Häuser
     spielfeld[39].mieten[6] = 100;   //Feld mit Farbgruppe
-    spielfeld[39].besitzer = 0;
+    spielfeld[39].besitzer = 1;
     spielfeld[39].farbGruppe = BLAU;
     spielfeld[39].farbgruppenFelder[0] = 37;
     spielfeld[39].farbgruppenFelder[1] = 37;
@@ -1545,7 +1545,7 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[39].anzahlHaeuser = 0;
     spielfeld[39].kostenHaus = 200;
     spielfeld[39].rgbNummer = 27;
-    spielfeld[39].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+    spielfeld[39].feldBelastet = 1;  //wenn das Feld belastet ist = 1
 }
 
 void initialisiereKarten(Karte chanceKanzlei[])
@@ -1944,6 +1944,15 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
     uint8_t anzahlVersteigerteFelder = 0;//Zählt wie viele Felder bereits versteigert wurden.
     uint32_t systemZeit = 0;
     uint32_t startZeit = 0;
+    
+    uint8_t updateLcd = 0;
+    uint8_t hypothekAufloesen = 1;
+    uint8_t feldNummer = 0;
+    uint16_t bezahlBetrag = 0;
+    uint8_t zahlungErfolgreich = 0;
+    uint8_t flagZuWenigGeld = 0;
+    uint8_t flagMussHypBehalten = 0;
+    
     //uint8_t farbgruppenErstesFeld[8] = {1,6,11,16,21,26,31,37};
     char lcdBuffer[16];
     //Solange das Flag gesetzt ist
@@ -2206,6 +2215,9 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
             writeText(1,0," CRAZY  BLINKEN ");
             writeText(2,0," du bist PLEITE ");
             spielerInfo[zahler].pleite = 1;//Markiert den Spieler als Pleite. Er spielt nicht mehr mit
+            spielerInfo[zahler].position = 40;
+            //setGeld(0,zahler,0);//Siebensegment ausschalten
+            setPlayerPosition(40,zahler);//entfernt die Spielfigur vom Spielfeld
             _delay_ms(5000);
             
             
@@ -2375,12 +2387,189 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
             writeText(0,0," VERSTEIGERUNG  ");
             writeText(1,0,"    BEENDET     ");
             writeText(2,0,"                ");
+            _delay_ms(3000);
             flagGeldBeschaffen = 0; // flag auf 0 setzen um aus der while Schleife rauszukommen
+            pleiteZustand = GENUG_GELD;//startzustand festlegen
             break;
             case FELDER_ABGEBEN:
             //Der Spieler hatte Schulden bei einem Mitspieler
             writeText(0,0,"    ABGEBEN     ");
+            //geht alle Felder die übertragen werden durch
+            for (uint8_t i = 0; i < inventarZaehler; i = i + 1)
+            {
+                flagFeldBelastet = 1;
+                flagMussHypBehalten = 0;
+                flagZuWenigGeld = 0;
+                updateLcd = 0;
+                while(flagFeldBelastet)
+                {
+                    //Flankenerkennung
+                    tasteAlt = tasteNeu;
+                    tasteNeu = 0;
+                    tasteNeu = (PINL << 8) | PINK;
+                    positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
+                    if (!updateLcd)
+                    {
+                        feldNummer = inventar[i];
+                        writeText(0,0,"                ");
+                        writeText(0,0,spielfeld[feldNummer].name);
+                        writeText(1,0,"Hyp. Aufl"OE"sen  "PFEIL_O);
+                        writeText(2,0,"andere option  "PFEIL_U);
+                        updateLcd = 1;
+                    }
+                    if (positiveFlanke & TASTE_O)
+                    {
+                        if (hypothekAufloesen)//Hypothek soll aufgelöst werden
+                        {
+                            bezahlBetrag = spielfeld[feldNummer].preis * 0.55;
+                            //bezahlBetrag = (bezahlBetrag / 2) + (bezahlBetrag / 20);
+                            //prüft ob der Spieler genug Geld hat um die Hypothek aufzulösen
+                            if (spielerInfo[empfaenger].geld >= bezahlBetrag)
+                            {
+                                //Spieler hat genug Geld
+                                writeText(1,0,"Zahle          S");
+                                sprintf(lcdBuffer,"%u",bezahlBetrag);
+                                writeText(1,6,lcdBuffer);
+                            }
+                            else
+                            {
+                                //der Spieler hat nicht genug Geld um die Hypothek aufzulösen
+                                writeText(1,0," zu wenig Geld  ");
+                                _delay_ms(3000);
+                                //berechnet den neuen Betrag der bezahlt werden muss um Hyp. zu behalten
+                                bezahlBetrag = spielfeld[feldNummer].preis * 0.05;
+                                //prüft ob der Spieler sich den neuen Betrag leisten kann
+                                if (spielerInfo[empfaenger].geld >= bezahlBetrag)
+                                {
+                                    //flagMussHypBehalten = 1;
+                                    //der SPieler hat genug Geld um die Hypothek zu behalten
+                                    writeText(1,0,"du beh"AE"ltst Hyp.");
+                                    _delay_ms(3000);
+                                    writeText(1,0,"Zahle          S");
+                                    sprintf(lcdBuffer,"%u",bezahlBetrag);
+                                    writeText(1,6,lcdBuffer);
+                                }
+                                else
+                                {
+                                    //der Spieler hat nicht genug Geld um die Hypothek zu behalten.
+                                    writeText(1,0,"geht an die Bank");
+                                    writeText(2,0,"                ");
+                                    _delay_ms(3000);
+                                    flagZuWenigGeld = 1;
+                                }
+                            }
+                            
+                        }
+                        else//wenn die Hypothek nicht aufgelöst werden soll
+                        {
+                            bezahlBetrag = spielfeld[feldNummer].preis * 0.05;
+                            //wenn der Spieler nicht genug Geld hat um die Hypothek zu behalten
+                            if (bezahlBetrag > spielerInfo[empfaenger].geld)
+                            {
+                                writeText(1,0," zu wenig Geld  ");
+                                writeText(2,0,"                ");
+                                _delay_ms(3000);
+                                writeText(1,0,"geht an die Bank");
+                                writeText(2,0,"                ");
+                                _delay_ms(3000);
+                                flagZuWenigGeld = 1;
+                            }
+                            else
+                            {
+                                writeText(1,0,"Zahle          S");
+                                sprintf(lcdBuffer,"%u",bezahlBetrag);
+                                writeText(1,6,lcdBuffer);
+                            }
+                        }
+                        //wenn flagZuWenigGeld nicht gesetzt wurde
+                        if (!flagZuWenigGeld)
+                        {
+                            //warte bis der Spieler mit Taste S bestätigt hat oder mit Taste U zurück zur auswahl gegangen ist
+                            while (!(positiveFlanke & TASTE_S) && !(positiveFlanke & TASTE_U))
+                            {
+                                //Flankenerkennung
+                                tasteAlt = tasteNeu;
+                                tasteNeu = 0;
+                                tasteNeu = (PINL << 8) | PINK;
+                                positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
+                            }
+                            //prüft ob der neue besitzer Taste S betätigt hat
+                            if (positiveFlanke & TASTE_S)
+                            {
+                                zahlungErfolgreich = geldUeberweisen(empfaenger,0,bezahlBetrag,1);
+                            }
+                            else
+                            {
+                                hypothekAufloesen = (hypothekAufloesen + 1) % 2;
+                                if (hypothekAufloesen)
+                                {
+                                    writeText(1,0,"Hyp. Aufl"OE"sen  "PFEIL_O);
+                                }
+                                else
+                                {
+                                    writeText(1,0,"Hyp. Behalten  "PFEIL_O);
+                                }
+                            }
+                            //Wenn die Zahlung erfolgreich war
+                            if (zahlungErfolgreich == 1)
+                            {
+                                //wenn die Hypothek aufgelöst werden soll
+                                if (hypothekAufloesen)
+                                {
+                                    //feld als nicht mehr belastet speichern
+                                    spielfeld[feldNummer].feldBelastet = 0;
+                                    spielfeld[feldNummer].besitzer = empfaenger;
+                                    if (spielfeld[feldNummer].typ == STRASSE)
+                                    {
+                                        setHaus(spielfeld[feldNummer].hausnummer,0);
+                                    }
+                                    setPropertyRgb(spielfeld[feldNummer].rgbNummer,empfaenger);
+                                    
+                                }
+                                //flagHandelBelastet auf 0 setzen um aus der schleife raus zu kommen
+                                flagFeldBelastet = 0;
+                                zahlungErfolgreich = 0;
+                            }
+                        }
+                        else
+                        {
+                            //Der Spieler hat zuwenig Geld -> Feld geht an die Bank
+                            spielfeld[feldNummer].besitzer = 0;//Feld wird der Bank zugeschrieben
+                            spielfeld[feldNummer].feldBelastet = 0;//feld als nicht belastet kennzeichnen
+                            setPropertyRgb(spielfeld[feldNummer].rgbNummer,0);//RGB ausschalten
+                            //Wenn das Feld eine Strasse ist
+                            if (spielfeld[feldNummer].typ == STRASSE)
+                            {
+                                setHaus(spielfeld[feldNummer].hausnummer,0);
+                            }
+                            flagFeldBelastet = 0; //flag auf 0 setzen um mit nächtem Feld weiterzufahren
+                        }
+                        
+                    }
+                    else if (positiveFlanke & TASTE_U)
+                    {
+                        hypothekAufloesen = (hypothekAufloesen + 1) % 2;
+                        if (hypothekAufloesen)
+                        {
+                            writeText(1,0,"Hyp. Aufl"OE"sen  "PFEIL_O);
+                        }
+                        else
+                        {
+                            writeText(1,0,"Hyp. Behalten  "PFEIL_O);
+                        }
+                    }
+                }
+            }
             //FREIKARTE NICHT VERGESSEN
+            //prüft ob freikarten übertragen werden müssen
+            if (spielerInfo[zahler].freikarte)
+            {
+                //Überträgt alle freikarten
+                spielerInfo[empfaenger].freikarte += spielerInfo[zahler].freikarte;
+                //Löscht die Freikarten aus dem Inventar des Spielers
+                spielerInfo[zahler].freikarte = 0;
+            }
+            pleiteZustand = ENDE_VERSTEIGERUNG;
             break;
             default:
             break;

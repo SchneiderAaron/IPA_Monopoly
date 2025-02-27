@@ -766,8 +766,11 @@ int main(void)
                 updateLCD = 0;//LCD ausgabe blockieren
                 zustand = VERWALTEN;//Zustandswechsel
             }
-            
-            
+            //Prüft ob der Spieler am zug pleite ist
+            if (spielerInfo[spielerAmZug].pleite)
+            {
+                flagSpielerPleite = 1;//Der spieler, der am zug ist ist bereits aus dem Spiel ausgeschieden
+            }
             switch (aktuellesFeld) //verarbeitung aufgrund aktuellem feldtyp
             {
                 //wenn das aktuelle Feld ein Ereignissfeld ist
