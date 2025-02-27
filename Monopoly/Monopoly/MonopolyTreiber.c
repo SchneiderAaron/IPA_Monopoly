@@ -2266,9 +2266,9 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
                 //Der Spieler hatte Schulden bei einem Mitspieler. Sein Besitz wird dem Mitspieler übergeben
                 //Sein Restliches Geld wird an den Mitspieler überwiesen
                 geldUeberweisen(zahler,empfaenger,spielerInfo[zahler].geld,1);
-                //pleiteZustand = FELDER_ABGEBEN;
+                pleiteZustand = FELDER_ABGEBEN;
                 //wird alles wieder rausgelöscht nur zum testen ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                for (uint8_t i = 0; i < inventarZaehler; i = i + 1)
+                /*for (uint8_t i = 0; i < inventarZaehler; i = i + 1)
                 {
                     spielfeld[inventar[i]].feldBelastet = 0;//Hypothek vom Feld entfernen
                     if (spielfeld[inventar[i]].typ == STRASSE)//Prüft ob das Feld eine Strasse ist
@@ -2284,7 +2284,7 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
                 }
                 //alle Felder des Spielers werden in der Grossversteigerung versteigert.
                 pleiteZustand = GROSSVERSTEIGERUNG;
-                flagNeuesFeld = 1;
+                flagNeuesFeld = 1;*/
                 //wird alles wieder rausgelöscht nur zum testen ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             }
             break;
@@ -2351,7 +2351,7 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
             {
                 writeText(0,0," versteigert an ");
                 writeText(1,0,"   Spieler      ");
-                sprintf(lcdBuffer,"%u",zahler);
+                sprintf(lcdBuffer,"%u",bieter[5]);
                 writeText(1,11,lcdBuffer);
                 
                 spielfeld[inventar[anzahlVersteigerteFelder]].besitzer = bieter[5];//Höchstbieter wird als neuer besitzer gespeichert
