@@ -566,8 +566,18 @@ void updateKontostand(uint8_t anzahlSpieler, Spieler spielerInfo[5])
     for (uint8_t i = 1; i <= anzahlSpieler; i = i + 1)
     {
         //Setze den Geldbetrag für den Spieler i auf den Wert von spielerInfo[i].geld
-        //Der dritte Parameter ist 1, was möglicherweise eine Aktivierung bedeutet
-        setGeld(spielerInfo[i].geld, i, 1);
+        //Der dritte Parameter ist 1, was bedeutet, dass das Siebensegment eingeschaltet ist
+        //Wenn der Spieler nicht Pleite ist
+        if (!spielerInfo[i].pleite)
+        {
+            //Kontostand auf Siebensegment anzeigen
+            setGeld(spielerInfo[i].geld, i, 1);
+        }
+        else
+        {
+            //Siebensegment ausschalten
+            setGeld(spielerInfo[i].geld, i, 0);
+        }
     }
     
     //Iteriere über die restlichen Spieler (die nicht aktiv sind)
@@ -1849,7 +1859,7 @@ uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uin
 }
 uint8_t getUeberweisungsSchritt(uint16_t betrag)
 {
-    uint8_t schritt = 20;
+    uint8_t schritt = 10;
     uint8_t rest = 1;
     //solange rest nicht 0 ist
     while (rest)
@@ -2277,6 +2287,7 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
                     {
                         //wenn es eine Strasse ist ist die Hypothek mit 6 Häusern markiert
                         setHaus(spielfeld[inventar[i]].hausnummer,0);//Entfernt die Markierung auf dem Feld
+                        setPropertyRgb(spielfeld[inventar[i]].rgbNummer,RGB_BANK);//schaltet die RGB auf die Farbe der Bank
                     }
                     else
                     {
@@ -2384,6 +2395,7 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
             writeText(1,0,"    BEENDET     ");
             writeText(2,0,"                ");
             _delay_ms(3000);
+            updateKontostand(anzahlSpieler,spielerInfo);
             flagGeldBeschaffen = 0; // flag auf 0 setzen um aus der while Schleife rauszukommen
             pleiteZustand = GENUG_GELD;//startzustand festlegen
             break;

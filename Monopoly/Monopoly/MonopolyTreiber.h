@@ -88,21 +88,20 @@ typedef enum {
 
 
 typedef struct {
-    char name[50];       // Name des Feldes
-    FeldTyp typ;         // Typ des Feldes
-    uint16_t preis;           // Kaufpreis (falls relevant)
-    //uint16_t miete;
-    uint16_t mieten[7];
-    uint8_t besitzer;        // Besitzer (Index des Spielers, 0 = unbesetzt)
-    Farbe farbGruppe;
-    uint8_t farbgruppenFelder[4]; //FeldNummern der Farbgruppen hinterlegt
-    uint8_t hausnummer;
-    uint8_t anzahlHaeuser;
-    uint8_t rgbNummer;
-    uint8_t kostenHaus;
-    uint8_t feldBelastet;
-    uint8_t hypothek;
-    uint8_t hypothekAufloesen;
+    char name[50];                  // Name des Feldes
+    FeldTyp typ;                    // Typ des Feldes
+    uint16_t preis;                 // Kaufpreis
+    uint16_t mieten[7];             // Mieten auf dem Feld -> Einzeln, 1 Haus, 2 Häuser, 3 Häuser, 4 Häuser, 1 Hotel, Farbgruppe
+    uint8_t besitzer;               // Spielernummer des Besitzers (0 = Unbesetzt)
+    Farbe farbGruppe;               // Die Farbe der Farbgruppe
+    uint8_t farbgruppenFelder[4];   // FeldNummern aller Felder der Farbgruppe
+    uint8_t hausnummer;             // Hausnummer (Wird verwendet um Häuser LEDs anzusteuern)
+    uint8_t anzahlHaeuser;          // Anzahl Häuser auf dem Feld -> 0 = Keine Häuser, 1-4 = 1-4 Häuser, 5 = 1 Hotel
+    uint8_t rgbNummer;              // Wird verwendet um die RGB Led des Feldes zu setzen
+    uint8_t kostenHaus;             // Preis für ein Haus
+    uint8_t feldBelastet;           // Ist das Feld belastet? -> 0 = unbelastet, 1 = Belastet
+    //uint8_t hypothek;
+    //uint8_t hypothekAufloesen;
 } Feld;
 typedef enum
 {
