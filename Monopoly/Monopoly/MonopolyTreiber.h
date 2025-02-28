@@ -51,15 +51,15 @@
 #define RGB_BANK 9
 /*--- Datentypen (typedef) ---------------------------------------------------*/
 typedef struct {
-    char name[50];      // Name des Spielers
-    uint16_t geld;      //Kontostand des Spielers
-    uint8_t position;   //Position des spielers
-    uint8_t gefaengnis;
-    uint8_t rundenImGefaengnis;
-    uint8_t freikarte;
-    uint8_t haeuser;
-    uint8_t hotels;
-    uint8_t pleite;
+    char name[50];              // Name des Spielers
+    uint16_t geld;              // Kontostand des Spielers
+    uint8_t position;           // Position des spielers
+    uint8_t gefaengnis;         // 1 = Spieler ist im Gefängnis
+    uint8_t rundenImGefaengnis; // Anzahl runden, die im Gefängnis verbracht wurden 
+    uint8_t freikarte;          // Anzahl Freikarten, die der Spieler besitzt
+    uint8_t haeuser;            // Anzahl Häuser, die der Spieler besitzt
+    uint8_t hotels;             // Anzahl Hotels, die der Spieler besitzt
+    uint8_t pleite;             // 1 = Spieler ist Pleite und Spielt nicht mehr mit
 } Spieler;
 
 typedef enum {

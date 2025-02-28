@@ -1156,10 +1156,10 @@ int main(void)
                                     writeText(1,0,"  Pasch   X=JA  ");
                                     writeText(2,0,"W"UE"rfeln   Y=NEIN");
                                 }
-                                sprintf(lcdBuffer,"%u",spielerInfo[spielerAmZug].rundenImGefaengnis);
-                                writeText(1,0,lcdBuffer);
-                                writeText(1,0,"   Runden X=JA  ");
-                                writeText(2,0,"  warten  Y=NEIN");
+                                /*sprintf(lcdBuffer,"%u",spielerInfo[spielerAmZug].rundenImGefaengnis);
+                                writeText(1,0,lcdBuffer);
+                                writeText(1,0,"   Runden X=JA  ");
+                                writeText(2,0,"  warten  Y=NEIN");*/
                             }
                         }
                         break;
