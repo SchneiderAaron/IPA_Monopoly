@@ -158,30 +158,39 @@ extern uint8_t yTasten[4];
 
 void resetMonopoly(void);
 
+//in der Vorbereitung erstellt
 void writeHaus(uint8_t data[14]);
+//in der Vorbereitung erstellt
 void setHaus(uint8_t FeldNr, uint8_t anzahlHaus);
-
+//in der Vorbereitung erstellt
 void setPropertyRgb(uint8_t FeldNummer, uint8_t spielerNr);
-
+//in der Vorbereitung erstellt
 void setPlayerPosition(uint8_t feld, uint8_t spielerNummer);
+//in der Vorbereitung erstellt
 int8_t spielerPosFehlerAusgleich(uint8_t spielerNummer);
-
+//in der Vorbereitung erstellt
 void setGeld(uint16_t geld, uint8_t spieler, uint8_t siebensegmentOnOff);
+
 void updateKontostand(uint8_t anzahlSpieler, Spieler spielerInfo[5]);
 
 uint8_t zufallsGenerator(void);
+//in der Vorbereitung erstellt
 void wuerfel(void);
+//in der Vorbereitung erstellt
 void wuerfelAB(uint8_t wuerfelNummer, uint8_t flagWuerfel1, uint8_t flagWuerfel2);
+//in der Vorbereitung erstellt
 void wuerfelTransmit(uint8_t zahl1, uint8_t zahl2);
-
+//in der Vorbereitung erstellt
 void adm_ADC_init(void);
+//in der Vorbereitung erstellt
 uint16_t adm_ADC_read(uint8_t kanal);
 
 void abInsGefaengnis(uint8_t Spieler);
 void blaulicht(uint8_t delay, uint8_t anzahlWiederholungen);
 
+//in der Vorbereitung erstellt
 void PortInitialisierung(void);
-
+//in der Vorbereitung erstellt
 void startGeldAnimation(uint8_t anzahlSpieler);
 
 void initialisiereSpielfeld(Feld spielfeld[]);
