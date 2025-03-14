@@ -165,7 +165,7 @@ void setHaus(uint8_t FeldNr, uint8_t anzahlHaus);
 //in der Vorbereitung erstellt
 void setPropertyRgb(uint8_t FeldNummer, uint8_t spielerNr);
 //in der Vorbereitung erstellt
-void setPlayerPosition(uint8_t feld, uint8_t spielerNummer);
+void setzeSpielerPosition(uint8_t feld, uint8_t spielerNummer);
 //in der Vorbereitung erstellt
 int8_t spielerPosFehlerAusgleich(uint8_t spielerNummer);
 //in der Vorbereitung erstellt
@@ -197,9 +197,9 @@ void initialisiereSpielfeld(Feld spielfeld[]);
 void initialisiereKarten(Karte chanceKanzlei[]);
 void read_string(char *buf, size_t i);
 uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uint8_t flagWeiter, Karte chanceKanzlei[]);
-uint8_t getUeberweisungsSchritt(uint16_t betrag);
+uint8_t ueberweisungsSchritt(uint16_t betrag);
 uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag);
 void initialisiereHandelInventar(handelInventar handel[]);
 uint8_t geldBeschaffen(uint8_t spielerNr, uint8_t schuldenBei, uint16_t mindestBetrag);
-void hausBauen(uint8_t spielerAmZug);
+void hausKaufenVerkaufen(uint8_t spielerAmZug);
 #endif /* MONOPOLYTREIBER_H_ */

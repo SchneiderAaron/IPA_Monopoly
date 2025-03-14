@@ -35,7 +35,7 @@
 #include "SPI.h"
 #include "ws2812.h"
 #include "LCD.h"
-#pragma GCC optimize 0
+//#pragma GCC optimize 0
 /*--- #define-Konstanten und Makros -----------------------------------------*/
 #define USART_HAUS_SCHIEBEREGISTER 0
 #define USART_GELD_SCHIEBEREGISTER 2
@@ -46,6 +46,7 @@
 #define ANZAHL_HAUS_SCHIEBEREGISTER 14
 #define SPIELER_POSITION_LATCH_PIN 0x10
 #define SPIELER_START_FELD 40 //Alle Spieler werden ausgeblendet
+#define UNSICHTBARES_FELD 40 //Auf diesem Feld werden die Spieler nicht angezeigt
 #define ANZAHL_GRUNDSTUEKE 28
 #define SIEBENSEGMENT_OFF 10
 #define ANZAHL_FELDER 40
@@ -55,7 +56,6 @@
 #define BLAULICHT_LED2_ON   0b01000000
 #define BLAULICHT_LED2_OFF ~0b01000000
 #define ANZAHL_KONTO_SIEBENSEGMENTE 17
-
 
 //Taster an PORT K
 #define TASTE1     (1<<0)
@@ -96,8 +96,12 @@
 #define TASTE_Y2 TASTE4 //Taste Y Spieler 2
 #define TASTE_Y3 TASTE5 //Taste Y Spieler 3
 #define TASTE_Y4 TASTE7 //Taste Y Spieler 4
-
-
+#define MAX_SCHRITTGROESSE 10
+#define ANZAHL_FELDER_IN_FARBGRUPPE 3
+#define ANZAHL_BIETER_INFORMATIONEN 6
+#define GROSSVERSTEIGERUNG_SCHRITT_GROESSE 10
+#define HOECHSTBIETENDER_SPIELER 5
+#define ZURUECKGETRETENE_SPIELER 4
 //#define SIEBENSEGMENT_OFF 0
 /*--- Datentypen (typedef) --------------------------------------------------*/
 rgb_color leds[LED_COUNT];
@@ -125,10 +129,10 @@ void resetMonopoly(void)
     writeHaus(hausRegister);
 
     //Setze die Position der Spieler
-    setPlayerPosition(SPIELER_START_FELD, 1);
-    setPlayerPosition(SPIELER_START_FELD, 2);
-    setPlayerPosition(SPIELER_START_FELD, 3);
-    setPlayerPosition(SPIELER_START_FELD, 4);
+    setzeSpielerPosition(SPIELER_START_FELD, 1);
+    setzeSpielerPosition(SPIELER_START_FELD, 2);
+    setzeSpielerPosition(SPIELER_START_FELD, 3);
+    setzeSpielerPosition(SPIELER_START_FELD, 4);
 
     //Setze alle Grundstücke auf RGB-Wert 0 (zurücksetzen)
     for (uint8_t i = 0; i < ANZAHL_GRUNDSTUEKE; i = i + 1)
@@ -309,7 +313,7 @@ void setPropertyRgb(uint8_t FeldNummer, uint8_t spielerNr)
 * Rückgabewert: Keine Rückgabe
 *
 \******************************************************************************/
-void setPlayerPosition(uint8_t feld, uint8_t spielerNummer)
+void setzeSpielerPosition(uint8_t feld, uint8_t spielerNummer)
 {
     uint8_t spielerRegister, startLed, spielerPositionAlt = 0;
     int8_t fehlerausgleich = 0;
@@ -664,6 +668,8 @@ void wuerfel(void)
     wuerfelArray[0] = zufallszahl1;
     wuerfelArray[1] = zufallszahl2;
 }
+
+
 void wuerfelAB(uint8_t wuerfelNummer, uint8_t flagWuerfel1, uint8_t flagWuerfel2)
 {
     //Variabeln für zufallszahl 1 und zufallszahl 2 initialisieren
@@ -829,7 +835,7 @@ void abInsGefaengnis(uint8_t spielerNr)
     //spielerImGefaengnis[spielerNr] = 1;
     blaulicht(100,20);
     spielerInfo[spielerNr].position = 10;
-    setPlayerPosition(10,spielerNr);
+    setzeSpielerPosition(10,spielerNr);
 }
 
 void blaulicht(uint8_t delay, uint8_t anzahlWiederholungen)
@@ -1749,7 +1755,7 @@ uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uin
             spielerInfo[spielerAmZug].position = 10; //setzt die Position des spielers auf gefängnis
             spielerInfo[spielerAmZug].gefaengnis = 1; //vermerkt den Spieler als Häftling
             spielerInfo[spielerAmZug].rundenImGefaengnis = 0; //setzt die anzahl im gefängnis verbrachten runden auf 0
-            setPlayerPosition(10, spielerAmZug);
+            setzeSpielerPosition(10, spielerAmZug);
             break;
             case FREIKARTE:
             spielerInfo[spielerAmZug].freikarte = 1; //gibt dem Spieler eine Freikarte
@@ -1791,7 +1797,7 @@ uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uin
             {
                 ausgangsPosition = spielerInfo[spielerAmZug].position;
                 neuePosition = ausgangsPosition + chanceKanzlei[zufallsNummer].bewegung;
-                setPlayerPosition(neuePosition, spielerAmZug);
+                setzeSpielerPosition(neuePosition, spielerAmZug);
             }
             else
             {
@@ -1800,7 +1806,7 @@ uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uin
                 {
                     anzahlFelder = i;
                     neuePosition = (i % 40) + 1;
-                    setPlayerPosition(neuePosition, spielerAmZug);
+                    setzeSpielerPosition(neuePosition, spielerAmZug);
                     if (neuePosition == 0)
                     {
                         geldUeberweisen(0,spielerAmZug,200);
@@ -1811,7 +1817,7 @@ uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uin
             //setzt die neue Position
             spielerInfo[spielerAmZug].position = neuePosition;
             //setzt den spieler auf das richtige Feld
-            setPlayerPosition(spielerInfo[spielerAmZug].position,spielerAmZug);
+            setzeSpielerPosition(spielerInfo[spielerAmZug].position,spielerAmZug);
             break;
             case TELEPORTIEREN:
             //wenn die aktuelle spition des Spielers + wüfelsumme grösser gleich 40 is
@@ -1824,20 +1830,20 @@ uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uin
                 //animiert die fortbewegung des spielers bis feld Los
                 for (uint8_t i = spielerInfo[spielerAmZug].position; i <= 40; i = i + 1)
                 {
-                    setPlayerPosition(i % 40,spielerAmZug);
+                    setzeSpielerPosition(i % 40,spielerAmZug);
                     _delay_ms(100); //delay dient zu animationszwecken
                 }
                 geldUeberweisen(0,spielerAmZug,startGeld);
             }
             for (uint8_t i = spielerInfo[spielerAmZug].position; i < chanceKanzlei[zufallsNummer].zielFeld; i = i + 1)
             {
-                setPlayerPosition(i % 40,spielerAmZug);
+                setzeSpielerPosition(i % 40,spielerAmZug);
                 _delay_ms(100); //delay dient zu animationszwecken
             }
             //addiert die würfelsumme zur aktuellen position dazu
             spielerInfo[spielerAmZug].position = chanceKanzlei[zufallsNummer].zielFeld;
             //setzt den spieler auf das richtige Feld
-            setPlayerPosition(spielerInfo[spielerAmZug].position,spielerAmZug);
+            setzeSpielerPosition(spielerInfo[spielerAmZug].position,spielerAmZug);
             break;
         }
         
@@ -1857,77 +1863,127 @@ uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uin
     return 0;
     
 }
-uint8_t getUeberweisungsSchritt(uint16_t betrag)
+uint8_t ueberweisungsSchritt(uint16_t betrag)
 {
-    uint8_t schritt = 10;
-    uint8_t rest = 1;
-    //solange rest nicht 0 ist
+    //Die Maximale Schrittgrösse ist schritt -1
+    uint8_t schritt = MAX_SCHRITTGROESSE; //Die Variable schritt wird auf 10 initialisiert
+    uint8_t rest = 1;//Die Variable rest wird auf 1 initialisiert
+    //Solange rest grösser als 0 ist
     while (rest)
     {
+        //schritt um 1 verkleinern
         schritt -= 1;
         rest = betrag % schritt;
     }
     return schritt;
 }
+
+
+/******************************************************************************\
+* geldUeberweisen
+*
+* Überweist Geld zwischen zwei Spielern oder Swischen der BAnk und einem Spieler
+    Wenn ein Spieler nicht genug Geld hat, wird automatisch das
+    geldBeschaffen verfahren eingeleitet
+* 
+*
+* Parameter:
+* zahler:       Der Parameter zahler bestimmt von wem das Geld abgezogen wird
+                0 = Geld kommt von der Bank
+                1 - 4 = Geld kommt von einem Spieler 1 - 4
+                
+* empfaenger:   Der Parameter empfänger bestimmt wer das Geld erhält
+                0 = Geld geht an die Bank
+                1 - 4 = Geld geht an einen Spieler 1 - 4
+                
+* betrag:       Der Parameter Betrag bestimmt die Summe, welche überwiesen wird
+                Wert muss im 16 Bit bereich liegen
+*
+* Rückgabewert: 1: Zahlung erfolgreich / abgeschlossen
+*
+\******************************************************************************/
 uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag)
 {
-    uint16_t restBetrag = 0;
-    uint8_t schritt = 0;
-    schritt = getUeberweisungsSchritt(betrag);
-    if (empfaenger && zahler) //wenn der empfänger nicht spieler 0 ist
+    uint16_t restBetrag = 0; //Variabel restBetrag auf 0 initialisieren
+    uint8_t schritt = 0; //Variabel schritt auf 0 initialisieren
+    schritt = ueberweisungsSchritt(betrag); //Schrittgrösse bestimmen, in der überwiesen werden soll
+    if (empfaenger && zahler) //Wenn das Geld an einen anderen Spieler übewiesen werden soll
     {
-        //wenn der Zahlende Spieler genug geld hat
+        //Wenn der zahlende Spieler genug Geld hat
         if (spielerInfo[zahler].geld >= betrag)
         {
+            //erhöhe i um Schrittgrösse, solange i kleiner als der zu bezahlende Betrag ist . Starte mit i = 0
             for (uint16_t i = 0; i < betrag; i = i + schritt)
             {
+                //Kontostand des zahlenden Spielers um Schrittgrösse verkleinern
                 spielerInfo[zahler].geld -= schritt;
+                //Kontostand des empfangenden Spielers um Schrittgrösse vergrössern
                 spielerInfo[empfaenger].geld += schritt;
+                //Kontostand aktualisieren
                 updateKontostand(anzahlSpieler,spielerInfo);
+                //Programm für 10ms blockieren, damit die Überweisung als Animation wahrgenommen wird
                 _delay_ms(10);
             }
-            return 1; //zahlung erfolgreich
+            return 1; //Zahlung erfolgreich rückgeben
         }
         else //wenn es sich der Spieler nicht leisten kann
         {
-            flagGeldBeschaffen = 1;//flag setzen
-            restBetrag = betrag - spielerInfo[zahler].geld;//restbetrag berechnen
-            geldUeberweisen(zahler,empfaenger,spielerInfo[zahler].geld);//gesammtes Geld überweisen
+            flagGeldBeschaffen = 1;//flagGeldBeschaffen auf 1 setzen
+            //Den restlichen Betrag anhand von zu bezahlendem Betrag und Kontostand des Spielers bestimmen
+            //und in der Variabel restBetrag speichern
+            restBetrag = betrag - spielerInfo[zahler].geld;
+            //Gesamter Kontostand des Spielers überweisen
+            geldUeberweisen(zahler,empfaenger,spielerInfo[zahler].geld);
+            //Den Spieler das restliche Geld beschaffen lassen
             geldBeschaffen(zahler, empfaenger, restBetrag);//restbetrag beschaffen
-            return 1;
+            return 1; //Zahlung erfolgreich rückgeben
             //geldUeberweisen(zahler,empfaenger,betrag,1);//restlichesGeld überweisen
             //return 2; //zahlung fehlgeschlagen
         }
     }
-    else if (!empfaenger) //wenn spieler 0 als empfänger eingegeben wurde, wird an die Bank überwiesen
+    else if (!empfaenger) //Wenn das Geld an die Bank überwiesen werden soll
     {
-        //wenn der Zahlende Spieler genug geld hat
+        //Wenn der zahlende Spieler genug Geld hat
         if (spielerInfo[zahler].geld >= betrag)
         {
+            //erhöhe i um Schrittgrösse, solange i kleiner als der zu bezahlende Betrag ist . Starte mit i = 0
             for (uint16_t i = 0; i < betrag; i = i + schritt)
             {
+                //Kontostand des zahlenden Spielers um Schrittgrösse verkleinern
                 spielerInfo[zahler].geld -= schritt;
+                //Kontostand aktualisieren
                 updateKontostand(anzahlSpieler,spielerInfo);
-                _delay_ms(2);
+                //Programm für 10ms blockieren, damit die Überweisung als Animation wahrgenommen wird
+                _delay_ms(10);
             }
-            return 1; //zahlung erfolgreich
+            return 1; //Zahlung erfolgreich rückgeben
         }
         else //wenn es sich der Spieler nicht leisten kann
         {
-            flagGeldBeschaffen = 1;//flag setzen
-            restBetrag = betrag - spielerInfo[zahler].geld;//restbetrag berechnen
-            geldUeberweisen(zahler,empfaenger,spielerInfo[zahler].geld);//gesammtes Geld überweisen
-            geldBeschaffen(zahler, empfaenger, restBetrag);//restbetrag beschaffen
-            return 1;
+            //flagGeldBeschaffen auf 1 setzen
+            flagGeldBeschaffen = 1;
+            //Den restlichen Betrag anhand von zu bezahlendem Betrag und Kontostand des Spielers bestimmen
+            //und in der Variabel restBetrag speichern
+            restBetrag = betrag - spielerInfo[zahler].geld;
+            //Gesamter Kontostand des Spielers überweisen
+            geldUeberweisen(zahler,empfaenger,spielerInfo[zahler].geld);
+            //Den Spieler das restliche Geld beschaffen lassen
+            geldBeschaffen(zahler, empfaenger, restBetrag);
+            return 1;//Zahlung erfolgreich rückgeben
             //return 2; //zahlung fehlgeschlagen
         }
     }
-    else if (!zahler)//wenn spieler 0 als zahler eingegeben wurde, kommt das Geld von der Bank
+    else if (!zahler)//Wenn die Bank Geld an einen Spieler überweist
     {
+        //erhöhe i um Schrittgrösse, solange i kleiner als der zu bezahlende Betrag ist . Starte mit i = 0
         for (uint16_t i = 0; i < betrag; i = i + schritt)
         {
+            //Kontostand des empfangenden Spielers um Schrittgrösse vergrössern
             spielerInfo[empfaenger].geld += schritt;
+            //Kontostand aktualisieren
             updateKontostand(anzahlSpieler,spielerInfo);
+            //Programm für 10ms blockieren, damit die Überweisung als Animation wahrgenommen wird
+            _delay_ms(10);
         }
         return 1; //zahlung erfolgreich
     }
@@ -1954,7 +2010,8 @@ void initialisiereHandelInventar(handelInventar handel[])
 
 uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetrag)
 {
-    uint8_t flagHaeuser, flagBelastebar, flagFarbgruppe, flagFeldBelastet, feldZaehler = 0;
+    //diverse Flags, Variablen und Arrays Initialisieren
+    uint8_t flagHaeuser, flagBelastbar, flagFarbgruppe, flagFeldBelastet, feldZaehler = 0;
     uint8_t felderMitHaeuser[40] = {0};
     uint8_t felderBelastbar[40] = {0};
     uint8_t anzahlFelderMitHaeuser, anzahlFelderBelastbar = 0;
@@ -1980,10 +2037,11 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
     
     //uint8_t farbgruppenErstesFeld[8] = {1,6,11,16,21,26,31,37};
     char lcdBuffer[16];
-    //Solange das Flag gesetzt ist
+    //Solange flageldBeschaffen gesetzt ist
     while (flagGeldBeschaffen)
     {
         //Flankenerkennung
+        //Tasten einlesen und positive Flanken bestimmen
         tasteAlt = tasteNeu;
         tasteNeu = 0;
         tasteNeu = (PINL << 8) | PINK;
@@ -1991,73 +2049,80 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
         
         switch (pleiteZustand)
         {
+            //Zustand in dem geprüft wird ob der Spieler etwas besitzt, was Geld einbringt
             case INVENTAR_PRUEFEN://überprüft ob der Spieler etwas besitzt, das man verkaufen kann
             anzahlFelderMitHaeuser = 0; //anzahlFelderMitHaeuser zurücksetzen
             anzahlFelderBelastbar = 0;  //anzahlFelderBelastbar zurücksetzen
-            flagHaeuser = 0;
-            flagBelastebar = 0;
-            flagFarbgruppe = 0;
+            flagHaeuser = 0;            //flagHaeuser zurücksetzen
+            flagBelastbar = 0;         //flagBelastebar zurücksetzen
+            flagFarbgruppe = 0;         //flagFarbgruppe zurücksetzen
             //geht alle Felder durch
+            //Erhöhe i um 1, solange i kleiner ANZAHL_FELDER ist. Starte mit i = 0
             for (uint8_t i = 0; i < ANZAHL_FELDER; i = i + 1)
             {
                 //Position "i" in der Liste zurücksetzen
                 felderMitHaeuser[i] = 0;    //position "i" in felderMitHaeuser zurücksetzen
                 felderBelastbar[i] = 0;     //position "i" in felderBelastbar zurücksetzen
-                //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Häuser~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                //Wenn das Feld dem Spieler gehört, es Häuser hat und nicht belastet ist
+                //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Häuser~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                //Wenn das Feld an der Position "i" dem Spieler gehört, es Häuser hat und nicht belastet ist
                 if ((spielfeld[i].besitzer == zahler) && spielfeld[i].anzahlHaeuser && (!spielfeld[i].feldBelastet))
                 {
                     //wenn die bedingung eintrifft, wird das Feld in die Liste aufgenommen
-                    felderMitHaeuser[anzahlFelderMitHaeuser] = i;//Speichert die Feldnummer in dem Array
-                    anzahlFelderMitHaeuser += 1; //anzahlFelderMitHaeuser erhöhen
-                    flagHaeuser = 1;//flagHaeuser setzen, da mindestens 1 Haus verkauft werden kann
+                    felderMitHaeuser[anzahlFelderMitHaeuser] = i;//Speichert die Feldnummer in felderMitHäuser
+                    anzahlFelderMitHaeuser += 1; //anzahlFelderMitHaeuser um 1 erhöhen
+                    flagHaeuser = 1;//flagHaeuser auf 1 setzen um zu signalisieren, dass es Häuser zu verkaufen gibt
                 }
-                //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~BELASTEN~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                //Wenn das Feld dem Spieler gehört und es nicht belastet ist
+                //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~BELASTEN~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                //Wenn das Feld an der Position "i" dem Spieler gehört und es nicht belastet ist
                 if ((spielfeld[i].besitzer == zahler) && !spielfeld[i].feldBelastet)
                 {
-                    flagFarbgruppe = 1; //flagFarbgruppe Setzen
+                    flagFarbgruppe = 1; //flagFarbgruppe auf 1 setzen
                     //überprüft ob es auf den anderen Farbgruppenfelder Häuser hat
-                    for (uint8_t j = 0; j < 3; j = j + 1)
+                    for (uint8_t j = 0; j < ANZAHL_FELDER_IN_FARBGRUPPE; j = j + 1)
                     {
-                        //Wenn es auf einem Feld der Farbgruppe ein Haus hat
+                        //Wenn es auf Feld "j" der Farbgruppe ein Haus hat
                         if (spielfeld[spielfeld[i].farbgruppenFelder[j]].anzahlHaeuser)
                         {
                             //flag zurücksetzen | Feld kann erst belastet werden,
                             //wenn alle Häuser der Farbgruppe verkauft sind
-                            flagFarbgruppe = 0;
+                            flagFarbgruppe = 0;//flagFarbgruppe auf 0 setzen
                         }
                     }
                     //prüfe ob flagFarbgruppe noch gesetzt ist
+                    //Wenn flagFarbgruppe noch gesetzt ist
                     if (flagFarbgruppe)
                     {
                         //speichert die aktuelle Feldnummer
-                        felderBelastbar[anzahlFelderBelastbar] = i;
-                        anzahlFelderBelastbar += 1; //anzahlFelderBelastbar erhöhen
-                        flagBelastebar = 1; //flagBelastbar setzen, da mindestens ein Feld belastet werden kann
-                    }
+                        felderBelastbar[anzahlFelderBelastbar] = i; //Feld "i" in felderBelastbar speichern
+                        anzahlFelderBelastbar += 1; //anzahlFelderBelastbar um 1 erhöhen
+                        //flagBelastbar auf 1 Setzen um zu signalisieren, dass Felder belastet werden können
+                        flagBelastbar = 1; 
                 }
             }
             //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~nächsten Zustand bestimmen~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             //wenn flagHaeuser gesetzt ist d.h. der spieler besitzt häuser
+            //Wenn flagHaueser gesetzt ist
             if (flagHaeuser)
             {
                 //LCD ausgabe spieler am Zug und Navigation
+                //Spieler am Zug am LCD ausgeben
                 writeText(0,0,"   Spieler      ");
-                sprintf(lcdBuffer,"%u",zahler);
-                writeText(0,11,lcdBuffer);
-                writeText(1,0,"Haus verkaufen? ");
-                writeText(2,0,"X Ja      Nein Y");
+                sprintf(lcdBuffer,"%u",zahler);     //spielerAmZug in den lcdBuffer laden
+                writeText(0,11,lcdBuffer);          //lcdBuffer am LCD ausgeben
+                writeText(1,0,"Haus verkaufen? ");  //"Haus verkaufen?" am LCD ausgeben
+                writeText(2,0,"X Ja      Nein Y");  //Tastenbelegung am LCD ausgeben
                 pleiteZustand = HAEUSER;
             }//wenn flagBelastebar gesetzt ist d.h. der spieler hat belastbare Felder
-            else if (flagBelastebar)
+            //Wenn flagBelastbar gesetzt ist
+            else if (flagBelastbar)
             {
                 //LCD ausgabe spieler am Zug und Navigation
+                //Spieler am Zug am LCD ausgeben
                 writeText(0,0,"   Spieler      ");
-                sprintf(lcdBuffer,"%u",zahler);
-                writeText(0,11,lcdBuffer);
-                writeText(1,0," Feld Belasten? ");
-                writeText(2,0,"X Ja      Nein Y");
+                sprintf(lcdBuffer,"%u",zahler);     //spielerAmZug in den lcdBuffer laden
+                writeText(0,11,lcdBuffer);          //lcdBuffer am LCD ausgeben
+                writeText(1,0," Feld Belasten? ");  //"Feld Belasten?" am LCD ausgeben
+                writeText(2,0,"X Ja      Nein Y");  //Tastenbelegung am LCD ausgeben
                 pleiteZustand = BELASTEN;
             }//wenn weder flagHaeuser noch flagBelastebar gesetzt ist
             else
@@ -2067,205 +2132,248 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
                 pleiteZustand = PLEITE;
             }
             break;
+            //Zustand in dem der Spieler Häuser verkaufen kann
             case HAEUSER:
             //wenn Taste X betätigt wurde --> Haus verkaufen
+            //Wenn der Spieler seine Taste X betätigt hat
             if (positiveFlanke & xTasten[zahler - 1])
             {
                 //lässt den Spieler ein Haus verkaufen
-                hausBauen(zahler);
+                //der Spieler will ein Haus verkaufen
+                hausKaufenVerkaufen(zahler);
+                //Zum pleiteZustand GENUG_GELD wechseln
                 pleiteZustand = GENUG_GELD;//zustandswechsel
             }//wenn Taste Y betätigt wurde --> Haus nicht verkaufen
+            //Wenn der Spieler seine Taste Y betätigt hat
             else if (positiveFlanke & yTasten[zahler - 1])
             {
                 //prüft ob der Spieler Felder Belasten kann
-                if (flagBelastebar)
+                //Wenn der Spieler Felder belasten kann
+                if (flagBelastbar)
                 {
+                    //Spieler am Zug am LCD ausgeben
                     writeText(0,0,"   Spieler      ");
-                    sprintf(lcdBuffer,"%u",zahler);
-                    writeText(0,11,lcdBuffer);
-                    writeText(1,0," Feld Belasten? ");
-                    writeText(2,0,"X Ja      Nein Y");
-                    pleiteZustand = BELASTEN;
+                    sprintf(lcdBuffer,"%u",zahler);     //spielerAmZug in den lcdBuffer laden   
+                    writeText(0,11,lcdBuffer);          //lcdBuffer am LCD ausgeben
+                    writeText(1,0," Feld Belasten? ");  //"Feld Belasten?" am LCD ausgeben
+                    writeText(2,0,"X Ja      Nein Y");  //Tastenbelegung am LCD ausgeben
+                    pleiteZustand = BELASTEN;           //Zum pleiteZustand BELASTEN wechseln
                 }//Wenn der Spieler kein Feld belasten kann
                 else
                 {
+                    //Spieler am Zug am LCD ausgeben
                     writeText(0,0,"   Spieler      ");
-                    sprintf(lcdBuffer,"%u",zahler);
-                    writeText(0,11,lcdBuffer);
+                    sprintf(lcdBuffer,"%u",zahler);         //spielerAmZug in den lcdBuffer laden   
+                    writeText(0,11,lcdBuffer);              //lcdBuffer am LCD ausgeben
+                    //"Du musst Häuser verkaufen!" am LCD ausgeben
                     writeText(1,0," Du must H"AE"user ");
                     writeText(2,0,"   verkaufen!   ");
+                    //Programm für 3 Sekunden blokieren, damit die Spieler Zeit haben das LCD zu lesen
                     _delay_ms(3000);
+                    //Spieler am Zug am LCD ausgeben
                     writeText(0,0,"   Spieler      ");
-                    sprintf(lcdBuffer,"%u",zahler);
-                    writeText(0,11,lcdBuffer);
-                    writeText(1,0,"Haus verkaufen? ");
-                    writeText(2,0,"X Ja      Nein Y");
+                    sprintf(lcdBuffer,"%u",zahler);         //spielerAmZug in den lcdBuffer laden
+                    writeText(0,11,lcdBuffer);              //lcdBuffer am LCD ausgeben
+                    writeText(1,0,"Haus verkaufen? ");      //"Haus Verkaufen?" am LCD ausgeben
+                    writeText(2,0,"X Ja      Nein Y");      //Tastenbelegung am LCD ausgeben
                 }
             }
             break;
+            //Zustand in dem der Spieler Felder belasten kann
             case BELASTEN:
             //wenn Taste X betätigt wurde --> Feld Belasten
+            //Wenn der Spieler seine Taste X betätigt hat
             if (positiveFlanke & xTasten[zahler - 1])
             {
+                //Spieler am Zug am LCD ausgeben
                 writeText(0,0,"   Spieler      ");
-                sprintf(lcdBuffer,"%u",zahler);
-                writeText(0,11,lcdBuffer);
-                writeText(1,0,PFEIL_O"Hyp. | weiter "PFEIL_R);
+                sprintf(lcdBuffer,"%u",zahler);                 //spielerAmZug in den lcdBuffer laden
+                writeText(0,11,lcdBuffer);                      //lcdBuffer am LCD ausgeben
+                //Tastenbelegung am LCD ausgeben
+                writeText(1,0,PFEIL_O"Hyp. | weiter "PFEIL_R);  
                 writeText(2,0,"                ");
-                writeText(2,0,spielfeld[felderBelastbar[0]].name);//Name von erstem Feld ausgeben;
+                //Den Namen des ersten belastbaren Feldes auf dem LCD ausgeben
+                writeText(2,0,spielfeld[felderBelastbar[0]].name);//Name von erstem Feld ausgeben
+                //flagFeldBelastet auf 0 setzen um zu markieren, dass noch kein Feld belastet wurde
                 flagFeldBelastet = 0;
+                //feldZaehler auf 0 zurücksetzen
                 feldZaehler = 0;
-                //Schleife, bis ein Feld Belastet wurde
+                //Wiederhole solange flagFeldBelastet 0 ist und somit noch kein Feld belastet wurde
                 while (!flagFeldBelastet)
                 {
                     //Flankenerkennung
+                    //Tasten einlesen und positive Flanken bestimmen
                     tasteAlt = tasteNeu;
                     tasteNeu = 0;
                     tasteNeu = (PINL << 8) | PINK;
                     positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
                     
-                    //wenn nächstes Feld angezeigt werden soll
+                    //Wenn Taste R betätigt wurde und somit das nächste Feld angezeigt werden soll
                     if (positiveFlanke & TASTE_R)
                     {
                         //prüft ob es noch belastbare Felder in der liste hat
                         //und ob der zähler noch erhöt werden darf
-                        if (felderBelastbar[feldZaehler + 1] && feldZaehler < 39)
+                        //Wenn der Spieler noch mehr belastbare Felder hat
+                        if (felderBelastbar[feldZaehler + 1] && feldZaehler < ANZAHL_FELDER - 1)
                         {
-                            feldZaehler += 1; //feldzähler erhöhen
+                            feldZaehler += 1; //feldZaehler um 1 erhöhen
                             writeText(2,0,"                ");
-                            writeText(2,0,spielfeld[felderBelastbar[feldZaehler]].name);//Name von nächsten Feld ausgeben;
+                            //Name vom nächsten Feld am LCD ausgeben
+                            writeText(2,0,spielfeld[felderBelastbar[feldZaehler]].name);
                         }
                         else //wenn das aktuelle Feld das letzte in der liste ist
                         {
                             feldZaehler = 0;
                             writeText(2,0,"                ");
-                            writeText(2,0,spielfeld[felderBelastbar[feldZaehler]].name);//Name von nächsten Feld ausgeben;
+                            //Name vom ersten Feld am LCD ausgeben
+                            writeText(2,0,spielfeld[felderBelastbar[feldZaehler]].name);
                         }
                     }
-                    else if (positiveFlanke & TASTE_O)//Wenn das Feld belastet werden soll
+                    //Wenn Taste O betätigt wurde und das Feld somit Belastet werden soll
+                    else if (positiveFlanke & TASTE_O)
                     {
-                        //Feld als Belastet speichern
+                        //Das momentane Feld als belastet markieren
                         spielfeld[felderBelastbar[feldZaehler]].feldBelastet = 1;
-                        //Hypothek Wert berechnen
+                        //Den Wert des Feldes berechnen, indem der Kaufpreis durch 2 dividiert wird
                         hypothekBetrag = spielfeld[felderBelastbar[feldZaehler]].preis / 2;
+                        //Dem Spieler den Wert des Feldes überweisen
                         geldUeberweisen(0,zahler,hypothekBetrag);
                         
                         if (spielfeld[felderBelastbar[feldZaehler]].typ == STRASSE)//wenn es eine Strase ist
                         {
-                            //Markiert das Feld als verpfändet
-                            //alle 5 haus LEDs werden eingeschaltet
+                            //Das Feld als belastet markieren, in dem alle 5 Haus LEDs eingeschaltet werden
                             setHaus(spielfeld[felderBelastbar[feldZaehler]].hausnummer,6);
                         }
                         else //wenn es keine strasse ist
                         {
-                            //wenn es keine häuser hat, die man als Markierung nutzen kann
-                            // wird die RGB auf weiss gestellt.
+                            //Das Feld als belastet markieren, in dem die Feld RGB LED auf weiss gesetzt wird
                             setPropertyRgb(spielfeld[felderBelastbar[feldZaehler]].rgbNummer,5);
                         }
-                        flagFeldBelastet = 1;//Flag setzen um loop zu verlassen
+                        //flagFeldBelastet auf 1 setzen um dem programm zu Signalisieren, dass ein Feld belastet wurde
+                        flagFeldBelastet = 1;
                     }
                 }
+                //Zum pleiteZustand GENUG_GELD wechseln
                 pleiteZustand = GENUG_GELD; // Zustandswechsel
             }//wenn Taste Y betätigt wurde --> Feld nicht belasten
             else if (positiveFlanke & yTasten[zahler - 1])
             {
-                //prüft ob der Spieler Häuser verkaufen kann
+                //Wenn der Spieler Häuser verkaufen kann
                 if (flagHaeuser)
                 {
+                    //Spieler am Zug am LCD ausgeben
                     writeText(0,0,"   Spieler      ");
-                    sprintf(lcdBuffer,"%u",zahler);
-                    writeText(0,11,lcdBuffer);
-                    writeText(1,0,"Haus verkaufen? ");
+                    sprintf(lcdBuffer,"%u",zahler);     //spielerAmZug in den lcdBuffer laden
+                    writeText(0,11,lcdBuffer);          //lcdBuffer am LCD ausgeben
+                    //"Haus verkaufen?" am LCD ausgeben
+                    writeText(1,0,"Haus verkaufen? "); 
+                    //Tastenbelegung am LCD ausgeben 
                     writeText(2,0,"X Ja      Nein Y");
+                    //Zum pleiteZustand HAEUSER wechseln
                     pleiteZustand = HAEUSER;
                 }//Wenn der Spieler kein Feld belasten kann
                 else
                 {
+                    //Spieler am Zug am LCD ausgeben
                     writeText(0,0,"   Spieler      ");
-                    sprintf(lcdBuffer,"%u",zahler);
-                    writeText(0,11,lcdBuffer);
-                    writeText(1,0," Du must Felder ");
+                    sprintf(lcdBuffer,"%u",zahler);     //spielerAmZug in den lcdBuffer laden
+                    writeText(0,11,lcdBuffer);          //lcdBuffer am LCD ausgeben
+                    //"Du musst Felder belasten!" am LCD ausgeben
+                    writeText(1,0," Du musst Felder");  
                     writeText(2,0,"   belasten!    ");
+                    //Programm für 3 Sekunden blokieren, damit die Spieler Zeit haben das LCD zu lesen
                     _delay_ms(3000);
+                    //Spieler am Zug am LCD ausgeben
                     writeText(0,0,"   Spieler      ");
-                    sprintf(lcdBuffer,"%u",zahler);
-                    writeText(0,11,lcdBuffer);
-                    writeText(1,0," Feld Belasten? ");
+                    sprintf(lcdBuffer,"%u",zahler);     //spielerAmZug in den lcdBuffer laden
+                    writeText(0,11,lcdBuffer);          //lcdBuffer am LCD ausgeben
+                    //"Feld belasten?" am LCD ausgeben
+                    writeText(1,0," Feld belasten? ");
+                    //Tastenbelegung am LCD ausgeben
                     writeText(2,0,"X Ja      Nein Y");
                 }
             }
-            
             break;
+            //Zustand in dem geprüft wird ob der Spieler genug Geld aufgetrieben hat
+            //um seine Schulden zu begleichen
             case GENUG_GELD:
             //prüft ob der Spieler das minimum auftreiben konnte
+            //Wenn der Spieler bereits den restlichen Betrag auftreiben konnte
             if (spielerInfo[zahler].geld >= mindestBetrag)
             {
-                //Überweist den restlichen betrag
+                //Den restlichen Betrag an den Spieler, bei dem man sich verschuldet hat, überweisen
                 geldUeberweisen(zahler,empfaenger,mindestBetrag);
-                //Spieler Nummer an LCD anzeigen
+                //Spieler am Zug am LCD ausgeben
                 writeText(0,0,"   Spieler      ");
-                sprintf(lcdBuffer,"%u",zahler);
-                writeText(0,11,lcdBuffer);
+                sprintf(lcdBuffer,"%u",zahler);     //spielerAmZug in den lcdBuffer laden
+                writeText(0,11,lcdBuffer);          //lcdBuffer am LCD ausgeben
                 writeText(1,0,"                ");
+                //"Schuld beglichen" am LCD ausgeben
                 writeText(2,0,"Schuld beglichen");
+                //Programm für 5 Sekunden blokieren, damit die Spieler Zeit haben das LCD zu lesen
                 _delay_ms(5000);
+                //flagGeldBeschaffen auf 0 setzen um dem Programm zu Signalisieren, dass die Schuld beglichen wurde
                 flagGeldBeschaffen = 0;
             }
             else
             {
-                //berechnet die restlichen Schulden die der Spieler hat
+                //Berechnet den Betrag, der noch aufgetrieben werden muss
                 schuldBetrag = mindestBetrag - spielerInfo[zahler].geld;
-                //Spieler Nummer an LCD anzeigen
+                //Spieler am Zug am LCD ausgeben
                 writeText(0,0,"   Spieler      ");
-                sprintf(lcdBuffer,"%u",zahler);
-                writeText(0,11,lcdBuffer);
+                sprintf(lcdBuffer,"%u",zahler);         //spielerAmZug in den lcdBuffer laden
+                writeText(0,11,lcdBuffer);              //lcdBuffer am LCD ausgeben
                 
+                //Am LCD ausgeben, wie viel Geld noch aufgetrieben werden muss
                 writeText(1,0,"  Du schuldest  ");
                 writeText(2,0,"                ");
-                sprintf(lcdBuffer,"%4u",schuldBetrag);
-                writeText(2,6,lcdBuffer);
-                blaulicht(100,4);//Blaulicht
-                pleiteZustand = INVENTAR_PRUEFEN;
+                sprintf(lcdBuffer,"%4u",schuldBetrag);  //schuldBetrag in den lcdBuffer laden
+                writeText(2,6,lcdBuffer);               //lcdBuffer am LCD ausgeben
+                blaulicht(100,4);                       //Blaulicht aufleuchten lassen
+                pleiteZustand = INVENTAR_PRUEFEN;       //Zum pleiteZustand INVENTAR_PRUEFEN wechseln
             }
             break;
+            //Zustand in den man gelangt, wenn man pleite ist
+            //und seine Schuld nicht begleichen kann
             case PLEITE:
             //Der Spieler hat alle seine Felder belastet und alle Häuser verkauft. 
             //Da der spieler nichts mehr besitzt scheidet er aus dem Spiel aus
             //Wenn der spieler schulden bei einem Mitspieler hat geht sein ganzer Besitz an
             //den Mitspieler. d.h. alle Felder und Freikarten und restliches Geld.
             //Bei Schulden bei der Bank, werden alle Felder Versteigert. Restliches Geld geht an die Bank
+            
+            //Spieler am Zug am LCD ausgeben
             writeText(0,0,"   Spieler      ");
-            sprintf(lcdBuffer,"%u",zahler);
-            writeText(0,11,lcdBuffer);
-            writeText(1,0," CRAZY  BLINKEN ");
-            writeText(2,0," du bist PLEITE ");
-            spielerInfo[zahler].pleite = 1;//Markiert den Spieler als Pleite. Er spielt nicht mehr mit
-            spielerInfo[zahler].position = 40;
+            sprintf(lcdBuffer,"%u",zahler);     //spielerAmZug in den lcdBuffer laden
+            writeText(0,11,lcdBuffer);          //lcdBuffer am LCD ausgeben
+            writeText(1,0,"                ");
+            //writeText(1,0," CRAZY  BLINKEN ");
+            //"Du bist PLEITE" am LCD ausgeben
+            writeText(2,0," Du bist PLEITE ");
+            //Den Spieler am Zug als pleite markieren, um ihn aus dem Spiel auschliessen zu können
+            spielerInfo[zahler].pleite = 1;
+            //Die Position des Spielers auf ein unsichtbares Feld setzen
+            spielerInfo[zahler].position = UNSICHTBARES_FELD;
             //setGeld(0,zahler,0);//Siebensegment ausschalten
-            setPlayerPosition(40,zahler);//entfernt die Spielfigur vom Spielfeld
+            //Die Spielfigur des Spielers auf das unsichtbare Feld stellen
+            setzeSpielerPosition(UNSICHTBARES_FELD,zahler);//entfernt die Spielfigur vom Spielfeld
+            //Programm für 5 Sekunden blokieren, damit die Spieler Zeit haben das LCD zu lesen
             _delay_ms(5000);
             
             
             //Sucht alle Felder nach Feldern ab, die dem Spieler gehörten
+            //Erhöhe i um 1, solange i kleiner als ANZAHL_FELDER ist. Starte mit i = 0
             for(uint8_t i = 0; i < ANZAHL_FELDER; i = i + 1)
             {
-                inventar[i] = 0; // inventar zurücksetzen
-                //wenn das aktuelle Feld dem Spieler gehörte
+                //Setze das Inventar an der Position "i" zurück
+                inventar[i] = 0;
+                //Wenn das Feld "i" dem ausgeschiedenen Spieler gehört
                 if (spielfeld[i].besitzer == zahler)
                 {
-                    /*spielfeld[i].feldBelastet = 0;//entfernt die Hypothek vom Haus
-                    //Wenn es sich bei dem Feld um eine Strasse Handelt
-                    if (spielfeld[i].typ == STRASSE)
-                    {
-                        setHaus(spielfeld[i].hausnummer,0);//entfernt die Markierung vom Feld
-                    }
-                    else
-                    {
-                        //Entfernt die RGB Markierung
-                        setPropertyRgb(spielfeld[i].rgbNummer,0);
-                    }*/
-                    inventar[inventarZaehler] = i;//speichert die Feldnummer im Inventar
-                    inventarZaehler += 1; //erhöt den Inventarzähler um 1
+                    //Das Feld "i" im inventar speichern
+                    inventar[inventarZaehler] = i;
+                    //Den inventarZaehler um 1 erhöhen
+                    inventarZaehler += 1;
                     
                 }
             }
@@ -2276,198 +2384,272 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
             {
                 //die Hypotheken verfallen. Alle felder die versteigert werden sind automatisch nicht mehr belastet
                 //Der Spieler hatte Schulden bei der Bank
-                //Sein Ganzes restliches Geld wird überwiesen an die Bank
+                //Das gesammte Geld, dass der Spieler noch besitzt an die Bank überweisen
                 geldUeberweisen(zahler,0,spielerInfo[zahler].geld);
-                //freikarten löschen
+                //Die anzahl Freikarten, die der Spieler besitzt, auf 0 zurücksetzen
                 spielerInfo[zahler].freikarte = 0; 
+                //Erhöhe i um 1, solange i kleiner als inventarZaehler ist. Starte mit i = 0
                 for (uint8_t i = 0; i < inventarZaehler; i = i + 1)
                 {
+                    //Die Hypothek, des Feldes "i" aus dem inventar, entfernen
                     spielfeld[inventar[i]].feldBelastet = 0;//Hypothek vom Feld entfernen
-                    if (spielfeld[inventar[i]].typ == STRASSE)//Prüft ob das Feld eine Strasse ist
+                    //Wenn das Feld "i" im Inventar eine Strasse ist
+                    if (spielfeld[inventar[i]].typ == STRASSE)
                     {
                         //wenn es eine Strasse ist ist die Hypothek mit 6 Häusern markiert
-                        setHaus(spielfeld[inventar[i]].hausnummer,0);//Entfernt die Markierung auf dem Feld
-                        setPropertyRgb(spielfeld[inventar[i]].rgbNummer,RGB_BANK);//schaltet die RGB auf die Farbe der Bank
+                        //Alle Haus LEDS auf dem Feld ausschalten
+                        setHaus(spielfeld[inventar[i]].hausnummer,0);
+                        //Die RGB LED des Feldes auf die Farbe der Bank setzen
+                        setPropertyRgb(spielfeld[inventar[i]].rgbNummer,RGB_BANK);
                     }
                     else
                     {
-                        //wenn das Feld keine Strasse ist, ist die Hypothek mit einer weissen rgb gekennzeichnet
-                        setPropertyRgb(spielfeld[inventar[i]].rgbNummer,RGB_BANK);//schaltet die RGB auf die Farbe der Bank
+                        //Die RGB LED des Feldes auf die Farbe der Bank setzen
+                        setPropertyRgb(spielfeld[inventar[i]].rgbNummer,RGB_BANK);
                     }
                 }
-                //alle Felder des Spielers werden in der Grossversteigerung versteigert.
-                pleiteZustand = GROSSVERSTEIGERUNG;
+                //flagNeuesFeld auf 1 setzen
                 flagNeuesFeld = 1;
+                
+                //alle Felder des Spielers werden in der Grossversteigerung versteigert.
+                //Zum pleiteZustand GROSSVERSTEIGERUNG wechseln
+                pleiteZustand = GROSSVERSTEIGERUNG;
             }
             else
             {
                 //Der Spieler hatte Schulden bei einem Mitspieler. Sein Besitz wird dem Mitspieler übergeben
-                //Sein Restliches Geld wird an den Mitspieler überwiesen
+                //Das gesammte Geld, dass der Spieler noch besitzt an den Spieler, 
+                //bei dem man sich verschuldet hat, überweisen
                 geldUeberweisen(zahler,empfaenger,spielerInfo[zahler].geld);
+                //Zum pleiteZustand FELDER_ABGEBEN wechseln
                 pleiteZustand = FELDER_ABGEBEN;
             }
             break;
+            //Zustand in dem alle Felder des Spielers versteigert werden
             case GROSSVERSTEIGERUNG:
-            //Wenn ein neues Feld versteigert wird
+            //Wenn flagNeuesFeld gesetzt ist und somit das nächste Feld versteigert werden soll
             if(flagNeuesFeld)
             {
-                for (uint8_t i = 0; i < 6; i = i + 1)
+                for (uint8_t i = 0; i < ANZAHL_BIETER_INFORMATIONEN; i = i + 1)
                 {
-                    //bieter array --> speichert welche Spieler von der Versteiogerung zurückgetreten sind = 0 - 3
+                    //bieter array --> speichert welche Spieler von der Versteigerung zurückgetreten sind = 0 - 3
                     //anzahl zurückgetretene Spieler = 4
                     //höchstbietender Spieler = 5
+                    //Setze den Wert an der Position "i" in der Liste "bieter" auf 0
                     bieter[i] = 0; //array zurücksetzen
                 }
                 for (uint8_t i = 1; i <= anzahlSpieler; i = i + 1)
                 {
                     //wenn der spieler Pleite ist, darf er nicht mitbieten
+                    //Schalte die Konto Siebensegmente des aktuellen Spielers aus
                     setGeld(0,i,0);//Siebensegmente aller Spieler ausschalten
                     if (spielerInfo[i].pleite)
                     {
+                        //"----" auf dem Konto Siebensegment des Spielers anzeigen
                         setGeld(0,i,2);//Spieler spielt nicht mehr mit => ---- anzeigen
+                        //Im Speicher markieren, dass der aktuelle Spieler aus der Versteigerung zurückgetreten ist
                         bieter[i - 1] = 1; //Schliesst den Spieler aus der versteigerung aus
+                        //Die Anzahl zurückgetretenen Spieler um 1 erhöhen
                         bieter[4] = bieter[4] + 1; //erhöht anzahl zurückgezogene spieler 
                     }
                 }
-                clear();
-                //LCD ausgabe des aktuellen Feldes
+                clear(); //Das LCD leeren
+                //"VERSTEIGERUNG" am LCD ausgeben
                 writeText(0,0," VERSTEIGERUNG  ");
+                //Name des Feldes, dass Versteigert wird, am LCD ausgeben
                 writeText(1,0,spielfeld[inventar[anzahlVersteigerteFelder]].name);
+                //Tastenbelegung am LCD ausgeben
                 writeText(2,0,"bieten X sonst Y");
-                hoechstGebot = 0;//STARTGEBOT auf 0 setzen --> danach 10er Schritte
+                //Die Variable hoechstGebot auf 0 zurücksetzen
+                hoechstGebot = 0;
+                //flagNeuesFeld auf 0 zurücksetzen, um erneutes durchlaufen zu verhindern
                 flagNeuesFeld = 0; 
             }
             //prüft alle eingaben der Spieler
             for (uint8_t i = 0; i < anzahlSpieler; i = i + 1)
             {
-                //wenn der Spieler noch in der versteigerung dabei ist und er mehr Geld hat als das Höchstgebot + 10
-                if ((positiveFlanke & xTasten[i]) && !bieter[i] && (spielerInfo[i + 1].geld >= hoechstGebot + 10))
+                //Wenn der Spieler "i" seine Taste X betätigt hat, nicht aus der Versteigerung  zurückgetreten ist,
+                //und genug Geld hat um das Gebot zu erhöhen
+                if ((positiveFlanke & xTasten[i]) && !bieter[i] 
+                && (spielerInfo[i + 1].geld >= hoechstGebot + GROSSVERSTEIGERUNG_SCHRITT_GROESSE))
                 {
-                    hoechstGebot += 10;//höchstgebot um 10 erhöhen
-                    bieter[5] = i + 1; //Speichert die Spielernummer des spielers mit dem Höchsten gebot
+                    //Die Variable hoechstGebot um die GROSSVERSTEIGERUNG_SCHRITT_GROESSE erhöhen
+                    hoechstGebot += GROSSVERSTEIGERUNG_SCHRITT_GROESSE;//höchstgebot um 10 erhöhen
+                    //Den Spieler "i" als Höchstbieter speichern
+                    bieter[HOECHSTBIETENDER_SPIELER] = i + 1;
+                    //Erhöhe j um 1, solange j <= anzahlSpieler ist. Starte mit j = 0
                     for (uint8_t j = 1; j <= anzahlSpieler; j = j + 1)
                     {
-                        //wenn der Spieler noch am bieten ist und nicht der höchstbieter ist
+                        //Wenn der Spieler noch am bieten ist und nicht der Höchstbieter ist
                         if (!bieter[j - 1] && !(bieter[5] == j))
                         {
-                            setGeld(0,j,0);//wenn der Spieler kein Gebot abgegeben hat aber noch mitbietet siebensegmente abschalten
+                            //wenn der Spieler kein Gebot abgegeben hat aber 
+                            //noch mitbietet siebensegmente abschalten
+                            setGeld(0,j,0);//Das Konto Siebensegment ausschalten
                         }
                     }
+                    //Höchstgebot auf dem Konto LCD des Höchstbieters anzeigen
                     setGeld(hoechstGebot,i + 1,1);//Ausgabe Höchstgebot
 
                 }
-                //wenn der Spieler die Taste Y zum ersten mal in diese versteigerungsrunde betätigt hat & nicht der höchstbieter geboten hat
+                //Wenn der Spieler "i" die Taste Y zum ersten mal in diese Versteigerungsrunde betätigt hat
+                //und er nicht der höchstbieter ist
                 if ((positiveFlanke & yTasten[i]) && !bieter[i] && !(positiveFlanke & yTasten[bieter[5] - 1]))
                 {
-                    bieter[i] = 1; //schliesst spieler aus auktion aus                  bieter 0 - 3 spieler zurückgetreten
-                    bieter[4] = bieter[4] + 1; //erhöht anzahl zurückgezogene spieler   bieter 4 anzahl zurückgetretene Spieler
+                    //Den Spieler "i", als aus der Versteigerung zurückgetreten markieren
+                    bieter[i] = 1; //schliesst spieler aus auktion aus
+                    //Die Anzahl an aus der Versteigerung zurückgetretenen Spieler um 1 vergrössern
+                    bieter[ZURUECKGETRETENE_SPIELER] = bieter[ZURUECKGETRETENE_SPIELER] + 1;
+                    //"----" auf dem Konto Siebensegment des Spielers anzeigen
                     setGeld(0,i + 1,2);//---- anzeigen
                 }
             }
             
-            //wenn alle Spieler ausser der höchstbieter nicht mehr bieten
+            //Wenn alle Spieler ausser der Höchstbieter aus der Versteigerung zurückgetreten sind
             if (bieter[4] == anzahlSpieler - 1)
             {
+                //Am LCD anzeigen, an welchen Spieler das Feld versteigert wurde
                 writeText(0,0," versteigert an ");
                 writeText(1,0,"   Spieler      ");
-                sprintf(lcdBuffer,"%u",bieter[5]);
-                writeText(1,11,lcdBuffer);
-                
-                spielfeld[inventar[anzahlVersteigerteFelder]].besitzer = bieter[5];//Höchstbieter wird als neuer besitzer gespeichert
-                //rgb Farbe auf die Farbe des neuen Besitzers schreiben
-                setPropertyRgb(spielfeld[inventar[anzahlVersteigerteFelder]].rgbNummer,bieter[5]);
+                sprintf(lcdBuffer,"%u",bieter[HOECHSTBIETENDER_SPIELER]);   //Höchstbieter in den lcdBuffer laden
+                writeText(1,11,lcdBuffer);  //lcdBuffer am LCD ausgeben
+                //Das Feld an den neuen Besitzer übertragen
+                spielfeld[inventar[anzahlVersteigerteFelder]].besitzer = bieter[HOECHSTBIETENDER_SPIELER];
+                //Die RGB des Feldes auf die Farbe des neuen Besitzers setzen
+                setPropertyRgb(spielfeld[inventar[anzahlVersteigerteFelder]].rgbNummer,bieter[HOECHSTBIETENDER_SPIELER]);
+                //DIe Variable anzahlVersteigerteFelder um 1 erhöhen
                 anzahlVersteigerteFelder += 1;
-                //wenn es noch Felder zu versteigern gibt
+                //Wenn es noch weitere Felder zu versteigern gibt
                 if (inventar[anzahlVersteigerteFelder])
                 {
-                    flagNeuesFeld = 1;//flag ermöglicht es, dass das nächste Feld versteigert wird
+                    //flagNeuesFeld auf 1 setzen um die Versteigerung des nächsten Feldes zu starten
+                    flagNeuesFeld = 1;
                 }
                 else
                 {
                     //wenn es nichts mehr zu versteigern gibt, ist die Versteigerung beendet
+                    //Zum pleiteZustand ENDE_VERSTEIGERUNG wechseln
                     pleiteZustand = ENDE_VERSTEIGERUNG;
                 }
+                //Programm für 1 Sekunden blokieren, damit die Spieler Zeit haben das LCD zu lesen
                 _delay_ms(1000);//1s warten
             }
             break;
+            //Zustand in dem die Grossversteigerung abgeschlossen wird
             case ENDE_VERSTEIGERUNG:
+            //"VERSTEIGERUNG BEENDET" am LCD Ausgeben
             writeText(0,0," VERSTEIGERUNG  ");
             writeText(1,0,"    BEENDET     ");
             writeText(2,0,"                ");
+            //Programm für 3 Sekunden blokieren, damit die Spieler Zeit haben das LCD zu lesen
             _delay_ms(3000);
+            //Den Kontostand aller Spieler an den Konto Siebensegmenten anzeigen
             updateKontostand(anzahlSpieler,spielerInfo);
-            flagGeldBeschaffen = 0; // flag auf 0 setzen um aus der while Schleife rauszukommen
-            pleiteZustand = GENUG_GELD;//startzustand festlegen
+            //flagGeldBeschaffen auf 0 setzen um dem Programm zu signalisieren, dass die Schuld beglichen wurde
+            flagGeldBeschaffen = 0;
+            //pleiteZustand auf GENUG_GELD zurücksetzen
+            pleiteZustand = GENUG_GELD;
             break;
+            //Zustand in dem alle Felder an einen anderen Spieler übertragen werden
             case FELDER_ABGEBEN:
             //Der Spieler hatte Schulden bei einem Mitspieler
+            //Empfangender Spieler am LCD anzeigen
             writeText(0,0,"   Spieler      ");
-            sprintf(lcdBuffer,"%u",empfaenger);
-            writeText(0,11,lcdBuffer);
+            sprintf(lcdBuffer,"%u",empfaenger); //empfänger in den lcdBuffer laden
+            writeText(0,11,lcdBuffer);          //lcdBuffer am LCD ausgeben
+            //"Auswahl treffen" am LCD ausgeben
             writeText(1,0,"Auswahl treffen ");
             writeText(2,0,"                ");
+            //Programm für 3 Sekunden blokieren, damit die Spieler Zeit haben das LCD zu lesen
             _delay_ms(3000);
             //geht alle Felder die übertragen werden durch
+            //Erhöhe i um 1, solange i kleiner als inventarZaehler ist. Starte mit i = 0
             for (uint8_t i = 0; i < inventarZaehler; i = i + 1)
             {
+                //flagFeldBelastet auf 1 setzen
                 flagFeldBelastet = 1;
+                //flagMussHypBehalten auf 0 setzen
                 flagMussHypBehalten = 0;
+                //flagZuWenigGeld auf 0 setzen
                 flagZuWenigGeld = 0;
+                //updateLcd auf 0 setzen
                 updateLcd = 0;
+                //Solange flagFeldBelastet 1 ist und somit noch keine Entscheidung getroffen wurde
                 while(flagFeldBelastet)
                 {
                     //Flankenerkennung
+                    //Tasten einlesen und positive Flanken bestimmen
                     tasteAlt = tasteNeu;
                     tasteNeu = 0;
                     tasteNeu = (PINL << 8) | PINK;
                     positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
+                    //Wenn das LCD noch nicht aktualisiert wurde
                     if (!updateLcd)
                     {
+                        //Das Aktuelle Feld aus dem Inventar auslesen und in der Variable feldNummer speichern
                         feldNummer = inventar[i];
                         writeText(0,0,"                ");
+                        //Name des Feldes am LCD ausgeben
                         writeText(0,0,spielfeld[feldNummer].name);
+                        //"Hypothek auflösen" und dazugehörige Taste am LCD ausgeben
                         writeText(1,0,"Hyp. Aufl"OE"sen  "PFEIL_O);
-                        writeText(2,0,"andere option  "PFEIL_U);
+                        //"andere Option" und dazugehörige Taste am LCD ausgeben
+                        writeText(2,0,"andere Option  "PFEIL_U);
+                        //updateLCD auf 1 setzen um erneute Ausgabe zu blockieren
                         updateLcd = 1;
                     }
+                    //Wenn der Spieler die Taste O betätigt hat
                     if (positiveFlanke & TASTE_O)
                     {
-                        if (hypothekAufloesen)//Hypothek soll aufgelöst werden
+                        //Wenn die Hypothek aufgelöst werden soll
+                        if (hypothekAufloesen)
                         {
+                            //Den zu bezahlenden Betrag berechnen
                             bezahlBetrag = spielfeld[feldNummer].preis * 0.55;
                             //bezahlBetrag = (bezahlBetrag / 2) + (bezahlBetrag / 20);
                             //prüft ob der Spieler genug Geld hat um die Hypothek aufzulösen
+                            //Wenn der Spieler genug Geld hat um die Hypothek aufzulösen
                             if (spielerInfo[empfaenger].geld >= bezahlBetrag)
                             {
                                 //Spieler hat genug Geld
+                                //Den zu bezahlenden Betrag und die dazugehörige Taste am LCD ausgeben
                                 writeText(1,0,"Zahle          S");
-                                sprintf(lcdBuffer,"%u",bezahlBetrag);
-                                writeText(1,6,lcdBuffer);
+                                sprintf(lcdBuffer,"%u",bezahlBetrag);   //bezahlBetrag in den lcdBuffer laden
+                                writeText(1,6,lcdBuffer);               //lcdBuffer am LCD ausgeben
                             }
                             else
                             {
                                 //der Spieler hat nicht genug Geld um die Hypothek aufzulösen
+                                //"zu Wenig Geld" am LCD ausgeben
                                 writeText(1,0," zu wenig Geld  ");
+                                //Programm für 3 Sekunden blokieren, damit die Spieler Zeit haben das LCD zu lesen
                                 _delay_ms(3000);
-                                //berechnet den neuen Betrag der bezahlt werden muss um Hyp. zu behalten
+                                //Den Betrag berechen, der zu bezahlen ist um die Hypothek zu behalten
                                 bezahlBetrag = spielfeld[feldNummer].preis * 0.05;
-                                //prüft ob der Spieler sich den neuen Betrag leisten kann
+                                //Wenn der Spieler genug Geld hat um die Hypothek zu behalten
                                 if (spielerInfo[empfaenger].geld >= bezahlBetrag)
                                 {
                                     //flagMussHypBehalten = 1;
                                     //der SPieler hat genug Geld um die Hypothek zu behalten
+                                    //"Du behältst die Hypothek" am LCD ausgeben
                                     writeText(1,0,"du beh"AE"ltst Hyp.");
+                                    //Programm für 3 Sekunden blokieren, damit die Spieler Zeit haben das LCD zu lesen
                                     _delay_ms(3000);
+                                    //Den zu bezahlenden Betrag und die dazugehörige Taste am LCD ausgeben
                                     writeText(1,0,"Zahle          S");
-                                    sprintf(lcdBuffer,"%u",bezahlBetrag);
-                                    writeText(1,6,lcdBuffer);
+                                    sprintf(lcdBuffer,"%u",bezahlBetrag);   //bezahlBetrag in den lcdBuffer laden
+                                    writeText(1,6,lcdBuffer);               //lcdBuffer am LCD ausgeben
                                 }
                                 else
                                 {
                                     //der Spieler hat nicht genug Geld um die Hypothek zu behalten.
+                                    //Am LCD ausgeben, dass das Feld an die Bank geht
                                     writeText(1,0,"geht an die Bank");
                                     writeText(2,0,"                ");
+                                    //Programm für 3 Sekunden blokieren, damit die Spieler Zeit haben das LCD zu lesen
                                     _delay_ms(3000);
+                                    //flagZuWenigGeld auf 1 setzen, um dem Programm zu Signalisieren,
+                                    //dass das Feld an die Bank geht
                                     flagZuWenigGeld = 1;
                                 }
                             }
@@ -2475,138 +2657,177 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
                         }
                         else//wenn die Hypothek nicht aufgelöst werden soll
                         {
+                            //Den Betrag berechen, der zu bezahlen ist um die Hypothek zu behalten
                             bezahlBetrag = spielfeld[feldNummer].preis * 0.05;
-                            //wenn der Spieler nicht genug Geld hat um die Hypothek zu behalten
+                            ///Wenn der Spieler nicht genug Geld hat um die Hypothek zu behalten
                             if (bezahlBetrag > spielerInfo[empfaenger].geld)
                             {
+                                //"zu Wenig Geld" am LCD ausgeben
                                 writeText(1,0," zu wenig Geld  ");
                                 writeText(2,0,"                ");
+                                //Programm für 3 Sekunden blokieren, damit die Spieler Zeit haben das LCD zu lesen
                                 _delay_ms(3000);
+                                //Am LCD ausgeben, dass das Feld an die Bank geht
                                 writeText(1,0,"geht an die Bank");
                                 writeText(2,0,"                ");
+                                //Programm für 3 Sekunden blokieren, damit die Spieler Zeit haben das LCD zu lesen
                                 _delay_ms(3000);
+                                //flagZuWenigGeld auf 1 setzen, um dem Programm zu Signalisieren, 
+                                //dass das Feld an die Bank geht
                                 flagZuWenigGeld = 1;
                             }
                             else
                             {
+                                //Den zu bezahlenden Betrag und die dazugehörige Taste am LCD ausgeben
                                 writeText(1,0,"Zahle          S");
-                                sprintf(lcdBuffer,"%u",bezahlBetrag);
-                                writeText(1,6,lcdBuffer);
+                                sprintf(lcdBuffer,"%u",bezahlBetrag);   //bezahlBetrag in den lcdBuffer laden
+                                writeText(1,6,lcdBuffer);               //lcdBuffer am LCD ausgeben
                             }
                         }
-                        //wenn flagZuWenigGeld nicht gesetzt wurde
+                        //Wenn flagZuWenigGeld nicht gesetzt wurde
                         if (!flagZuWenigGeld)
                         {
-                            //warte bis der Spieler mit Taste S bestätigt hat oder mit Taste U zurück zur auswahl gegangen ist
+                            //Warte bis der Spieler mit Taste S bestätigt hat,
+                            //oder mit Taste U zurück zur Auswahl gegangen ist
                             while (!(positiveFlanke & TASTE_S) && !(positiveFlanke & TASTE_U))
                             {
                                 //Flankenerkennung
+                                //Tasten einlesen und positive Flanken bestimmen
                                 tasteAlt = tasteNeu;
                                 tasteNeu = 0;
                                 tasteNeu = (PINL << 8) | PINK;
                                 positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
                             }
-                            //prüft ob der neue besitzer Taste S betätigt hat
+                            //Wenn der Spieler die Taste S betätigt hat
                             if (positiveFlanke & TASTE_S)
                             {
+                                //Den zu bezahlenden Betrag bezahlen
                                 zahlungErfolgreich = geldUeberweisen(empfaenger,0,bezahlBetrag);
                             }
                             else
                             {
+                                //Zur nächsten Option wechseln
                                 hypothekAufloesen = (hypothekAufloesen + 1) % 2;
+                                //Wenn die neue Option Hypothek auflösen ist
                                 if (hypothekAufloesen)
                                 {
+                                    //"Hypothek auflösen" und die dazugehörige Taste am LCD ausgeben
                                     writeText(1,0,"Hyp. Aufl"OE"sen  "PFEIL_O);
                                 }
                                 else
                                 {
+                                    //"Hypothek behalten" und die dazugehörige Taste am LCD ausgeben
                                     writeText(1,0,"Hyp. Behalten  "PFEIL_O);
                                 }
                             }
                             //Wenn die Zahlung erfolgreich war
                             if (zahlungErfolgreich == 1)
                             {
-                                //wenn die Hypothek aufgelöst werden soll
+                                //Wenn die Hypothek aufgelöst werden soll
                                 if (hypothekAufloesen)
                                 {
-                                    //feld als nicht mehr belastet speichern
+                                    //Feld als nicht mehr belastet speichern
                                     spielfeld[feldNummer].feldBelastet = 0;
+                                    //Das Feld an den neuen Besitzer übertragen
                                     spielfeld[feldNummer].besitzer = empfaenger;
+                                    //Wenn das Feld eine Strasse ist
                                     if (spielfeld[feldNummer].typ == STRASSE)
                                     {
+                                        //Alle Haus LEDs ausschalten
                                         setHaus(spielfeld[feldNummer].hausnummer,0);
                                     }
+                                    //Feld RGB LED auf die Farbe des neuen Besitzers setzen
                                     setPropertyRgb(spielfeld[feldNummer].rgbNummer,empfaenger);
                                     
                                 }
                                 else
                                 {
+                                    //Das Feld an den neuen Besitzer übertragen
                                     spielfeld[feldNummer].besitzer = empfaenger;
+                                    //Wenn das Feld eine Strasse ist
                                     if (spielfeld[feldNummer].typ == STRASSE)
                                     {
+                                        //Feld RGB LED auf die Farbe des neuen Besitzers setzen
                                         setPropertyRgb(spielfeld[feldNummer].rgbNummer,empfaenger);
                                     }
                                 }
-                                //flagHandelBelastet auf 0 setzen um aus der schleife raus zu kommen
+                                //flagFeldBelastet auf 0 setzen um dem Programm zu signalisieren,
+                                //dass eine Entscheidung getroffen wurde
                                 flagFeldBelastet = 0;
+                                //zahlungErfolgreich auf 0 zurücksetzen
                                 zahlungErfolgreich = 0;
                             }
                         }
                         else
                         {
                             //Der Spieler hat zuwenig Geld -> Feld geht an die Bank
-                            spielfeld[feldNummer].besitzer = 0;//Feld wird der Bank zugeschrieben
-                            spielfeld[feldNummer].feldBelastet = 0;//feld als nicht belastet kennzeichnen
-                            setPropertyRgb(spielfeld[feldNummer].rgbNummer,0);//RGB ausschalten
+                            //Das Feld an die Bank übertragen
+                            spielfeld[feldNummer].besitzer = 0;
+                            //Feld als nicht mehr belastet markieren
+                            spielfeld[feldNummer].feldBelastet = 0;
+                            //RGB LED des Feldes ausschalten
+                            setPropertyRgb(spielfeld[feldNummer].rgbNummer,0);
                             //Wenn das Feld eine Strasse ist
                             if (spielfeld[feldNummer].typ == STRASSE)
                             {
+                                //Alle Haus LEDs ausschalten
                                 setHaus(spielfeld[feldNummer].hausnummer,0);
                             }
                             flagFeldBelastet = 0; //flag auf 0 setzen um mit nächtem Feld weiterzufahren
                         }
                         
                     }
+                    //Wenn Taste U betätigt wurde
                     else if (positiveFlanke & TASTE_U)
                     {
+                        //Zur nächsten Option wechseln
                         hypothekAufloesen = (hypothekAufloesen + 1) % 2;
+                        //Wenn die neue Option Hypothek auflösen ist
                         if (hypothekAufloesen)
                         {
+                            //"Hypothek auflösen" und die dazugehörige Taste am LCD ausgeben
                             writeText(1,0,"Hyp. Aufl"OE"sen  "PFEIL_O);
                         }
                         else
                         {
+                            //"Hypothek behalten" und die dazugehörige Taste am LCD ausgeben
                             writeText(1,0,"Hyp. Behalten  "PFEIL_O);
                         }
                     }
                 }
             }
-            //FREIKARTE NICHT VERGESSEN
-            //prüft ob freikarten übertragen werden müssen
+            //Wenn der Spieler Freikarten hatte
             if (spielerInfo[zahler].freikarte)
             {
-                //Überträgt alle freikarten
+                //Die Freikarten an den neuen Besitzer übertragen
                 spielerInfo[empfaenger].freikarte += spielerInfo[zahler].freikarte;
-                //Löscht die Freikarten aus dem Inventar des Spielers
+                //Die Freikarten aus dem Inventar des alten besitzers löschen
                 spielerInfo[zahler].freikarte = 0;
             }
+            //Zum pleiteZustand ENDE_FELDER_ABGEBEN wechseln
             pleiteZustand = ENDE_FELDER_ABGEBEN;
             break;
+            //Zustand in dem das Abgeben der Felder abgeschlossen wird
             case ENDE_FELDER_ABGEBEN:
+            //"ALLE FELDER ABGEGEBEN" am LCD ausgeben
             writeText(0,0,"  ALLE FELDER   ");
             writeText(1,0,"   ABGEGEBEN    ");
             writeText(2,0,"                ");
+            //Programm für 3 Sekunden blokieren, damit die Spieler Zeit haben das LCD zu lesen
             _delay_ms(3000);
+            //flagGeldBeschaffen auf 0 setzen um dem Programm zu signalisieren, dass die Schuld beglichen wurde
             flagGeldBeschaffen = 0; // flag auf 0 setzen um aus der while Schleife rauszukommen
+            //pleiteZustand auf GENUG_GELD zurücksetzen
             pleiteZustand = GENUG_GELD;//startzustand festlegen
             break;
             default:
             break;
+            }
         }
     }
 }
 
-void hausBauen(uint8_t spielerAmZug)
+void hausKaufenVerkaufen(uint8_t spielerAmZug)
 {
     uint8_t farbgruppenCounter = 0;
     uint8_t updateLCD = 0;
