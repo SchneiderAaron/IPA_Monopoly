@@ -2329,6 +2329,23 @@ int main(void)
     }
 }
 
+/******************************************************************************\
+* feldKaufen
+*
+* Diese Funktion ermöglicht es einem Spieler, ein Spielfeld zu kaufen,
+* wenn er genügend Geld besitzt. Die Funktion überprüft die Eingabe des
+* Spielers und aktualisiert die Besitzverhältnisse und den Kontostand.
+*
+* Parameter:
+* feldNummer   = Nummer des Spielfelds, das gekauft werden soll
+* spielfeld    = Array der Spielfelder
+* spielerAmZug = Nummer des aktuellen Spielers
+*
+* Rückgabewert:
+* 1 = Feld wurde gekauft
+* 2 = Feld wurde nicht gekauft (Versteigerung)
+*
+\******************************************************************************/
 uint8_t feldKaufen(uint8_t feldNummer, Feld spielfeld[40], uint8_t spielerAmZug)
 {
     char lcdBuffer[16];
@@ -2381,38 +2398,58 @@ uint8_t feldKaufen(uint8_t feldNummer, Feld spielfeld[40], uint8_t spielerAmZug)
     return spielerEingabe;
 }
 
+
+/******************************************************************************\
+* bauen
+*
+* Prüft ob noch genügend Häuser / Hotels im Spiel sind um ein Weiteres zu bauen
+  Plaziert die Häuser auf dem Feld
+*
+* Parameter:
+* feldNummer = Das Feld auf dem gebaut werden soll
+* spielerAmZug = Der Spieler der bauen will (1 - 4)
+*
+* Rückgabewert: 1 = Bau erfolgreich | 0 = Bau fehlgeschlagen
+*
+\******************************************************************************/
 uint8_t bauen(uint8_t feldNummer, uint8_t spielerAmZug)
 {
+    //Die Variable kaufStatus auf 0 initialisieren
     uint8_t kaufStatus = 0;
     //wenn ein Hotel gebaut wird
+    //Wenn die Anzahl Häuser auf dem Feld kleiner als 5 ist
     if (spielfeld[feldNummer].anzahlHaeuser < 5)
     {
-        //prüft ob 4 Häuser gebaut wurden und es noch genügend Hotels im SPiel hat
+        //Wenn auf dem Feld bereits 4 Häuser gebaut wurden und es noch genug Hotels im Spiel hat
         if ((spielfeld[feldNummer].anzahlHaeuser == 4) && hotelsImSpiel < MAX_ANZAHL_HOTELS_IM_SPIEL)
         {
-            //häuser im Spiel verkleinern
+            //Die Variable haeuserImSpiel um 4 verkleinern
             haeuserImSpiel -= 4;
-            //hotels im Spiel vergrössern
+            //Die Variable hotelsImSpiel um 1 vergrössern
             hotelsImSpiel += 1;
-            //Geld überweisen
+            //Den Betrag für ein Hotel überweisen
             kaufStatus = geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus);
-            //Haus LED setzen
+            //Die Haus LEDs setzen
             setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser + 1); 
-            //Neue anzahl Häuser speichern
+            //Neue Anzahl Häuser speichern
             spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser + 1;
+            //Den Wert 1 zurückgeben um zu Signalisieren, dass der Bau erfolgreich war
             return 1;//Erfolgreich
         }
         //wenn es noch Häuser im Spiel hat
         else if (haeuserImSpiel < MAX_ANZAHL_HAEUSER_IM_SPIEL)
         {
             //häuser im spiel erhöhen
+            //Die Variable haeuserImSpiel um 1 vergrössern
             haeuserImSpiel += 1;
             //geld überweisen
+            //Den Betrag für ein Haus überweisen
             kaufStatus = geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus);
-            //Haus LED einschalten
+            //Die Haus LEDs setzen
             setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser + 1);
             //Neue anzahl Häuser speichern
             spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser + 1;
+            //Den Wert 1 zurückgeben um zu Signalisieren, dass der Bau erfolgreich war
             return 1;//Erfolgreich
         }
         else
@@ -2421,44 +2458,66 @@ uint8_t bauen(uint8_t feldNummer, uint8_t spielerAmZug)
         }
     }
 }
-
+/******************************************************************************\
+* abBauen
+*
+* Entfernt Häuser und Hotels von den Feldern
+*
+* Parameter:
+* feldNummer = Das Feld auf dem abgebaut werden soll
+* spielerAmZug = Der Spieler der abauen will (1 - 4)
+*
+* Rückgabewert: 1 = Abbau erfolgreich | 0 = Abbau fehlgeschlagen
+*
+\******************************************************************************/
 uint8_t abBauen(uint8_t feldNummer, uint8_t spielerAmZug)
 {
+    //Die Variable kaufStatus auf 0 initialisieren
     uint8_t kaufStatus = 0;
-    //wenn es auf dem Feld ein Hotel hat
+    //Wenn auf dem Feld ein Hotel steht
     if ((spielfeld[feldNummer].anzahlHaeuser == 5) && (spielfeld[feldNummer].anzahlHaeuser > 0))
     {
-        //häuser im SPiel um 4 erhöhen
+        //Die Variable haeuserImSpiel um 4 vergrössern
         haeuserImSpiel += 4;
-        //hotels im spiel um 1 verkleinern
+        //Die Variable hotelsImSpiel um 1 verkleinern
         hotelsImSpiel -= 1;
-        //häuser LEDs setzen
+        //Die Haus LEDs setzen
         setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser - 1); 
-        //Neue anzahl Häuser speichern
+        //Neue Anzahl Häuser speichern
         spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser - 1;
-        //geld überweisen
+        //Den Wert für ein Hotel an den Spieler überweisen
         kaufStatus = geldUeberweisen(0,spielerAmZug,spielfeld[feldNummer].kostenHaus / 2);
+        //Den Wert 1 zurückgeben um zu Signalisieren, dass der Abbau erfolgreich war
         return 1;
     }
+    //Wenn auf dem Feld mindestens 1 Haus steht
     else if (spielfeld[feldNummer].anzahlHaeuser > 0)
     {
-        //anzahl häuser um 1 verkleinern
+        //Die Variable haeuserImSpiel um 1 verkleinern
         haeuserImSpiel -= 1;
-        //häuser LEDs setzen
+        //Die Haus LEDs setzen
         setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser - 1);
-        //Neue anzahl Häuser speichern
+        //Neue Anzahl Häuser speichern
         spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser - 1;
-        //geld überweisen
+        //Den Wert für ein Haus an den Spieler überweisen
         kaufStatus = geldUeberweisen(0,spielerAmZug,spielfeld[feldNummer].kostenHaus / 2);
+        //Den Wert 1 zurückgeben um zu Signalisieren, dass der Abbau erfolgreich war
         return 1;
     }
     else
     {
+        //Den Wert 0 zurückgeben um zu Signalisieren, dass nichts abgebaut wurde
         return 0;
     }
     
 }
 
+/******************************************************************************\
+* warteBisGewuerfelt
+*
+* Diese Funktion wartet darauf, dass beide Würfel geworfen wurden.
+*
+\******************************************************************************/
 void warteBisGewuerfelt(void)
 {
     //wartet bis mit beiden Würfel gewürfelt wurde
@@ -2489,15 +2548,29 @@ void warteBisGewuerfelt(void)
     }
 }
 
+/******************************************************************************\
+* handelWareAuswaehlen
+*
+* Diese Funktion ermöglicht es einem Spieler, Waren für den Handel auszuwählen,
+* darunter Grundstücke, Bargeld und Freikarten.
+* Die Auswahl erfolgt durch Tastensteuerung und wird auf dem LCD-Display angezeigt.
+*
+* Parameter:
+* haendlerNr = Nummer des Händlers, der den Handel durchführt
+*
+* Rückgabewert: 1, wenn die Auswahl abgeschlossen ist, 0 bei laufender Auswahl
+*
+\******************************************************************************/
 uint8_t handelWareAuswaehlen(uint8_t haendlerNr)
 {
     char lcdBuffer[16] = {0};
     //flankenerkennung
+    //Tasten einlesen und positive Flanken bestimmen
     tasteAlt = tasteNeu;
     tasteNeu = 0;
     tasteNeu = (PINL << 8) | PINK;
     positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
-    
+    //handelWare verarbeiten
     switch (handelware)
     {
         case GRUNDSTUECK:
@@ -2507,75 +2580,97 @@ uint8_t handelWareAuswaehlen(uint8_t haendlerNr)
             /*sprintf(lcdBuffer,"%u",handel[haendlerNr].spielerNr);
             writeText(0,11,lcdBuffer);*/
             //lcd ausgabe
+            //"Grundstück" und Tastenbelegung am LCD anzeigen
             writeText(0,0,"   Grundst"UE"ck   ");
             writeText(1,0,"S Handel|weiter"PFEIL_R);
             writeText(2,0,"                ");
+            //globalUpdateLCD auf 1 setzen um erneute Ausgabe zu verhindern
             globalUpdateLCD = 1;
             
             //handelbareFelder zurücksetzen
+            //Alle Elemente der Liste handelbareFelder durchgehen
             for (uint8_t i = 0; i < 28; i = i + 1)
             {
+                //Das aktuelle Element der Liste handelbareFelder auf 0 zurücksetzen
                 handelbareFelder[i] = 0;
             }
+            //anzahlHandelbareFelder auf 0 zurücksetzen
             anzahlHandelbareFelder = 0;
             //sucht alle felder ab nach Felder die dem Spieler gehören
+            //Alle Spielfelder durchlaufen
             for (uint8_t i = 0; i < ANZAHL_FELDER; i = i + 1)
             {
                 //sucht die spielfelder nach denen ab, die dem Spieler gehören und keine Häuser haben
+                //Wenn das aktuelle Feld dem Spieler gehört, und es keine Häuser hat
                 if ((spielfeld[i].besitzer == handel[haendlerNr].spielerNr) && (spielfeld[i].anzahlHaeuser == 0))
                 {
                     //flag setzen
+                    //flagHandelbar auf 1 setzen
                     flagHandelbar = 1;
                     //prüft ob es auf den andern Felder der Farbgruppe noch häuser hat
+                    //Alle Felder der Farbgruppe des Feldes durchlaufen
                     for (uint8_t j = 0; j < 3; j = j + 1)
                     {
                         //wenn es auf einem Feld der Farbgruppe noch ein haus hat
+                        //Wenn es auf dem zu prüfenden Feld der Farbgruppe ein Haus hat
                         if (spielfeld[spielfeld[i].farbgruppenFelder[j]].anzahlHaeuser)
                         {
                             //flag auf 0 setzen
+                            //flagHandelbar auf 0 setzen um das ursprüngliche Feld als nicht handelbar zu markieren
                             flagHandelbar = 0;
                         }
                         
                     }
                     //wenn das Flag immernoch auf 1 ist, kann das FEld gehandelt werden
+                    //Wenn flagHandelbar noch gesetzt ist
                     if (flagHandelbar)
                     {
-                        //speichert die Feldnummer im spielerinventar
+                        //Das aktuelle Feld in der Liste handelbareFelder speichern
                         handelbareFelder[anzahlHandelbareFelder] = i;
-                        //anzahlHandelbareFelder erhöhen
+                        //anzahlHandelbareFelder aum 1 erhöhen
                         anzahlHandelbareFelder += 1;
                     }
                 }
             }
             //zeigt erstes handelbares Feld auf LCD an
+            //handelFeld auf 0 setzen
             handelFeld = 0;
             //lcd ausgabe
             writeText(2,0,"                ");
+            //Den Namen des ersten handelbaren Feldes am LCD anzeigen
             writeText(2,0,spielfeld[handelbareFelder[handelFeld]].name);
             
         }
         //Nachfolgender Code wird mehrmals durchgeführt
+        //Wenn die Taste R betätigt wurde
         if (positiveFlanke & TASTE_R)//nächstes Feld
         {
-            //wechselt zum nächsten feld
+            //zum nächsten Feld wechseln
             handelFeld = (handelFeld + 1) % anzahlHandelbareFelder; 
-            //Schreibt das Aktuelle Feld auf das LCD
+            //Den Namen des neuen Feldes am LCD anzeigen
             writeText(2,0,"                ");
             writeText(2,0,spielfeld[handelbareFelder[handelFeld]].name);
         }
+        //Wenn Taste S betätigt wurde
         else if (positiveFlanke & TASTE_S)//Feld bestätigt
         {
             //speichert das aktuelle Feld 
+            //Das aktuelle Feld im Inventar speichern
             handel[haendlerNr].feldNummern[anzahlAusgewaehlteFelder] = handelbareFelder[handelFeld];
             //zähler erhöhen
+            //anzahlAusgewaehlteFelder um 1 erhöhen
             anzahlAusgewaehlteFelder += 1;
             //zustandswechsel
+            //handelware auf AUSWAHL_BEENDEN setzen
             handelware = AUSWAHL_BEENDEN;
+            //globalUpdateLCD auf 0 setzen
             globalUpdateLCD = 0;
         }
+        //Wenn Taste L betätigt wurde
         else if (positiveFlanke & TASTE_L)//etwas anderes handeln
         {
             //lcd ausgabe
+            //"Bargeld" und Tastenbelegung am LCD anzeigen
             writeText(0,0,"    Bargeld     ");
             writeText(1,0,"S Handel|weiter"PFEIL_R);
             writeText(2,0,"                ");
@@ -2585,34 +2680,50 @@ uint8_t handelWareAuswaehlen(uint8_t haendlerNr)
         }
     	break;
         case BARGELD:
+        //Wenn das LCD noch nicht aktualisiert wurde
         if (!globalUpdateLCD)
         {
+            //Betrag und Tastenbelegung am LCD anzeigen
             writeText(0,0,"Bargeld 0       ");
             writeText(1,0,"S Handel|weiter"PFEIL_R);
             writeText(2,0,PFEIL_O" +10      +100"PFEIL_U);
             globalUpdateLCD = 1;
         }
+        //"Bargeld" und Tastenbelegung am LCD anzeigen
         if (positiveFlanke & TASTE_O)
         {
+            //Betrag um 10 erhöhen
             handel[haendlerNr].barGeld += 10;
+            //Betrag am LCD ausgeben
             sprintf(lcdBuffer,"%4u",handel[haendlerNr].barGeld);
             writeText(0,8,lcdBuffer);
         }
+        //Wenn Taste U betätigt wurde
         else if (positiveFlanke & TASTE_U)
         {
+            //Betrag um 100 erhöhen
             handel[haendlerNr].barGeld += 100;
+            //Betrag am LCD ausgeben
             sprintf(lcdBuffer,"%4u",handel[haendlerNr].barGeld);
             writeText(0,8,lcdBuffer);
         }
         //prüft ob der Spieler eine Freikarte hat
+        //Wenn Taste L betätigt wurde und der Spieler eine Freikarte besitzt
         if ((positiveFlanke & TASTE_L) && spielerInfo[handel[haendlerNr].spielerNr].freikarte)
         {
+            //handelware auf FREIKARTEN setzen
             handelware = FREIKARTEN;//zustandswechsel
+            //"Freikarte" am LCD ausgeben
+            writeText(0,0,"   Freikarte    ");
+            //globalUpdateLCD auf 0 setzen
             globalUpdateLCD = 0;
         }
+        //Wenn Taste L betätigt wurde
         else if(positiveFlanke & TASTE_L)
         {
+            //handelware auf GRUNDSTUECK setzen
             handelware = GRUNDSTUECK;//zustandswechsel
+            //globalUpdateLCD auf 0 setzen
             globalUpdateLCD = 0;
         }
         if(positiveFlanke & TASTE_S)
@@ -2627,78 +2738,123 @@ uint8_t handelWareAuswaehlen(uint8_t haendlerNr)
             handelware = AUSWAHL_BEENDEN;
             globalUpdateLCD = 0;
         }
+        else if(positiveFlanke & TASTE_L)
+        {
+            //handelware auf GRUNDSTUECK setzen
+            handelware = GRUNDSTUECK;//zustandswechsel
+            //globalUpdateLCD auf 0 setzen
+            globalUpdateLCD = 0;
+        }
         break;
         case AUSWAHL_BEENDEN:
+        //Wenn das LCD noch nicht aktualisiert wurde
         if (!globalUpdateLCD)
         {
+            //"Auswahl Beenden", optionen und Tastenbelegung am LCD anzeigen
             writeText(0,0,"Auswahl Beenden?");
             writeText(1,0,PFEIL_O"Beenden   mehr"PFEIL_U);
             writeText(2,0,"                ");
+            //globalUpdateLCD auf 1 setzen um erneute Ausgabe zu verhindern
             globalUpdateLCD = 1;
         }
+        //Wenn Taste O betätigt wurde
         if (positiveFlanke & TASTE_O)//Auswahl Beenden~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         {
+            //anzahlAusgewaehlteFelder <uf 0 zurücksetzen
             anzahlAusgewaehlteFelder = 0;
+            //handelware auf GRUNDSTUECK zurücksetzen
             handelware = GRUNDSTUECK;
+            //globalUpdateLCD auf 0 zurücksetzen
             globalUpdateLCD = 0;
             return 1;
         }
+        //Wenn Taste U betätigt wurde
         else if (positiveFlanke & TASTE_U)//mehr auswählen
         {
+            //globalUpdateLCD auf 0 setzen
             globalUpdateLCD = 0;
+            //handelware auf GRUNDSTUECK setzen
             handelware = GRUNDSTUECK;
-            //handelWareAuswaehlen(haendlerNr); //Funktion erneut aufrufen
         }
         break;
         default:
         break;
     }
+    //Den Wert 0 zurückgeben
     return 0;
 }
 
+/******************************************************************************\
+* auswahlBestaetigen
+*
+* Diese Funktion bestätigt die ausgewählten Handelswaren, darunter Grundstücke,
+* Bargeld und Freikarten. Sie wartet auf die Bestätigung durch den anderen Spieler.
+*
+* Parameter:
+* haendlerNr = Nummer des Händlers
+*
+* Rückgabewert: 1 wenn alles bestätigt wurde , 0 wenn etwas abgelehnt wurde
+*
+\******************************************************************************/
 uint8_t auswahlBestaetigen(uint8_t haendlerNr)
 {
     char lcdBuffer[16] = {0};
+        //flagBestaetigt auf 1 initialisieren
     uint8_t flagBestaetigt = 1;
+    //Wenn das LCD noch nicht aktualisiert wurde
     if (!globalUpdateLCD)
     {
         //schreibt die Spielernummer auf das LCD
+        //Spielernummer am LCD anzeigen
         writeText(0,0,"   Spieler      ");
         sprintf(lcdBuffer,"%u",handel[1 - haendlerNr].spielerNr);
         writeText(0,11,lcdBuffer);
+        //"Bestätigen" am LCD anzeigen
         writeText(1,0,"   Best"AE"tigen   ");
         writeText(2,0,"                ");
+        //globalUpdateLCD auf 1 setzen um erneute Ausgabe zu verhindern
         globalUpdateLCD = 1;
     }
     //prüft ob grundstücke gehandelt wurden
+    //Wenn grundstücke gehandelt werden
     if (handel[haendlerNr].feldNummern[0])
     {
+        //Alle ausgewählten Grundstücke durchlaufen
         for (uint8_t i = 0; handel[haendlerNr].feldNummern[i] > 0; i = i + 1)
         {
-            //schreibt den Feldnamen auf das display
+            //"Bestätigen" am LCD anzeigen
             writeText(1,0,"   Best"AE"tigen   ");
+            //Name des Feldes am LCD anzeigen
             writeText(2,0,spielfeld[handel[haendlerNr].feldNummern[i]].name);
             //wartet bis der andere spieler bestätigt hatt
+            //Solange der Spieler weder bestätigt noch abgelehnt hat
             while (!((positiveFlanke & xTasten[(handel[1 - haendlerNr].spielerNr) - 1]) || (positiveFlanke & yTasten[(handel[1 - haendlerNr].spielerNr) - 1])))
             {
                 //Flankenerkennung
+                //Tasten einlesen und Positive Flanken bestimmen
                 tasteAlt = tasteNeu;
                 tasteNeu = 0;
                 tasteNeu = (PINL << 8) | PINK;
                 positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
                 //wartet auf benutzereingabe
             }
+            //Wenn die Taste X betätigt wurde
             if (positiveFlanke & xTasten[(handel[1 - haendlerNr].spielerNr) - 1])
             {
+                //"BESTÄTIGT" am LCD ausgeben
                 writeText(1,0,"   Best"AE"tigt    ");
                 writeText(2,0,"                ");
+                //Programm für 1 Sekunden blokieren, damit die Spieler Zeit haben das LCD zu lesen
                 _delay_ms(1000);
             }
+            //Wenn die Taste Y betätigt wurde 
             if (positiveFlanke & yTasten[(handel[1 - haendlerNr].spielerNr) - 1])
             {
+                //flagBestaetigt auf 0 setzen
                 flagBestaetigt = 0;
             }
             //Flankenerkennung
+            //Tasten einlesen und Positive Flanken bestimmen
             tasteAlt = tasteNeu;
             tasteNeu = 0;
             tasteNeu = (PINL << 8) | PINK;
@@ -2706,48 +2862,63 @@ uint8_t auswahlBestaetigen(uint8_t haendlerNr)
         }
     }
     //prüft ob bargeld gehandelt wird
+    //Wenn Bargeld gehandelt wird
     if (handel[haendlerNr].barGeld)
     {
+        //Spielernummer am LCD anzeigen
         writeText(0,0,"   Spieler      ");
         sprintf(lcdBuffer,"%u",handel[1 - haendlerNr].spielerNr);
         writeText(0,11,lcdBuffer);
+        //"Bestätigen" am LCD anzeigen
         writeText(1,0,"   Best"AE"tigen   ");
-        
+        //Geld Betrag am LCD ausgeben
         writeText(2,0,"Bargeld:        ");
         sprintf(lcdBuffer,"%4u",handel[haendlerNr].barGeld);
         writeText(2,9,lcdBuffer);
+        //Solange der Spieler weder bestätigt noch abgelehnt hat
         while (!((positiveFlanke & xTasten[(handel[1 - haendlerNr].spielerNr) - 1]) || (positiveFlanke & yTasten[(handel[1 - haendlerNr].spielerNr) - 1])))
         {
             //Flankenerkennung
+            //Tasten einlesen und Positive Flanken bestimmen
             tasteAlt = tasteNeu;
             tasteNeu = 0;
             tasteNeu = (PINL << 8) | PINK;
             positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
             //wartet auf benutzereingabe
         }
+        //Wenn die Taste X betätigt wurde
         if (positiveFlanke & xTasten[(handel[1 - haendlerNr].spielerNr) - 1])
         {
+            //"BESTÄTIGT" am LCD ausgeben
             writeText(1,0,"   Best"AE"tigt    ");
             writeText(2,0,"                ");
+            //Programm für 1 Sekunden blokieren, damit die Spieler Zeit haben das LCD zu lesen
             _delay_ms(1000);
         }
+        //Wenn die Taste Y betätigt wurde 
         if (positiveFlanke & positiveFlanke & yTasten[(handel[1 - haendlerNr].spielerNr) - 1])
         {
+            //flagBestaetigt auf 0 setzen
             flagBestaetigt = 0;
         }
     }
     //prüft ob Freikarten gehandelt wird
+    //Wenn Freikarten gehandelt werden
     if (handel[haendlerNr].freikarte)
     {
+        //Spielernummer am LCD anzeigen
         writeText(0,0,"   Spieler      ");
         sprintf(lcdBuffer,"%u",handel[1 - haendlerNr].spielerNr);
         writeText(0,11,lcdBuffer);
+        //"Bestätigen" am LCD anzeigen
         writeText(1,0,"   Best"AE"tigen   ");
-        
+        //"Freikarte" am LCD ausgeben
         writeText(0,2,"   Freikarte    ");
+        //Solange der Spieler weder bestätigt noch abgelehnt hat
         while (!((positiveFlanke & xTasten[(handel[1 - haendlerNr].spielerNr) - 1]) || (positiveFlanke & yTasten[(handel[1 - haendlerNr].spielerNr) - 1])))
         {
             //Flankenerkennung
+            //Tasten einlesen und Positive Flanken bestimmen
             tasteAlt = tasteNeu;
             tasteNeu = 0;
             tasteNeu = (PINL << 8) | PINK;
@@ -2756,15 +2927,21 @@ uint8_t auswahlBestaetigen(uint8_t haendlerNr)
         }
         if (positiveFlanke & xTasten[(handel[1 - haendlerNr].spielerNr) - 1])
         {
+            //"BESTÄTIGT" am LCD ausgeben
             writeText(1,0,"   Best"AE"tigt    ");
             writeText(2,0,"                ");
+            //Programm für 1 Sekunden blokieren, damit die Spieler Zeit haben das LCD zu lesen
             _delay_ms(1000);
         }
+        //Wenn die Taste Y betätigt wurde 
         if (positiveFlanke & positiveFlanke & yTasten[(handel[1 - haendlerNr].spielerNr) - 1])
         {
+            //flagBestaetigt auf 0 setzen
             flagBestaetigt = 0;
         }
     }
+    //globalUpdateLCD auf 0 setzen
     globalUpdateLCD = 0;
+    //flagBestaetigt zurückgeben
     return flagBestaetigt;
 }

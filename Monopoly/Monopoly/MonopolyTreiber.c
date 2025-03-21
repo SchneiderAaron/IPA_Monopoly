@@ -97,11 +97,14 @@
 #define TASTE_Y3 TASTE5 //Taste Y Spieler 3
 #define TASTE_Y4 TASTE7 //Taste Y Spieler 4
 #define MAX_SCHRITTGROESSE 10
+#define ANZAHL_FARBGRUPPEN 8
 #define ANZAHL_FELDER_IN_FARBGRUPPE 3
 #define ANZAHL_BIETER_INFORMATIONEN 6
 #define GROSSVERSTEIGERUNG_SCHRITT_GROESSE 10
 #define HOECHSTBIETENDER_SPIELER 5
 #define ZURUECKGETRETENE_SPIELER 4
+#define ANZAHL_KARTEN 17
+#define FELDNUMER_WORKSHOP 10
 //#define SIEBENSEGMENT_OFF 0
 /*--- Datentypen (typedef) --------------------------------------------------*/
 rgb_color leds[LED_COUNT];
@@ -111,6 +114,7 @@ typedef enum {INVENTAR_PRUEFEN, HAEUSER_J_N, HAEUSER, BELASTEN_J_N, BELASTEN, GE
 /*--- Modullokale Konstanten ------------------------------------------------*/
 /*--- Modullokale Variablen -------------------------------------------------*/
 pleite_t pleiteZustand = GENUG_GELD; 
+uint8_t zufallsNummer = 0;
 /*--- Prototypen modullokaler Funktionen ------------------------------------*/
 /*--- Funktionsdefinitionen -------------------------------------------------*/
  
@@ -669,7 +673,20 @@ void wuerfel(void)
     wuerfelArray[1] = zufallszahl2;
 }
 
-
+/******************************************************************************\
+* wuerfelAB
+*
+* Diese Funktion simuliert das Würfeln mit zwei Würfeln und zeigt die Ergebnisse
+* auf Siebensegment-Anzeigen an.
+*
+* Parameter:
+* wuerfelNummer = Nummer des Würfels (1 = A, 2 = B)
+* flagWuerfel1  = Statusflag, ob Würfel A bereits gewürfelt wurde
+* flagWuerfel2  = Statusflag, ob Würfel B bereits gewürfelt wurde
+*
+* Rückgabewert: keiner
+*
+\******************************************************************************/
 void wuerfelAB(uint8_t wuerfelNummer, uint8_t flagWuerfel1, uint8_t flagWuerfel2)
 {
     //Variabeln für zufallszahl 1 und zufallszahl 2 initialisieren
@@ -747,6 +764,20 @@ void wuerfelAB(uint8_t wuerfelNummer, uint8_t flagWuerfel1, uint8_t flagWuerfel2
         wuerfelArray[1] = zufallszahl2;
     }
 }
+
+/******************************************************************************\
+* wuerfelTransmit
+*
+* Diese Funktion überträgt die Zahlen der beiden Würfel (zahl1 und zahl2)
+* an ein Display über die USART-Schnittstelle und aktualisiert die Anzeige.
+*
+* Parameter:
+* zahl1 = Zahl für Würfel A (0-9)
+* zahl2 = Zahl für Würfel B (0-9)
+*
+* Rückgabewert: keiner
+*
+\******************************************************************************/
 
 void wuerfelTransmit(uint8_t zahl1, uint8_t zahl2)
 {
@@ -838,6 +869,19 @@ void abInsGefaengnis(uint8_t spielerNr)
     setzeSpielerPosition(10,spielerNr);
 }
 
+/******************************************************************************\
+* blaulicht
+*
+* Diese Funktion simuliert ein Blaulicht durch das abwechselnde Ein- und Ausschalten
+* von zwei LEDs für eine bestimmte Anzahl an Wiederholungen.
+*
+* Parameter:
+* delay = Wartezeit in Millisekunden zwischen den Blinks
+* anzahlWiederholungen = Anzahl der Blinkzyklen
+*
+* Rückgabewert: keiner
+*
+\******************************************************************************/
 void blaulicht(uint8_t delay, uint8_t anzahlWiederholungen)
 {
     for (uint8_t i = 0; i < anzahlWiederholungen; i = i + 1)
@@ -851,19 +895,16 @@ void blaulicht(uint8_t delay, uint8_t anzahlWiederholungen)
     }
     PORTC &= BLAULICHT_OFF;
 }
+
 /******************************************************************************\
 * PortInitialisierung
 *
-* Setzt die register A bis L
-* 
+* Diese Funktion initialisiert die Ports des Mikrocontrollers.
+* Dabei werden die Richtungen der Ports (Eingang oder Ausgang) sowie
+* die Anfangszustände der Ausgangsports festgelegt.
 *
-*
-*
-* Parameter:
-* Keine Parameter (void)
-*
-*
-* Rückgabewert: kein Rückgabewert (void)
+* Parameter: keine
+* Rückgabewert: keiner
 *
 \******************************************************************************/
 void PortInitialisierung(void)
@@ -890,16 +931,14 @@ void PortInitialisierung(void)
 /******************************************************************************\
 * startGeldAnimation
 *
-* Teilt das Startgeld an die ausgewählte anzahl spieler aus
-*
-*
-*
+* Diese Funktion verteilt das Startkapital in Form von Banknoten an alle Spieler.
+* Die Animation simuliert das schrittweise Verteilen der Banknoten und aktualisiert
+* den Kontostand der Spieler nach jeder Banknote.
 *
 * Parameter:
-* keine Parameter (void)
+*   - anzahlSpieler: Anzahl der Spieler im Spiel (1 bis max. Spieleranzahl)
 *
-*
-* Rückgabewert: kein Rückgabewert (void)
+* Rückgabewert: keiner
 *
 \******************************************************************************/
 void startGeldAnimation(uint8_t anzahlSpieler)
@@ -928,7 +967,16 @@ void startGeldAnimation(uint8_t anzahlSpieler)
 }
 
 
-
+/******************************************************************************\
+* initialisiereSpielfeld
+*
+* Initialisiert die Spielfelder des Monopoly-ähnlichen Spiels.
+*
+* Parameter:
+*   - spielfeld[]: Array von Feldern, das die Spielfeld-Datenstruktur speichert
+*
+* Rückgabewert: keiner
+\******************************************************************************/
 void initialisiereSpielfeld(Feld spielfeld[])
 {
     //Eigenschaften des Feldes: Los
@@ -1564,6 +1612,16 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[39].feldBelastet = 0;  //wenn das Feld belastet ist = 1
 }
 
+/******************************************************************************\
+* initialisiereKarten
+*
+* Initialisiert die Chance- und Kanzleikarten.
+*
+* Parameter:
+*   - chanceKanzlei[]: Array von Karten
+*
+* Rückgabewert: keiner
+\******************************************************************************/
 void initialisiereKarten(Karte chanceKanzlei[])
 {
     chanceKanzlei[0].typ = WORKSHOP;
@@ -1582,7 +1640,7 @@ void initialisiereKarten(Karte chanceKanzlei[])
     
     chanceKanzlei[5].typ = BEWEGEN;
     chanceKanzlei[5].zielFeldTyp = HALTESTELLE;
-    chanceKanzlei[6].bewegung = 0;
+    chanceKanzlei[5].bewegung = 0;
     
     chanceKanzlei[6].typ = BEWEGEN;
     chanceKanzlei[6].zielFeldTyp = HALTESTELLE;
@@ -1676,7 +1734,7 @@ void initialisiereKarten(Karte chanceKanzlei[])
 const char kartenArray[][200] PROGMEM =
 {
     //17x chance Karten
-    "Oli mag dich    nicht.          Gehe ins        Gef"AE"ngnis",
+    "Oli mag dich    nicht.          Gehe zum        Workshop",
     "Freikarte",
     "R"UE"cke vor bis   zum N"AE"chsten    Werk",
     "Du hast zu vieleAbsenzen        Zahle 50",
@@ -1714,17 +1772,43 @@ const char kartenArray[][200] PROGMEM =
     "Du hast gegen   die Handyregel  verstossen.     R"UE"cke vor bis   Produktion      Elektroniker" 
 };
 
-
+/******************************************************************************\
+* read_string
+*
+* Liest eine Zeichenkette aus dem Flash-Speicher und kopiert sie in den RAM.
+*
+* Parameter:
+*   - buf: Zeiger auf den Puffer, in den der String kopiert wird
+*   - i: Index des Strings im Flash-Speicher-Array `kartenArray`
+*
+* Rückgabewert: keiner
+\******************************************************************************/
 void read_string(char *buf, size_t i) 
 {
     // Kopiere direkt aus dem Flash ins RAM
     strcpy_P(buf, kartenArray[i]);
 }
 
-#define ANZAHL_KARTEN 17
-uint8_t zufallsNummer = 0;
+
+/******************************************************************************\
+* ereignisFeld
+*
+* Diese Funktion verarbeitet die Ereigniskarten und Kanzleikarten.
+* Sie steuert die Aktionen, die der Spieler je nach gezogener Karte ausführt.
+*
+* Parameter:
+* kanzlei        = 1, wenn eine Kanzleikarte gezogen werden soll, 0 für Ereigniskarte
+* spielerAmZug   = Der aktuelle Spieler, der an der Reihe ist
+* schritt        = Zeile welche auf dem LCD angezeigt werden soll
+* flagWeiter     = Signalisiert, ob der Spieler die Aktion bestätigt hat
+* chanceKanzlei  = Array von Kartenstrukturen, die die möglichen Karten enthalten
+*
+* Rückgabewert: 1, wenn die Aktion erfolgreich abgeschlossen wurde, ansonsten 0 
+*
+\******************************************************************************/
 uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uint8_t flagWeiter, Karte chanceKanzlei[])
 {
+    //Variablen initialisieren
     static char text[200] = {0};
     //static uint8_t zufallsNummer = 0;
     static uint8_t rueckgabewert = 0;
@@ -1736,66 +1820,96 @@ uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uin
     uint8_t ausgangsPosition = 0;
     uint8_t neuePosition = 0;
     uint16_t startGeld = 0;
+    //Wenn die Variable schritt 0 ist
     if (!schritt)
     {
+        //rueckgabewert auf 0 setzen
         rueckgabewert = 0;
+        //Zufällige Nummer generieren und in der Variablen zufallsNummer speichern
         zufallsNummer = (rand() % 16);
+        //Wenn eine Kanzleikarte gezoggen werden soll
         if (kanzlei)
         {
+            //Die Zufallsnummer um ANZAHL_KARTEN erhöhen
+            //um zu den Kanzleikarten zu gelangen
             zufallsNummer += ANZAHL_KARTEN;
         }
+        //Den Text des zufälligen Ereignisses aus dem Speicher auslesen
         read_string(text, zufallsNummer);  //Liest den Text aus dem Flash speicher
     }
     
+    //Wenn flagWeiter gesetzt wurde und der Spieler somit bestätigt hat.
     if (flagWeiter) //wenn der Spieler bestätigt hat.
     {
+        //Verarbeitung des Kartentyps
         switch(chanceKanzlei[zufallsNummer].typ)
         {
             case WORKSHOP:
-            spielerInfo[spielerAmZug].position = 10; //setzt die Position des spielers auf gefängnis
-            spielerInfo[spielerAmZug].gefaengnis = 1; //vermerkt den Spieler als Häftling
-            spielerInfo[spielerAmZug].rundenImGefaengnis = 0; //setzt die anzahl im gefängnis verbrachten runden auf 0
-            setzeSpielerPosition(10, spielerAmZug);
+            //Den Spieler in den Workshop setzen
+            spielerInfo[spielerAmZug].position = FELDNUMER_WORKSHOP; //setzt die Position des spielers auf gefängnis
+            //Den Spieler als häftling markieren
+            spielerInfo[spielerAmZug].gefaengnis = 1;
+            //Die runden im Workshop auf 0 zurücksetzen
+            spielerInfo[spielerAmZug].rundenImGefaengnis = 0;
+            //Neue Position an den LEDs ausgeben
+            setzeSpielerPosition(FELDNUMER_WORKSHOP, spielerAmZug);
             break;
             case FREIKARTE:
+            //Dem Spieler eine Freikarte geben
             spielerInfo[spielerAmZug].freikarte = 1; //gibt dem Spieler eine Freikarte
             break;
             case RENOVIEREN:
             //berechet den Preis für die Häuser und die hotels
+            //Anzahl Häuser die der Spieler Besitzt auslesen und mit dem Betrag pro Haus
+            //multiplizieren
             hausBetrag = spielerInfo[spielerAmZug].haeuser * chanceKanzlei[zufallsNummer].geld;
+            //Anzahl Hotels die der Spieler Besitzt auslesen und mit dem Betrag pro Hotel
+            //multiplizieren
             hausBetrag = spielerInfo[spielerAmZug].hotels * chanceKanzlei[zufallsNummer].geld2;
-            //zieht den berechneten betrag vom spieler ab
+            //Die Summe beider Beträge vom Kontostand abziehen
             geldUeberweisen(spielerAmZug,0,(hausBetrag + hotelBetrag));
             break;
             case GELD_AN_BANK:
+            //Betrag an die Bank überweisen
             geldUeberweisen(spielerAmZug,0,chanceKanzlei[zufallsNummer].geld);
             break;
             case GELD_VON_BANK:
+            //Betrag an den Spieler überweisen
             geldUeberweisen(0,spielerAmZug,chanceKanzlei[zufallsNummer].geld);
             break;
             case GELD_AN_MITSPIELER:
+            //Erhöhe i um 1, solange i <= anzahlSpieler ist. Starte mit i = 1
             for (uint8_t i = 1; i <= anzahlSpieler; i = i + 1)
             {
+                //Wenn "i" nicht = spielerAmZug ist
                 if (!(i == spielerAmZug))
                 {
+                    //Betrag dem Spieler "i" überweisen
                     geldUeberweisen(spielerAmZug,i,chanceKanzlei[zufallsNummer].geld);
                 }
                 
             }
             break;
             case GELD_VON_MITSPIELER:
+            //Erhöhe i um 1, solange i <= anzahlSpieler ist. Starte mit i = 1
             for (uint8_t i = 1; i <= anzahlSpieler; i = i + 1)
             {
-                if (i == spielerAmZug)
+                //Wenn "i" nicht = spielerAmZug ist
+                if (!(i == spielerAmZug))
                 {
+                    //Spieler "i" überweist dem Spieler am Zug den Betrag
                     geldUeberweisen(i,spielerAmZug,chanceKanzlei[zufallsNummer].geld);
                 }
             }
             break;
             case BEWEGEN:
+            //Wen vorgegeben ist wie viele Felder gefahren werden
             if (chanceKanzlei[zufallsNummer].bewegung)
             {
+                //Aktuelle position in der Variablen ausgangsPosition speichern
                 ausgangsPosition = spielerInfo[spielerAmZug].position;
+                //ausgangsPosition + Anzahl Felder die gefahren werden
+                //in neuePosition speichern
                 neuePosition = ausgangsPosition + chanceKanzlei[zufallsNummer].bewegung;
                 setzeSpielerPosition(neuePosition, spielerAmZug);
             }
@@ -1804,65 +1918,97 @@ uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uin
                 ausgangsPosition = spielerInfo[spielerAmZug].position;
                 for (uint8_t i = ausgangsPosition; !(chanceKanzlei[zufallsNummer].zielFeldTyp == spielfeld[i].typ); i = i + 1)
                 {
+                    //Die Variable anzahlFelder auf "i" setzen
                     anzahlFelder = i;
+                    //neuePosition erhöhen
                     neuePosition = (i % 40) + 1;
+                    //Den Spieler auf die neue Position setzen
                     setzeSpielerPosition(neuePosition, spielerAmZug);
+                    //Wenn der Spieler sich auf dem Feld "Los" befindet
                     if (neuePosition == 0)
                     {
+                        //Dem Spieler das Rundengeld bezahlen
                         geldUeberweisen(0,spielerAmZug,200);
                     }
+                    //Programm für 100ms blokieren, damit der Spieler sich animier bewegt
                     _delay_ms(100);
                 }
             }
             //setzt die neue Position
+            //Die neue Position des Spielers speichern
             spielerInfo[spielerAmZug].position = neuePosition;
             //setzt den spieler auf das richtige Feld
+            //Den Spieler auf die neue Position setzen
             setzeSpielerPosition(spielerInfo[spielerAmZug].position,spielerAmZug);
             break;
             case TELEPORTIEREN:
             //wenn die aktuelle spition des Spielers + wüfelsumme grösser gleich 40 is
             // erhält der spieler 200 CHF
-            
+            //Wenn der Spieler über "Los" kommen wird
             if (spielerInfo[spielerAmZug].position > chanceKanzlei[zufallsNummer].zielFeld)
             {
                 //berechnet den betrag, den man auf start erhält
+                //Den Betrag berechnen, welcher auf "Los" überwiesen wird
                 startGeld = 200 + chanceKanzlei[zufallsNummer].geld;
                 //animiert die fortbewegung des spielers bis feld Los
+                //Erhöhe i um 1, bis der spieler auf dem Feld "Los". Starte mit i = ausgangsPosition
                 for (uint8_t i = spielerInfo[spielerAmZug].position; i <= 40; i = i + 1)
                 {
+                    //Setze den Spieler auf die neue Position
                     setzeSpielerPosition(i % 40,spielerAmZug);
+                    //Programm für 100ms blokieren, damit der Spieler sich animier bewegt
                     _delay_ms(100); //delay dient zu animationszwecken
                 }
+                //Dem Spieler den berechneten betrag bezahlen
                 geldUeberweisen(0,spielerAmZug,startGeld);
             }
+            //Erhöhe i um 1, bis der spieler auf dem Zielfeld ist. Starte mit i = ausgangsposition
             for (uint8_t i = spielerInfo[spielerAmZug].position; i < chanceKanzlei[zufallsNummer].zielFeld; i = i + 1)
             {
                 setzeSpielerPosition(i % 40,spielerAmZug);
                 _delay_ms(100); //delay dient zu animationszwecken
             }
-            //addiert die würfelsumme zur aktuellen position dazu
+            //Die neue Position des Spielers speichern
             spielerInfo[spielerAmZug].position = chanceKanzlei[zufallsNummer].zielFeld;
             //setzt den spieler auf das richtige Feld
             setzeSpielerPosition(spielerInfo[spielerAmZug].position,spielerAmZug);
             break;
         }
         
-        
+        //Den Wert 1 zurückgeben um zu Signalisieren, dass das Ereignis erfolgreich war
         return 1;
     }
     
+    //Wenn die Variable rueckgabewert = 0 ist
     if (!rueckgabewert)
     {
+        //Text auf dem LCD anzeigen und anzeigen mit welcher Taste man scrollt und mit welcher man bestätigt
         rueckgabewert = lcdLauftext(text,schritt); //schreibt den Text auf das LCD
         writeText(0,0,"X OK     Weiter"PFEIL_R);
     }
     else
     {
+        //Text auf dem LCD anzeigen und mit welcher Taste man bestätigt
         writeText(0,0,"X OK            ");
     }
+    //Den Wert 0 zurückgeben
     return 0;
     
 }
+
+/******************************************************************************\
+* ueberweisungsSchritt
+*
+* Bestimmt die schrittgrösse in denen ein Betrag überwiesen wird
+* 
+*
+* Parameter:
+* betrag:       Der Parameter Betrag ist der Betrag, 
+                welcher überwiesen werden soll
+*
+* Rückgabewert: Gibt den grössten geeigneten Teiler zurück
+*
+\******************************************************************************/
 uint8_t ueberweisungsSchritt(uint16_t betrag)
 {
     //Die Maximale Schrittgrösse ist schritt -1
@@ -1989,6 +2135,18 @@ uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag)
     }
 }
 
+/******************************************************************************\
+* initialisiereHandelInventar
+*
+* Initialisiert das Handelinventar
+* 
+*
+* Parameter:
+* handel:   Das array, welches für das handeln verwendet wird
+*
+* Rückgabewert: Keine Rückgabe
+*
+\******************************************************************************/
 void initialisiereHandelInventar(handelInventar handel[])
 {
     handel[0].spielerNr = 0;
@@ -2008,12 +2166,28 @@ void initialisiereHandelInventar(handelInventar handel[])
     handel[1].freikarte = 0;
 }
 
-uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetrag)
+
+/******************************************************************************\
+* geldBeschaffen
+*
+* Der SPieler muss Häuser verkaufen oder Felder belasten 
+  um seine Schulden zu begleichen
+* 
+*
+* Parameter:
+* zahler:           1 - 4 Die Nummer des Spielers, der sich verschuldet hat
+* empfänger:        0 - 4 Die Nummer des Spielers bei dem man verschuldet ist
+* mindestbetrag:    Der kleinste Betrag, der aufgetrieben werden muss
+                    um schuldfrei zu sein
+* Rückgabewert: Keine Rückgabe
+*
+\******************************************************************************/
+void geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetrag)
 {
     //diverse Flags, Variablen und Arrays Initialisieren
     uint8_t flagHaeuser, flagBelastbar, flagFarbgruppe, flagFeldBelastet, feldZaehler = 0;
-    uint8_t felderMitHaeuser[40] = {0};
-    uint8_t felderBelastbar[40] = {0};
+    uint8_t felderMitHaeuser[40] = {0}; 
+    uint8_t felderBelastbar[40] = {0}; 
     uint8_t anzahlFelderMitHaeuser, anzahlFelderBelastbar = 0;
     uint16_t schuldBetrag = 0;
     uint16_t hypothekBetrag = 0;
@@ -2827,160 +3001,231 @@ uint8_t geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetra
     }
 }
 
+/******************************************************************************\
+* hausKaufenVerkaufen
+*
+* Sorgt dafür das Häuser auf Vollen Farbgruppen gleichmässig gebaut
+* und abgebaut werden
+*
+* Parameter:
+* spielerAmZug = Die Spielernummer des Spielers, welcher etwas bauen will (1 - 4)
+*
+* Rückgabewert: Keine Rückgabe
+*
+\******************************************************************************/
 void hausKaufenVerkaufen(uint8_t spielerAmZug)
 {
-    uint8_t farbgruppenCounter = 0;
+    uint8_t farbgruppenZaehler = 0;
     uint8_t updateLCD = 0;
     uint8_t minHaeuser = 5;
     uint8_t maxHaeuser = 0;
     uint8_t volleFarbgruppen[8] = {0};
     uint8_t haeuser = 0;
-    uint8_t gruppeAnzahlHaeuser = 0;
     uint8_t flagFarbgruppeKomplett = 0;
     uint8_t flagBauErfolgreich = 0;
     uint8_t feldNummer = 0;
     uint8_t farbgruppenErstesFeld[8] = {1,6,11,16,21,26,31,37}; //Jeweil das erste Feld einer Strassen Farbgruppe
     uint8_t anzahlHauser[3] = {0};
     uint8_t flagZurueck = 0;
-    //Felder nach vollen Farbgruppen absuchen~~~~~~~~~~~~~~~~~~~~~~~~~
-    for (uint8_t i = 0; i < 8; i = i + 1)//Alle Farbgruppen werden als voll markiert
+    //Erhöhe i um 1, solange i kleiner als ANZAHL_FARBGRUPPEN ist. Starte mit i = 0
+    for (uint8_t i = 0; i < ANZAHL_FARBGRUPPEN; i = i + 1)//Alle Farbgruppen werden als voll markiert
     {
+        //Die Liste volleFarbgruppen an Position "i" auf 1 zurücksetzen
         volleFarbgruppen[i] = 1;
     }
-    for (uint8_t i = 0; i < 3; i = i + 1)//Alle Farbgruppen werden als voll markiert
+    //Erhöhe i um 1, solange i kleiner als ANZAHL_FELDER_IN_FARBGRUPPE ist. Starte mit i = 0
+    for (uint8_t i = 0; i < ANZAHL_FELDER_IN_FARBGRUPPE; i = i + 1)
     {
+        //Die Liste anzahlHauser an Position "i" auf 1 zurücksetzen
         anzahlHauser[i] = 0;
     }
-    for (uint8_t i = 0;  i < 8; i = i + 1)
+    for (uint8_t i = 0;  i < ANZAHL_FARBGRUPPEN; i = i + 1)
     {
         //Flankenerkennung
+        //Tasten einlesen und positiveFlanken bestimmen
         tasteAlt = tasteNeu;
         tasteNeu = 0;
         tasteNeu = (PINL << 8) | PINK;
         positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
+        //flagFarbgruppeKomplett auf 1 setzen
         flagFarbgruppeKomplett = 1;
-        if (spielfeld[farbgruppenErstesFeld[i]].besitzer == spielerAmZug) //überprüft ob erstes feld einer Farbgruppe dem Spieler gehört
+        //Wenn das erste Feld der Farbgruppe "i" dem Spieler am Zug gehört
+        if (spielfeld[farbgruppenErstesFeld[i]].besitzer == spielerAmZug)
         {
-            for (uint8_t j = 0; j < 3; j = j + 1)//Prüft ob Farbgruppen tatsächlich voll sind
+            //Erhöhe j um 1, solange j kleiner als ANZAHL_FELDER_IN_FARBGRUPPE ist. Starte mit j = 0
+            for (uint8_t j = 0; j < ANZAHL_FELDER_IN_FARBGRUPPE; j = j + 1)//Prüft ob Farbgruppen tatsächlich voll sind
             {
-                //besitzer des spielfeldes mit dem spieler am zug vergleichen                                             Was dieser teil macht weiss ich grade auch nicht mehr         Dieser Teil prüft ob ein Feld der Farbgruppe belastet ist. Wenn ja, kann man nicht bauen
-                if (((!(spielfeld[spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j]].besitzer == spielerAmZug)) && (spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j])) || spielfeld[spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j]].feldBelastet)//prüft alle Felder der Farbgruppe
+                //Wenn das zu prüfende Feld der Farbgruppe nicht den selben Besitzer hat,
+                //wie das erste Feld der Farbgruppe und das zu prüfende Feld nicht 0 ist.
+                //Oder wenn das zu prüfende Feld belastet ist
+                
+                //Besitzer der Felder vergleichen. Wenn nicht der selbe besitzer, dann darf nicht gebaut werden
+                //Sonderfall für Farbgruppen mit 2 Felder, Sobald j = 2 (3. Feld) kommt man nicht ins if rein
+                //Prüfen ob das Feld belastet ist. Wenn es belastet ist, dann darf nicht gebaut werden
+                if (((!(spielfeld[spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j]].besitzer == spielerAmZug))
+                        && (spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j])) 
+                        || spielfeld[spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j]].feldBelastet)
                 {
-                    flagFarbgruppeKomplett = 0; //setzt flag auf 0 wenn ein Feld nicht dem Spieler gehört
+                    //flagFarbgruppeKomplett auf 0 setzen um zu markieren, dass die Farbgruppe nicht komplett ist
+                    flagFarbgruppeKomplett = 0;
+                    //Die Liste volleFarbgruppen an Position "i" auf 0 zurücksetzen,
+                    //um die Farbgruppe als nicht komplett zu speichern
                     volleFarbgruppen[i] = 0; //Markiert Farbgruppe als unvollständig
                 }
             }
+            //Wenn flagFarbgruppeKomplett noch gesetzt ist
+            //und die Farbgruppe somit komplett ist
             if (flagFarbgruppeKomplett)//Wenn farbgruppe komplett
             {
+                //updateLCD auf 0 setzen
                 updateLCD = 0;
-                //nächstes Feld
+                //Die Nummer des ersten Feldes der aktuellen Farbgruppe, in feldNummer speichern
                 feldNummer = farbgruppenErstesFeld[i];
                 //flagZurück wird verwendet, wenn Geld aufgetrieben werden muss.
                 //Es wird gesetzt, wenn ein Haus verkauft wurde um die while
                 //schleife zu verlassen
-                while (!(positiveFlanke & TASTE_C) && ! flagZurueck)
+                //Solange die Taste C nicht betätigt wurde und flagZurueck nicht gesetzt wurde
+                while (!(positiveFlanke & TASTE_C) && !flagZurueck)
                 {
                     //Flankenerkennung
+                    //Tasten einlesen und positiveFlanken bestimmen
                     tasteAlt = tasteNeu;
                     tasteNeu = 0;
                     tasteNeu = (PINL << 8) | PINK;
                     positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
                     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    //Die Variable minHaeuser auf 255 setzen
                     minHaeuser = 255;
+                    //Die Variable maxHaeuser auf 0 setzen
                     maxHaeuser = 0;
-                    for (uint8_t j = 0; j < 3; j = j + 1)
+                    //Erhöhe j um 1, solange j kleiner als ANZAHL_FELDER_IN_FARBGRUPPE ist. Starte mit j = 0
+                    for (uint8_t j = 0; j < ANZAHL_FELDER_IN_FARBGRUPPE; j = j + 1)
                     {
+                        //Wenn das Feld "j" der Farbgruppe grösser als 0 ist 
+                        //wird benötigt für die Spezialfälle der ersten und letzten Farbgruppe
                         if (spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j] > 0)
                         {
+                            //Anzahl Häuser auf dem Feld j der Farbgruppe auslesen und in der Variable haeuser speichern
                             haeuser = spielfeld[spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j]].anzahlHaeuser;
+                            //Wenn haeuser kleiner als minHaeuser ist
                             if ((haeuser < minHaeuser))
                             {
+                                //Die Variable minHaeuser auf den Wert von haeuser setzen
                                 minHaeuser = haeuser;
                             }
+                            //Wenn haeuser grösser als maxHaeuser ist
                             if (haeuser > maxHaeuser)
                             {
+                                //Die Variable maxHaeuser auf den Wert von haeuser setzen
                                 maxHaeuser = haeuser;
                             }
                         }
                     }
-                    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    for (uint8_t j = 0; j < 3; j = j + 1)
+                    //Erhöhe j um 1, solange j kleiner als ANZAHL_FELDER_IN_FARBGRUPPE ist. Starte mit j = 0
+                    for (uint8_t j = 0; j < ANZAHL_FELDER_IN_FARBGRUPPE; j = j + 1)
                     {
+                        //Anzahl Häuser auf dem Feld j der Farbgruppe auslesen und in der Variable haeuser speichern
                         haeuser = spielfeld[spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j]].anzahlHaeuser;
+                        //Wenn der Wert haeuser mit dem Wert maxHaeuser übereinstimmt
                         if (haeuser == maxHaeuser)
                         {
+                            //Die Liste anzahlHauser an Position "j" auf 1 setzen
                             anzahlHauser[j] = 1;
                         }
-                        //else if (spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[j])
+                        //Wenn der Wert haeuser mit dem Wert minHaeuser übereinstimmt
                         else if (haeuser == minHaeuser)
                         {
                             anzahlHauser[j] = 0;
                         }
                         else
                         {
+                            //Die Liste anzahlHauser an Position "j" auf 1 setzen
                             anzahlHauser[j] = 1;
                         }
                     }
-                            
-                            
+                    //Wenn das LCD noch nicht aktualisiert wurde     
                     if (!updateLCD)
                     {
+                        //LCD leeren
                         clear();//lcd leeren
+                        //Name des aktuellen Feldes auf das LCD schreiben
                         writeText(1,0,spielfeld[feldNummer].name);
                         //LCD ausgabe abhängig ob der Spieler schulden hat oder nicht
                         if (flagGeldBeschaffen)
                         {
+                            //"Abbauen" und die dazugehörige Taste am LCD anzeigen
                             writeText(0,0,PFEIL_U"Abbauen        ");
+                            //"weiter" und die dazugehörige Taste am LCD anzeigen
                             writeText(2,0,"         weiter"PFEIL_R);
                         }
                         else
                         {
+                            //"Abbauen", "Bauen" und die dazugehörigen Tasten am LCD anzeigen
                             writeText(0,0,PFEIL_U"Abbauen  Bauen"PFEIL_O);
+                            //"zurück", "weiter" und die dazugehörigen Tasten am LCD anzeigen
                             writeText(2,0,"C zur"UE"ck|weiter"PFEIL_R); 
                         }
                         /*writeText(1,0," w"UE"rfeln A / B ");
                         writeText(2,0,"    weiter C    ");*/
-                        gruppeAnzahlHaeuser = spielfeld[farbgruppenErstesFeld[i]].anzahlHaeuser; //holt die Anzahl Häuser
+                        //gruppeAnzahlHaeuser = spielfeld[farbgruppenErstesFeld[i]].anzahlHaeuser; //holt die Anzahl Häuser
+                        
+                        //updateLCD auf 1 setzen um erneutes durchlaufen zu blockieren
                         updateLCD = 1;
                     }
-                    if ((positiveFlanke & TASTE_O) && !flagGeldBeschaffen)//Haus Bauen nur möglich wenn der Spieler nicht verschuldet ist
+                    //Wenn die Taste O betätigt wurde und der Spieler nicht verschuldet ist
+                    if ((positiveFlanke & TASTE_O) && !flagGeldBeschaffen)
                     {
                         //Wenn auf allen felder gebaut wurde, flags zurücksetzten
+                        //Wenn alle Elemente der Liste anzahlHauser auf 1 gesetzt sind
                         if (anzahlHauser[0] && anzahlHauser[1] && anzahlHauser[2])
                         {
+                            //Alle Elemente der Liste anzahlHauser auf 0 zurücksetzen
                             anzahlHauser[0] = 0;
                             anzahlHauser[1] = 0;
                             anzahlHauser[2] = 0;
                         }
-                        switch (farbgruppenCounter)
+                        //Verarbeitung von farbgruppenCounter
+                        switch (farbgruppenZaehler)
                         {
                             case 0:
+                            //Wenn das Element 0 der Liste anzahlHauser = 0 ist
                             if (!anzahlHauser[0])
                             {
+                                //Auf dem aktuellen Feld ein Haus bauen
                                 flagBauErfolgreich = bauen(feldNummer, spielerAmZug);
+                                //Wenn der Bau erfolgreich war
                                 if (flagBauErfolgreich)
                                 {
+                                    //Element 0 der Liste anzahlHauser auf 1 setzen
                                     anzahlHauser[0] = 1;
                                 }
                                         
                             }
                             break;
                             case 1:
+                            //Wenn das Element 1 der Liste anzahlHauser = 0 ist
                             if (!anzahlHauser[1])
                             {
+                                //Auf dem aktuellen Feld ein Haus bauen
                                 flagBauErfolgreich = bauen(feldNummer, spielerAmZug);
+                                //Wenn der Bau erfolgreich war
                                 if (flagBauErfolgreich)
                                 {
+                                    //Element 1 der Liste anzahlHauser auf 1 setzen
                                     anzahlHauser[1] = 1;
                                 }
                             }
                             break;
                             case 2:
+                            //Wenn das Element 2 der Liste anzahlHauser = 0 ist
                             if (!anzahlHauser[2])
                             {
+                                //Auf dem aktuellen Feld ein Haus bauen
                                 flagBauErfolgreich = bauen(feldNummer, spielerAmZug);
+                                //Wenn der Bau erfolgreich war
                                 if (flagBauErfolgreich)
                                 {
+                                    //Element 2 der Liste anzahlHauser auf 1 setzen
                                     anzahlHauser[2] = 1;
                                 }
                             }
@@ -2988,43 +3233,58 @@ void hausKaufenVerkaufen(uint8_t spielerAmZug)
                         }
                                 
                     }
-                    if ((positiveFlanke & TASTE_U))//Haus Verkaufen~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    //Wenn die Taste U betätigt wurde
+                    if ((positiveFlanke & TASTE_U))//Haus Verkaufen
                     {
-                        //Wenn auf allen felder gebaut wurde, flags zurücksetzten
+                        //Wenn alle Elemente der Liste anzahlHauser auf 0 gesetzt sind
                         if (!(anzahlHauser[0] || anzahlHauser[1] || anzahlHauser[2]))
                         {
+                            //Alle Elemente der Liste anzahlHauser auf 1 zurücksetzen
                             anzahlHauser[0] = 1;
                             anzahlHauser[1] = 1;
                             anzahlHauser[2] = 1;
                         }
-                        switch (farbgruppenCounter)
+                        //Verarbeitung von farbgruppenCounter
+                        switch (farbgruppenZaehler)
                         {
                             case 0:
+                            //Wenn das Element 0 der Liste anzahlHauser = 1 ist
                             if (anzahlHauser[0])
                             {
+                                //Auf dem aktuellen Feld ein Haus abbauen
                                 flagBauErfolgreich = abBauen(feldNummer, spielerAmZug);
+                                //Wenn der Abbau erfolgreich war
                                 if (flagBauErfolgreich)
                                 {
+                                    //Element 0 der Liste anzahlHauser auf 0 setzen
                                     anzahlHauser[0] = 0;
                                 } 
                             }
                             break;
                             case 1:
+                            //Wenn das Element 1 der Liste anzahlHauser = 1 ist
                             if (anzahlHauser[1])
                             {
+                                //Auf dem aktuellen Feld ein Haus abbauen
                                 flagBauErfolgreich = abBauen(feldNummer, spielerAmZug);
+                                //Wenn der Abbau erfolgreich war
                                 if (flagBauErfolgreich)
                                 {
+                                    //Element 1 der Liste anzahlHauser auf 0 setzen
                                     anzahlHauser[1] = 0;
                                 }
                             }
                             break;
                             case 2:
+                            //Wenn das Element 2 der Liste anzahlHauser = 1 ist
                             if (anzahlHauser[2])
                             {
+                                //Auf dem aktuellen Feld ein Haus abbauen
                                 flagBauErfolgreich = abBauen(feldNummer, spielerAmZug);
+                                //Wenn der Abbau erfolgreich war
                                 if (flagBauErfolgreich)
                                 {
+                                    //Element 2 der Liste anzahlHauser auf 0 setzen
                                     anzahlHauser[2] = 0;
                                 }
                             }
@@ -3034,25 +3294,35 @@ void hausKaufenVerkaufen(uint8_t spielerAmZug)
                     }
                     //Wenn Geld bschafft werden muss, darf nur 1 Haus aufs mal verkauft werden
                     //Wenn flagGeldBeschaffen gesetzt ist und ein Haus abgebaut wurde
+                    
+                    //Wenn flagGeldBeschaffen gesetzt ist und ein Haus verkauft wurde
                     if (flagGeldBeschaffen && flagBauErfolgreich)
                     {
-                        //BauModus Verlassen
+                        //flagZurueck auf 1 setzen um die Funktion zu verlassen
                         flagZurueck = 1;
                     }
-                    
+                    //Wenn Taste R betätigt wurde
                     if (positiveFlanke & TASTE_R)//nächstes Feld
                     {
-                        farbgruppenCounter = (farbgruppenCounter + 1) % 3;
-                        feldNummer = spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[farbgruppenCounter];
+                        //Zum nächsten Feld wechseln, in dem farbgruppenCounter erhöt wird
+                        farbgruppenZaehler = (farbgruppenZaehler + 1) % 3;
+                        //Die Nummer des neuen Feldes auslesen und in feldNummer speichern
+                        feldNummer = spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[farbgruppenZaehler];
+                        //Wenn feldNummer 0 ist
                         if (!feldNummer)//Sonderfall bei Farbgruppen mit nur 2 Feldern
                         {
-                            farbgruppenCounter = 0;
-                            feldNummer = spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[farbgruppenCounter];
+                            //farbgruppenCounter auf 0 zurücksetzen
+                            farbgruppenZaehler = 0;
+                            //Die Nummer des neuen Feldes auslesen und in feldNummer speichern
+                            feldNummer = spielfeld[farbgruppenErstesFeld[i]].farbgruppenFelder[farbgruppenZaehler];
+                            //Das Element 2 der Liste anzahlHauser auf den Gleichen wert des Elementes 1 setzen
                             anzahlHauser[2] = anzahlHauser[1];
                         }
+                        //updateLCD auf 0 setzen, damit das nächste Feld am LCD angezeigt werden kann
                         updateLCD = 0;
                     }
                 }
+                //flagZurueck auf 0 zurücksetzen
                 flagZurueck = 0;
                         
             }

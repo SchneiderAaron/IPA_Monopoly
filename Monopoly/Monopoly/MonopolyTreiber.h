@@ -119,10 +119,10 @@ typedef enum
 typedef struct {
     KartenTyp typ;      // Typ der Karte
     int8_t bewegung;    // Anzahl der Felder (positiv = vorwärts, negativ = rückwärts)
-    int16_t geld;       // Geldbetrag (+ für Gewinn, - für Strafe)
-    int16_t geld2;      //2. geldbetrag
+    int16_t geld;       // Geldbetrag 
+    int16_t geld2;      //2. Geldbetrag
     uint8_t zielFeld;   // Falls die Karte den Spieler auf ein bestimmtes Feld schickt
-    FeldTyp zielFeldTyp;
+    FeldTyp zielFeldTyp;//Typ des Zielfeldes z.B. Haltestelle
 } Karte;
 
 
@@ -200,6 +200,6 @@ uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uin
 uint8_t ueberweisungsSchritt(uint16_t betrag);
 uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag);
 void initialisiereHandelInventar(handelInventar handel[]);
-uint8_t geldBeschaffen(uint8_t spielerNr, uint8_t schuldenBei, uint16_t mindestBetrag);
+void geldBeschaffen(uint8_t spielerNr, uint8_t schuldenBei, uint16_t mindestBetrag);
 void hausKaufenVerkaufen(uint8_t spielerAmZug);
 #endif /* MONOPOLYTREIBER_H_ */
