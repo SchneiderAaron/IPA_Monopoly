@@ -45,6 +45,7 @@
 #include <stdio.h>
 #include <avr/pgmspace.h>
 
+
 #include "SPI.h"
 #include "MonopolyTreiber.h"
 #include "LCD.h"
@@ -254,6 +255,8 @@ uint8_t yTasten[4] = {TASTE_Y1, TASTE_Y2, TASTE_Y3, TASTE_Y4};
 
 int main(void)
 {
+
+    //zufallsgeneratorAuswertung();
     char buffer[200];  // Buffer im RAM
     
     

@@ -1152,23 +1152,23 @@ END GROUP
 .debug_pubnames
  *(.debug_pubnames)
 
-.debug_info     0x00000000     0x96b3
+.debug_info     0x00000000     0x96b4
  *(.debug_info .gnu.linkonce.wi.*)
  .debug_info    0x00000000      0xbbc C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.7.374/gcc/dev/atmega2560/avr6/crtatmega2560.o
  .debug_info    0x00000bbc      0x953 LCD.o
- .debug_info    0x0000150f     0x4219 main.o
- .debug_info    0x00005728     0x3b2a MonopolyTreiber.o
- .debug_info    0x00009252      0x24e SPI.o
- .debug_info    0x000094a0      0x213 ws2812.o
+ .debug_info    0x0000150f     0x421a main.o
+ .debug_info    0x00005729     0x3b2a MonopolyTreiber.o
+ .debug_info    0x00009253      0x24e SPI.o
+ .debug_info    0x000094a1      0x213 ws2812.o
 
-.debug_abbrev   0x00000000     0x1587
+.debug_abbrev   0x00000000     0x156b
  *(.debug_abbrev)
  .debug_abbrev  0x00000000      0xb1a C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.7.374/gcc/dev/atmega2560/avr6/crtatmega2560.o
  .debug_abbrev  0x00000b1a      0x223 LCD.o
- .debug_abbrev  0x00000d3d      0x2bf main.o
- .debug_abbrev  0x00000ffc      0x37d MonopolyTreiber.o
- .debug_abbrev  0x00001379       0xea SPI.o
- .debug_abbrev  0x00001463      0x124 ws2812.o
+ .debug_abbrev  0x00000d3d      0x2a3 main.o
+ .debug_abbrev  0x00000fe0      0x37d MonopolyTreiber.o
+ .debug_abbrev  0x0000135d       0xea SPI.o
+ .debug_abbrev  0x00001447      0x124 ws2812.o
 
 .debug_line     0x00000000     0x5eb8
  *(.debug_line .debug_line.* .debug_line_end)
