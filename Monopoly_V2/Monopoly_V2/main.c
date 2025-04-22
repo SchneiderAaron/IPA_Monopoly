@@ -259,7 +259,7 @@ int main(void)
 {
 
     //zufallsgeneratorAuswertung();
-    char buffer[200];  // Buffer im RAM
+    //char buffer[200];  // Buffer im RAM
     
     
     /*--- Modullokale Konstanten ------------------------------------------------*/
@@ -268,7 +268,7 @@ int main(void)
     char lcdBuffer[16];
     //8-Bit Variabeln
     uint8_t spielerAmZug = 1;
-    uint8_t flagNextPlayer = 0;
+    //uint8_t flagNextPlayer = 0;
     uint8_t paschZaehler = 0;
     uint8_t flagWeiter = 1;
     uint8_t aktuellePosition = 0;
@@ -284,9 +284,9 @@ int main(void)
     
     uint8_t flagFertigGewuerfelt = 0;
     uint8_t letzterWuerfel = 0;
-    uint8_t flagSchulden = 0;
+    //uint8_t flagSchulden = 0;
     
-    uint8_t flagVersteigert = 0;
+    //uint8_t flagVersteigert = 0;
     uint8_t verkaufSpielerEingabe = 0;
     
     uint8_t updateLCD = 0;
@@ -300,12 +300,12 @@ int main(void)
     
     
     
-    uint8_t farbgruppenCounter = 0;
+    //uint8_t farbgruppenCounter = 0;
     
     
-    uint8_t flagHausFeld1 = 0;
-    uint8_t flagHausFeld2 = 0;
-    uint8_t flagHausFeld3 = 0;
+    //uint8_t flagHausFeld1 = 0;
+    //uint8_t flagHausFeld2 = 0;
+    //uint8_t flagHausFeld3 = 0;
     
     
 
@@ -319,11 +319,11 @@ int main(void)
     uint8_t ereignisfeldRueckgabe = 0;
     uint8_t flagKanzlei = 0;
     
-    uint8_t kaufStatus = 0;
+    //uint8_t kaufStatus = 0;
     uint16_t zahlBetrag = 0;
     uint8_t flagMieteFarbgruppe = 0;
     uint8_t zahlBetragFarbgruppe = 0;
-    uint8_t zahlSchritt = 0;
+    //uint8_t zahlSchritt = 0;
     
     uint8_t anzahlEigentum = 0;
     uint8_t feldZaehler = 0;
@@ -348,7 +348,7 @@ int main(void)
     uint8_t flagKeineHaeuser = 0;
     
     uint8_t haendlerZaehler = 0;
-    uint8_t haendlerAmZug = 0;
+    //uint8_t haendlerAmZug = 0;
     uint8_t auswahlAbgeschlossen = 0;
     uint8_t handelSpielerNummern[2] = {0};
     uint8_t handelFeldNummer = 0;
@@ -409,9 +409,9 @@ int main(void)
     }
     
     
-    uint8_t textCounter = 0;
-    uint8_t stringCounter = 0;
-    uint8_t flagEreignisfeld = 0;
+    //uint8_t textCounter = 0;
+    //uint8_t stringCounter = 0;
+    //uint8_t flagEreignisfeld = 0;
     //_delay_ms(1000);
     while (1) 
     {
@@ -468,7 +468,7 @@ int main(void)
                 writeText(1,0,PFEIL_L"- 2 Spieler  +"PFEIL_R);
                 writeText(2,0,"weiter Taste S");
                 //Mit Konto Siebensegmente alle registrierten Spieler anzeigen
-                updateKontostand(anzahlSpieler,spielerInfo);//Spielernummer auf siebensegmenten anzeigen
+                updateKontostand(anzahlSpieler,spielerInfo,0);//Spielernummer auf siebensegmenten anzeigen
                 spielerSetup = 1; //flag setzen um erneute ausgabe zu blockieren
             }
             
@@ -482,7 +482,7 @@ int main(void)
                 sprintf(lcdBuffer,"%u",anzahlSpieler);
                 writeText(1,3,lcdBuffer);
                 //Mit Konto Siebensegmente alle registrierten Spieler anzeigen
-                updateKontostand(anzahlSpieler,spielerInfo);
+                updateKontostand(anzahlSpieler,spielerInfo,0);
             }
             //anzahlspieler vergrössern
             //Wenn Taste R betätigt wurde und die momentane anzahlSpieler kleiner als das erlaubte maximum ist
@@ -494,7 +494,7 @@ int main(void)
                 sprintf(lcdBuffer,"%u",anzahlSpieler);
                 writeText(1,3,lcdBuffer);
                 //Mit Konto Siebensegmente alle registrierten Spieler anzeigen
-                updateKontostand(anzahlSpieler,spielerInfo);
+                updateKontostand(anzahlSpieler,spielerInfo,0);
             }
             //Wenn anzahl Spieler bestätigt wurde Taste S
             if (positiveFlanke & TASTE13)
@@ -506,7 +506,7 @@ int main(void)
                     setzeSpielerPosition(spielerInfo[i].position,i);//gib die position von spieler i an den leds aus
                 }
                 //aktualisiere den Kontostand für alle spieler
-                updateKontostand(anzahlSpieler,spielerInfo);
+                updateKontostand(anzahlSpieler,spielerInfo,0);
                 //Anzahl Spieler auf LCD anzeigen
                 writeText(0,0,"      Spieler   ");
                 sprintf(lcdBuffer,"%u",anzahlSpieler);
@@ -536,7 +536,7 @@ int main(void)
                 sprintf(lcdBuffer,"%u",i);//lädt den Spieler am Zug in den lcdBuffer
                 writeText(0,11,lcdBuffer);//gibt lcdBuffer an LCD aus
                 writeText(1,0,"    w"UE"rfelt    ");
-                writeText(2,0," wuerfeln A / B ");
+                writeText(2,0," w"UE"rfeln A / B ");
                 
                 //solange noch nicht mit beiden Würfel gewürfelt wurde 
                 while (!(flagWuerfel1 && flagWuerfel2)) 
@@ -618,7 +618,7 @@ int main(void)
                 flagWuerfel2 = 0;
                 letzterWuerfel = 0;
                 //Würfelsumme auf den Konto Siebensegmenten des aktuellen Spielers ausgeben
-                updateKontostand(i,spielerInfo);
+                updateKontostand(i,spielerInfo,0);
             }
             //Setzt den Spieler mit der höchsten Summe als den Spieler der am Zug ist
             spielerAmZug = ersterSpieler;
@@ -633,7 +633,7 @@ int main(void)
                 spielerInfo[i].geld = STARTGELD;
             }
             //Kontostand an Konto Siebensegmenten anzeigen
-            updateKontostand(anzahlSpieler,spielerInfo);
+            updateKontostand(anzahlSpieler,spielerInfo,spielerAmZug);
 
             //Spieler am zug und Navigation am lcd Ausgeben
             writeText(0,0,"   Spieler      ");
@@ -667,17 +667,31 @@ int main(void)
                 //flagSpielLcd auf 0 setzen um erneutes Ausführen zu verhindern
                 flagSpielLCD = 0;
             }
+            
+            //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            //                                  Nächster Spieler Logik
+            //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            
+            
+            
             //Spielzug abschliessen alles zurücksetzen
             //flagSpieler Pleite --> wenn spieler pleite ist, ist automatisch der nächste Spieler an der Reihe
             //wenn Taste C betätigt wurde oder flagGefaengnisWeiter oder flagSpielerPleite gesetzt ist
             //und flagFertigGewuerfelt, flagZahlungAbgeschlossen, flagKaufAbgeschlossen und
             //flagEreignisAbgeschlossen gesetzt sind
-            if(((positiveFlanke & TASTE_C) || flagGefaengnisWeiter || flagSpielerPleite) && flagFertigGewuerfelt && flagZahlungAbgeschlossen && flagKaufAbgechlossen && flagEreignisAbgeschlossen)
+            if(((positiveFlanke & TASTE_C) || flagGefaengnisWeiter || flagSpielerPleite) && flagFertigGewuerfelt 
+            && flagZahlungAbgeschlossen && flagKaufAbgechlossen && flagEreignisAbgeschlossen)
             {
                 //beide Würfel Siebensegment Anzeigen ausschalten
                 wuerfelTransmit(SIEBENSEGMENT_OFF,SIEBENSEGMENT_OFF);
                 //spielerAmZug auf den nächsten Spieler setzen
                 spielerAmZug = (spielerAmZug % anzahlSpieler) + 1;
+                //Kontostand und Spieler am zug ausgeben
+                updateKontostand(anzahlSpieler,spielerInfo,spielerAmZug);
                 //Spieler am Zug am LCD ausgeben
                 writeText(0,0,"   Spieler      ");
                 //lädt die Variabel "spielerAmZug" in den lcdBuffer
@@ -837,7 +851,7 @@ int main(void)
             }
             
             //kontostand aktualisieren und anzeigen
-            updateKontostand(anzahlSpieler,spielerInfo);
+            updateKontostand(anzahlSpieler,spielerInfo,spielerAmZug);
             //Spieler hat fertig gewürfelt 
             
             //Wenn Taste S betätigt wurde
@@ -1005,7 +1019,7 @@ int main(void)
                         sprintf(lcdBuffer,"%u",zahlBetrag);     //zahlBetrag in den lcdBuffer laden
                         writeText(1,10,lcdBuffer);              //lcdBuffer am LCD ausgeben
                         //Tastenbelegung und Feldbesitzer am LCD ausgeben
-                        writeText(2,0,"an Spieler   =>X");
+                        writeText(2,0,"an Spieler     X");
                         sprintf(lcdBuffer,"%u",feldBesitzer);   //feldBesitzer in den lcdBuffer laden
                         writeText(2,11,lcdBuffer);              //lcdBuffer am LCD ausgeben
                         //updateLCD auf 1 setzen um erneutes Ausführen zu verhindern
@@ -1051,7 +1065,7 @@ int main(void)
                         sprintf(lcdBuffer,"%u",zahlBetrag);     //zahlBetrag in den lcdBuffer laden
                         writeText(1,10,lcdBuffer);              //lcdBuffer am LCD ausgeben
                         //Tastenbelegung am LCD ausgeben
-                        writeText(2,0,"an die Bank  =>X");
+                        writeText(2,0,"an die Bank    X");
                         //updateLCD auf 1 setzen um erneutes ausführen zu verhindern
                         updateLCD = 1;
                     }
@@ -1141,7 +1155,7 @@ int main(void)
                         sprintf(lcdBuffer,"%u",zahlBetrag);     //zahlBetrag in den lcdBuffer laden
                         writeText(1,10,lcdBuffer);              //lcdBuffer am LCD ausgeben
                         //Tastenbelegung und Feldbesitzer am LCD ausgeben
-                        writeText(2,0,"an Spieler   =>X");
+                        writeText(2,0,"an Spieler     X");
                         sprintf(lcdBuffer,"%u",feldBesitzer);   //feldBesitzer in den lcdBuffer laden
                         writeText(2,11,lcdBuffer);              //lcdBuffer am LCD ausgeben
                         //updateLCD auf 1 setzen um erneutes Ausführen zu verhindern
@@ -1183,7 +1197,7 @@ int main(void)
                         //flagGefaengnisLCD setzen um erneutes Ausführen zu verhindern
                         flagGefaengnisLCD = 1;
                         //Programm für fünf Sekunden blockieren, um den Spielern Zeit zu geben das LCD zu lesen
-                        _delay_ms(5000);
+                        _delay_ms(3000);
                         //Wenn der Spieler am Zug eine Freikarte besitzt
                         if (spielerInfo[spielerAmZug].freikarte)
                         {
@@ -1307,6 +1321,10 @@ int main(void)
                                 flagFertigGewuerfelt = 0;
                                 //flagGefaengnis auf 0 zurücksetzen
                                 flagGefaengnis = 0;
+                                _delay_ms(1000);
+                                writeText(1,0," w"UE"rfeln A / B ");
+                                writeText(2,0,"weiter C  mehr S");
+                                updateKontostand(anzahlSpieler,spielerInfo,spielerAmZug);
                             }
                             /*else if (bezahlStatus == ZAHLUNG_FEHLGESCHLAGEN)
                             {
@@ -1386,6 +1404,9 @@ int main(void)
                                 //flagFertigGewuerfelt auf 0 setzen um dem
                                 //Spieler am Zug das Würfeln zu ermöglichen
                                 flagFertigGewuerfelt = 0; 
+                                writeText(1,0," w"UE"rfeln A / B ");
+                                writeText(2,0,"weiter C  mehr S");
+                                updateKontostand(anzahlSpieler,spielerInfo,spielerAmZug);
                             }
                             else
                             {
@@ -1394,7 +1415,7 @@ int main(void)
                                 flagGefaengnisWeiter = 1;
                                 //Programm für fünf Sekunden blockieren
                                 //um es den Spielern zu ermöglichen das LCD zu lesen
-                                _delay_ms(5000); //5s Warten
+                                _delay_ms(3000); //5s Warten
                             }
                         }
                         break;
@@ -1550,7 +1571,7 @@ int main(void)
                         sprintf(lcdBuffer,"%u",zahlBetrag);     //zahlBetrag in den lcdBuffer laden
                         writeText(1,10,lcdBuffer);              //lcdBuffer am LCD ausgeben
                         //Tastenbelegung und Feldbesitzer am LCD ausgeben
-                        writeText(2,0,"an Spieler   =>X");
+                        writeText(2,0,"an Spieler     X");
                         sprintf(lcdBuffer,"%u",feldBesitzer);   //feldBesitzer in den lcdBuffer laden
                         writeText(2,11,lcdBuffer);              //lcdBuffer am LCD ausgeben
                         //updateLCD auf 1 setzen um erneutes Ausführen zu verhindern
@@ -1664,7 +1685,7 @@ int main(void)
                         spielerInfo[i].geld = geldZwischenspeicher[i];
                     }
                     //Kontostand aktualisieren
-                    updateKontostand(anzahlSpieler,spielerInfo);
+                    updateKontostand(anzahlSpieler,spielerInfo,0);
                     //kontostand von Höchstbieter um gebot verkleinern
                     //spielerInfo[bieter[HOECHSTBIETER]].geld = (spielerInfo[bieter[5]].geld - aktuellesGebot);
                     //Betrag wird vom Konto des Höchstbieters abgezogen
@@ -1706,7 +1727,7 @@ int main(void)
                         spielerInfo[i].geld = geldZwischenspeicher[i];
                     }
                     //Kontostand aktualisieren
-                    updateKontostand(anzahlSpieler,spielerInfo);
+                    updateKontostand(anzahlSpieler,spielerInfo,spielerAmZug);
                     //bieter array zurücksetzen
                     //Erhöhe i um 1, solange i kleiner als 6 ist. Starte mit i = 0
                     for (uint8_t i = 0; i < 6; i = i + 1)
@@ -2368,7 +2389,7 @@ uint8_t feldKaufen(uint8_t feldNummer, Feld spielfeld[40], uint8_t spielerAmZug)
             sprintf(lcdBuffer,"%u",spielerAmZug);
             writeText(0,11,lcdBuffer);
             writeText(1,0,spielfeld[feldNummer].name);
-            writeText(2,0,"kaufen? <=N >=J");
+            writeText(2,0,"kaufen?"PFEIL_L"Nein|Ja"PFEIL_R"");
             globalUpdateLCD = 1;
         }
         if (positiveFlanke & TASTE_R)//kaufen
@@ -2384,7 +2405,7 @@ uint8_t feldKaufen(uint8_t feldNummer, Feld spielfeld[40], uint8_t spielerAmZug)
                 //Besitz RGB setzen
                 setPropertyRgb(spielfeld[feldNummer].rgbNummer,spielerAmZug);
                 //konto aktualisieren
-                updateKontostand(anzahlSpieler,spielerInfo);
+                updateKontostand(anzahlSpieler,spielerInfo,spielerAmZug);
                 //LCD leeren und neu beschreiben
                 clear();
                 writeText(0,0,"   Spieler      ");
@@ -2426,8 +2447,8 @@ uint8_t bauen(uint8_t feldNummer, uint8_t spielerAmZug)
     //Die Variable kaufStatus auf 0 initialisieren
     uint8_t kaufStatus = 0;
     //wenn ein Hotel gebaut wird
-    //Wenn die Anzahl Häuser auf dem Feld kleiner als 5 ist
-    if (spielfeld[feldNummer].anzahlHaeuser < 5)
+    //Wenn die Anzahl Häuser auf dem Feld kleiner als 5 ist zusätzlich wird geprüft ob der SPieler genug Geld hat
+    if ((spielfeld[feldNummer].anzahlHaeuser < 5) && spielerInfo[spielerAmZug].geld >= spielfeld[feldNummer].kostenHaus)
     {
         //Wenn auf dem Feld bereits 4 Häuser gebaut wurden und es noch genug Hotels im Spiel hat
         if ((spielfeld[feldNummer].anzahlHaeuser == 4) && hotelsImSpiel < MAX_ANZAHL_HOTELS_IM_SPIEL)
@@ -2466,6 +2487,7 @@ uint8_t bauen(uint8_t feldNummer, uint8_t spielerAmZug)
             return 0;//Fehlgeschlagen
         }
     }
+    return 0;//Sollte nicht zu problemen führen
 }
 /******************************************************************************\
 * abBauen

@@ -471,7 +471,25 @@ uint8_t ziffer[] =
     (SEG_A | SEG_B | SEG_C | SEG_F | SEG_G | SEG_D),                            //9
     (0),                                                                        //10 (unsichtbar, z.B. für ein Leerzeichen oder Null)
     (PUNKT),                                                                    //11
-    (SEG_G)                                                                     //12 - (---- = Spieler ist aus versteigerung zurückgetreten)
+    (SEG_G),                                                                    //12 - (---- = Spieler ist aus versteigerung zurückgetreten)
+    (0),                                                                        //13
+    (0),                                                                        //14
+    (0),                                                                        //15
+    (0),                                                                        //16
+    (0),                                                                        //17
+    (0),                                                                        //18
+    (0),                                                                        //19
+    (SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F | PUNKT),                    //20 --> 0.
+    (SEG_B | SEG_C | PUNKT),                                                    //21 --> 1.
+    (SEG_A | SEG_B | SEG_G | SEG_E | SEG_D | PUNKT),                            //22 --> 2.
+    (SEG_A | SEG_B | SEG_C | SEG_D | SEG_G | PUNKT),                            //23 --> 3.
+    (SEG_F | SEG_G | SEG_B | SEG_C | PUNKT),                                    //24 --> 4.
+    (SEG_A | SEG_C | SEG_D | SEG_F | SEG_G | PUNKT),                            //25 --> 5.
+    (SEG_F | SEG_G | SEG_C | SEG_D | SEG_E | SEG_A | PUNKT),                    //26 --> 6.
+    (SEG_A | SEG_B | SEG_C | PUNKT),                                            //27 --> 7.
+    (SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F | SEG_G | PUNKT),            //28 --> 8.
+    (SEG_A | SEG_B | SEG_C | SEG_F | SEG_G | SEG_D | PUNKT),                    //29 --> 9.
+    
 };
 
 
@@ -546,6 +564,18 @@ void setGeld(uint16_t geld, uint8_t spieler, uint8_t siebensegmentOnOff)
         //lädt ein unsichtbares symbol für die Einer ziffer und speichert es im siebensegment array
         siebensegment[((spieler - 1) * 4) + 3]  = ziffer[12];  //Unsichtbar
     }
+    else if (siebensegmentOnOff == 3)//Geld und SpielerAmZug ausgeben
+    {
+        //Die entsprechenden Ziffern für den Spieler im Array "siebensegment" setzen
+        //bestimmt das darzustellende symbol für die Tausender ziffer und speichert sie im siebensegment array
+        siebensegment[((spieler - 1) * 4)]      = ziffer[tausender + 20]; //Tausender
+        //bestimmt das darzustellende symbol für die Hunderter ziffer und speichert sie im siebensegment array
+        siebensegment[((spieler - 1) * 4) + 1]  = ziffer[hunderter + 20]; //Hunderter
+        //bestimmt das darzustellende symbol für die Zehner ziffer und speichert sie im siebensegment array
+        siebensegment[((spieler - 1) * 4) + 2]  = ziffer[zehner + 20];    //Zehner
+        //bestimmt das darzustellende symbol für die Einer ziffer und speichert sie im siebensegment array
+        siebensegment[((spieler - 1) * 4) + 3]  = ziffer[einer + 20];     //Einer
+    }
 
     //Ausgabe der Daten an das Siebensegment-Display
     for (uint8_t i = 0; i < ANZAHL_KONTO_SIEBENSEGMENTE; i = i + 1)
@@ -574,7 +604,7 @@ void setGeld(uint16_t geld, uint8_t spieler, uint8_t siebensegmentOnOff)
 * Rückgabewert: Keine Rückgabe (void)
 *
 \******************************************************************************/
-void updateKontostand(uint8_t anzahlSpieler, Spieler spielerInfo[5])
+void updateKontostand(uint8_t anzahlSpieler, Spieler spielerInfo[5], uint8_t spielerAmZug)
 {
     //Iteriere über alle aktiven Spieler (bis anzahlSpieler)
     for (uint8_t i = 1; i <= anzahlSpieler; i = i + 1)
@@ -582,7 +612,12 @@ void updateKontostand(uint8_t anzahlSpieler, Spieler spielerInfo[5])
         //Setze den Geldbetrag für den Spieler i auf den Wert von spielerInfo[i].geld
         //Der dritte Parameter ist 1, was bedeutet, dass das Siebensegment eingeschaltet ist
         //Wenn der Spieler nicht Pleite ist
-        if (!spielerInfo[i].pleite)
+        if (i == spielerAmZug)
+        {
+            //Kontostand auf und Spieler am Zug am Siebensegment anzeigen
+            setGeld(spielerInfo[i].geld, i, 3);
+        }
+        else if (!spielerInfo[i].pleite)
         {
             //Kontostand auf Siebensegment anzeigen
             setGeld(spielerInfo[i].geld, i, 1);
@@ -967,7 +1002,7 @@ void startGeldAnimation(uint8_t anzahlSpieler)
             //warte 75ms 
             _delay_ms(75); //Delay dient zu animationszwecken
             //aktualisiere den Kontostand
-            updateKontostand(anzahlSpieler,spielerInfo); 
+            updateKontostand(anzahlSpieler,spielerInfo,0); 
         }
         //warte 50 ms
         _delay_ms(50); //Delay dient zu animationszwecken
@@ -2074,7 +2109,7 @@ uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag)
                 //Kontostand des empfangenden Spielers um Schrittgrösse vergrössern
                 spielerInfo[empfaenger].geld += schritt;
                 //Kontostand aktualisieren
-                updateKontostand(anzahlSpieler,spielerInfo);
+                updateKontostand(anzahlSpieler,spielerInfo,0);
                 //Programm für 10ms blockieren, damit die Überweisung als Animation wahrgenommen wird
                 _delay_ms(10);
             }
@@ -2106,7 +2141,7 @@ uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag)
                 //Kontostand des zahlenden Spielers um Schrittgrösse verkleinern
                 spielerInfo[zahler].geld -= schritt;
                 //Kontostand aktualisieren
-                updateKontostand(anzahlSpieler,spielerInfo);
+                updateKontostand(anzahlSpieler,spielerInfo,0);
                 //Programm für 10ms blockieren, damit die Überweisung als Animation wahrgenommen wird
                 _delay_ms(10);
             }
@@ -2135,7 +2170,7 @@ uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag)
             //Kontostand des empfangenden Spielers um Schrittgrösse vergrössern
             spielerInfo[empfaenger].geld += schritt;
             //Kontostand aktualisieren
-            updateKontostand(anzahlSpieler,spielerInfo);
+            updateKontostand(anzahlSpieler,spielerInfo,0);
             //Programm für 10ms blockieren, damit die Überweisung als Animation wahrgenommen wird
             _delay_ms(10);
         }
@@ -2730,7 +2765,7 @@ void geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetrag)
             //Programm für 3 Sekunden blokieren, damit die Spieler Zeit haben das LCD zu lesen
             _delay_ms(3000);
             //Den Kontostand aller Spieler an den Konto Siebensegmenten anzeigen
-            updateKontostand(anzahlSpieler,spielerInfo);
+            updateKontostand(anzahlSpieler,spielerInfo,0);
             //flagGeldBeschaffen auf 0 setzen um dem Programm zu signalisieren, dass die Schuld beglichen wurde
             flagGeldBeschaffen = 0;
             //pleiteZustand auf GENUG_GELD zurücksetzen

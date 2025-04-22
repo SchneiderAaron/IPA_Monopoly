@@ -171,7 +171,7 @@ int8_t spielerPosFehlerAusgleich(uint8_t spielerNummer);
 //in der Vorbereitung erstellt
 void setGeld(uint16_t geld, uint8_t spieler, uint8_t siebensegmentOnOff);
 
-void updateKontostand(uint8_t anzahlSpieler, Spieler spielerInfo[5]);
+void updateKontostand(uint8_t anzahlSpieler, Spieler spielerInfo[5], uint8_t spielerAmZug);
 
 uint8_t zufallsGenerator(void);
 //in der Vorbereitung erstellt
