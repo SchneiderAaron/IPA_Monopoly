@@ -319,7 +319,9 @@ void setPropertyRgb(uint8_t FeldNummer, uint8_t spielerNr)
 \******************************************************************************/
 void setzeSpielerPosition(uint8_t feld, uint8_t spielerNummer)
 {
-    uint8_t spielerRegister, startLed, spielerPositionAlt = 0;
+    uint8_t spielerRegister = 0;
+    uint8_t startLed = 0;
+    uint8_t spielerPositionAlt = 0;
     int8_t fehlerausgleich = 0;
     
     //Deaktiviert die LED der alten Position des Spielers
@@ -490,7 +492,11 @@ uint8_t ziffer[] =
 void setGeld(uint16_t geld, uint8_t spieler, uint8_t siebensegmentOnOff)
 {
     //variabeln tausender, hunderter, zehner und einer auf 0 setzen
-    uint8_t tausender, hunderter, zehner, einer, transmitdata = 0;
+    uint8_t tausender       = 0;
+    uint8_t hunderter       = 0;
+    uint8_t zehner          = 0;
+    uint8_t einer           = 0;
+    uint8_t transmitdata    = 0;
 
     //Berechnen der einzelnen Ziffern
     //tausender ziffer berechnen und in variabel tausender speichern
@@ -630,7 +636,8 @@ uint8_t zufallsGenerator(void)
 void wuerfel(void)
 {
     char buffer[16];
-    uint8_t zufallszahl1, zufallszahl2 = 0;
+    uint8_t zufallszahl1 = 0;
+    uint8_t zufallszahl2 = 0;
     
     //Simuliert mehrere Würfeln-Animationen
     for (uint8_t i = 0; i < 50; i = i + 1)
@@ -690,7 +697,8 @@ void wuerfel(void)
 void wuerfelAB(uint8_t wuerfelNummer, uint8_t flagWuerfel1, uint8_t flagWuerfel2)
 {
     //Variabeln für zufallszahl 1 und zufallszahl 2 initialisieren
-    uint8_t zufallszahl1, zufallszahl2 = 10;
+    uint8_t zufallszahl1 = 10;
+    uint8_t zufallszahl2 = 10;
     //wenn mit würfel A gewürfelt werden soll und
     //bereits mit würfel B gewürfelt wurde
     if((wuerfelNummer == 1) && flagWuerfel2)
@@ -2185,7 +2193,11 @@ void initialisiereHandelInventar(handelInventar handel[])
 void geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetrag)
 {
     //diverse Flags, Variablen und Arrays Initialisieren
-    uint8_t flagHaeuser, flagBelastbar, flagFarbgruppe, flagFeldBelastet, feldZaehler = 0;
+    uint8_t flagHaeuser = 0;
+    uint8_t flagBelastbar = 0;
+    uint8_t flagFarbgruppe = 0;
+    uint8_t flagFeldBelastet = 0;
+    uint8_t feldZaehler = 0;
     uint8_t felderMitHaeuser[40] = {0}; 
     uint8_t felderBelastbar[40] = {0}; 
     uint8_t anzahlFelderMitHaeuser, anzahlFelderBelastbar = 0;

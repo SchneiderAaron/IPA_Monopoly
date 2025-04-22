@@ -12,7 +12,7 @@
 *
 * Dateiname: main.c
 *
-* Projekt  : IPA_Monopoly
+* Projekt  : IPA_Monopoly_v2
 * Hardware : Monopoly-Board, ATmega2560v von Atmel
 *
 *
@@ -25,7 +25,7 @@
 * Verlauf:
 * ========
 * Datum:      Autor:         Version   Grund der Änderung:
-* 10.01.2025  A.Schneider    V1.0      Neuerstellung
+* 22.04.2025  A.Schneider    V2.0      Nacharbeit
 *
 \*********************************************************************************/
 
@@ -170,7 +170,9 @@ uint8_t wuerfelArray[2] = {0};
     
 uint8_t spielerImGefaengnis[5] = {0};
 
-uint16_t tasteAlt, tasteNeu, positiveFlanke = 0; //Variabeln Flankenerkennung
+uint16_t tasteAlt       = 0; //Variabeln Flankenerkennung
+uint16_t tasteNeu       = 0;
+uint16_t positiveFlanke = 0;
 
 zustand_t zustand = SPIELERAUSWAHL;//Spielzustand auf SPIELERAUSWAHL setzen
 workshopZustand_t workshopZustand = PASCH_J_N;//Workshopzustand auf PASH_J_N setzen
@@ -266,7 +268,8 @@ int main(void)
     char lcdBuffer[16];
     //8-Bit Variabeln
     uint8_t spielerAmZug = 1;
-    uint8_t flagNextPlayer, paschZaehler = 0;
+    uint8_t flagNextPlayer = 0;
+    uint8_t paschZaehler = 0;
     uint8_t flagWeiter = 1;
     uint8_t aktuellePosition = 0;
     
@@ -279,9 +282,12 @@ int main(void)
     
     uint8_t spielerSetup = 0;
     
-    uint8_t flagFertigGewuerfelt, letzterWuerfel, flagSchulden = 0;
+    uint8_t flagFertigGewuerfelt = 0;
+    uint8_t letzterWuerfel = 0;
+    uint8_t flagSchulden = 0;
     
-    uint8_t flagVersteigert, verkaufSpielerEingabe = 0;
+    uint8_t flagVersteigert = 0;
+    uint8_t verkaufSpielerEingabe = 0;
     
     uint8_t updateLCD = 0;
     uint8_t flagSpielLCD = 0;
