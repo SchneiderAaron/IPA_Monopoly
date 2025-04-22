@@ -49,6 +49,9 @@
 #define CHANCE2 22
 #define CHANCE3 36
 #define RGB_BANK 9
+
+#define MAX_ANZAHL_HAEUSER_IM_SPIEL 32
+#define MAX_ANZAHL_HOTELS_IM_SPIEL 12
 /*--- Datentypen (typedef) ---------------------------------------------------*/
 typedef struct {
     char name[50];              // Name des Spielers
@@ -147,9 +150,13 @@ extern uint8_t wuerfelArray[2];
 extern Spieler spielerInfo[5];
 extern uint8_t anzahlSpieler;
 extern uint8_t spielerImGefaengnis[5];
+extern uint8_t haeuserImSpiel;
+extern uint8_t hotelsImSpiel;
 
 extern Feld spielfeld[40];
-extern uint16_t tasteAlt, tasteNeu, positiveFlanke; //Variabeln Flankenerkennung
+extern uint16_t tasteAlt; //Variabeln Flankenerkennung
+extern uint16_t tasteNeu;
+extern uint16_t positiveFlanke;
 extern uint8_t flagGeldBeschaffen;
 
 extern uint8_t xTasten[4];
@@ -202,4 +209,6 @@ uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag);
 void initialisiereHandelInventar(handelInventar handel[]);
 void geldBeschaffen(uint8_t spielerNr, uint8_t schuldenBei, uint16_t mindestBetrag);
 void hausKaufenVerkaufen(uint8_t spielerAmZug);
+uint8_t bauen(uint8_t feldNummer, uint8_t spielerAmZug);
+uint8_t abBauen(uint8_t feldNummer, uint8_t spielerAmZug);
 #endif /* MONOPOLYTREIBER_H_ */

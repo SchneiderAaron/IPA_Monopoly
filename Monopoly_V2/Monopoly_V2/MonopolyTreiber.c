@@ -258,7 +258,9 @@ void writeHaus(uint8_t data[14])
 \******************************************************************************/
 void setPropertyRgb(uint8_t FeldNummer, uint8_t spielerNr)
 {
-    uint8_t rot,gruen,blau = 0; //Initialisierung der RGB Varîablen
+    uint8_t rot = 0; //Initialisierung der RGB Varîablen
+    uint8_t gruen = 0;
+    uint8_t blau = 0;
     switch (spielerNr)//switch case zur bestimmung der RGB Werte anhand der Spielernummer
     {
         case 0://0 --> RGB Aus
@@ -321,7 +323,7 @@ void setzeSpielerPosition(uint8_t feld, uint8_t spielerNummer)
 {
     uint8_t spielerRegister = 0;
     uint8_t startLed = 0;
-    uint8_t spielerPositionAlt = 0;
+    //uint8_t spielerPositionAlt = 0;
     int8_t fehlerausgleich = 0;
     
     //Deaktiviert die LED der alten Position des Spielers
@@ -514,7 +516,7 @@ void setGeld(uint16_t geld, uint8_t spieler, uint8_t siebensegmentOnOff)
     uint8_t hunderter       = 0;
     uint8_t zehner          = 0;
     uint8_t einer           = 0;
-    uint8_t transmitdata    = 0;
+    //uint8_t transmitdata    = 0;
 
     //Berechnen der einzelnen Ziffern
     //tausender ziffer berechnen und in variabel tausender speichern
@@ -670,7 +672,7 @@ uint8_t zufallsGenerator(void)
 \******************************************************************************/
 void wuerfel(void)
 {
-    char buffer[16];
+    //char buffer[16];
     uint8_t zufallszahl1 = 0;
     uint8_t zufallszahl2 = 0;
     
@@ -1994,7 +1996,7 @@ uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uin
                 //Den Betrag berechnen, welcher auf "Los" überwiesen wird
                 startGeld = 200 + chanceKanzlei[zufallsNummer].geld;
                 //animiert die fortbewegung des spielers bis feld Los
-                //Erhöhe i um 1, bis der spieler auf dem Feld "Los". Starte mit i = ausgangsPosition
+                //Erhöhe i um 1, bis der spieler auf dem Feld "Los" ist. Starte mit i = ausgangsPosition
                 for (uint8_t i = spielerInfo[spielerAmZug].position; i <= 40; i = i + 1)
                 {
                     //Setze den Spieler auf die neue Position
@@ -2003,7 +2005,10 @@ uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uin
                     _delay_ms(100); //delay dient zu animationszwecken
                 }
                 //Dem Spieler den berechneten betrag bezahlen
+                setzeSpielerPosition(0,spielerAmZug);
+                spielerInfo[spielerAmZug].position = 0;
                 geldUeberweisen(0,spielerAmZug,startGeld);
+                
             }
             //Erhöhe i um 1, bis der spieler auf dem Zielfeld ist. Starte mit i = ausgangsposition
             for (uint8_t i = spielerInfo[spielerAmZug].position; i < chanceKanzlei[zufallsNummer].zielFeld; i = i + 1)
@@ -2176,6 +2181,7 @@ uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag)
         }
         return 1; //zahlung erfolgreich
     }
+    return 0;
 }
 
 /******************************************************************************\
@@ -2235,7 +2241,8 @@ void geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetrag)
     uint8_t feldZaehler = 0;
     uint8_t felderMitHaeuser[40] = {0}; 
     uint8_t felderBelastbar[40] = {0}; 
-    uint8_t anzahlFelderMitHaeuser, anzahlFelderBelastbar = 0;
+    uint8_t anzahlFelderMitHaeuser = 0;
+    uint8_t anzahlFelderBelastbar = 0;
     uint16_t schuldBetrag = 0;
     uint16_t hypothekBetrag = 0;
     
@@ -3377,4 +3384,122 @@ void hausKaufenVerkaufen(uint8_t spielerAmZug)
         }
     }
 
+}
+
+
+
+/******************************************************************************\
+* bauen
+*
+* Prüft ob noch genügend Häuser / Hotels im Spiel sind um ein Weiteres zu bauen
+  Plaziert die Häuser auf dem Feld
+*
+* Parameter:
+* feldNummer = Das Feld auf dem gebaut werden soll
+* spielerAmZug = Der Spieler der bauen will (1 - 4)
+*
+* Rückgabewert: 1 = Bau erfolgreich | 0 = Bau fehlgeschlagen
+*
+\******************************************************************************/
+uint8_t bauen(uint8_t feldNummer, uint8_t spielerAmZug)
+{
+    //Die Variable kaufStatus auf 0 initialisieren
+    uint8_t kaufStatus = 0;
+    //wenn ein Hotel gebaut wird
+    //Wenn die Anzahl Häuser auf dem Feld kleiner als 5 ist zusätzlich wird geprüft ob der SPieler genug Geld hat
+    if ((spielfeld[feldNummer].anzahlHaeuser < 5) && spielerInfo[spielerAmZug].geld >= spielfeld[feldNummer].kostenHaus)
+    {
+        //Wenn auf dem Feld bereits 4 Häuser gebaut wurden und es noch genug Hotels im Spiel hat
+        if ((spielfeld[feldNummer].anzahlHaeuser == 4) && hotelsImSpiel < MAX_ANZAHL_HOTELS_IM_SPIEL)
+        {
+            //Die Variable haeuserImSpiel um 4 verkleinern
+            haeuserImSpiel -= 4;
+            //Die Variable hotelsImSpiel um 1 vergrössern
+            hotelsImSpiel += 1;
+            //Den Betrag für ein Hotel überweisen
+            kaufStatus = geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus);
+            //Die Haus LEDs setzen
+            setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser + 1); 
+            //Neue Anzahl Häuser speichern
+            spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser + 1;
+            //Den Wert 1 zurückgeben um zu Signalisieren, dass der Bau erfolgreich war
+            return 1;//Erfolgreich
+        }
+        //wenn es noch Häuser im Spiel hat
+        else if (haeuserImSpiel < MAX_ANZAHL_HAEUSER_IM_SPIEL)
+        {
+            //häuser im spiel erhöhen
+            //Die Variable haeuserImSpiel um 1 vergrössern
+            haeuserImSpiel += 1;
+            //geld überweisen
+            //Den Betrag für ein Haus überweisen
+            kaufStatus = geldUeberweisen(spielerAmZug,0,spielfeld[feldNummer].kostenHaus);
+            //Die Haus LEDs setzen
+            setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser + 1);
+            //Neue anzahl Häuser speichern
+            spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser + 1;
+            //Den Wert 1 zurückgeben um zu Signalisieren, dass der Bau erfolgreich war
+            return 1;//Erfolgreich
+        }
+        else
+        {
+            return 0;//Fehlgeschlagen
+        }
+    }
+    return 0;//Sollte nicht zu problemen führen
+}
+
+
+/******************************************************************************\
+* abBauen
+*
+* Entfernt Häuser und Hotels von den Feldern
+*
+* Parameter:
+* feldNummer = Das Feld auf dem abgebaut werden soll
+* spielerAmZug = Der Spieler der abauen will (1 - 4)
+*
+* Rückgabewert: 1 = Abbau erfolgreich | 0 = Abbau fehlgeschlagen
+*
+\******************************************************************************/
+uint8_t abBauen(uint8_t feldNummer, uint8_t spielerAmZug)
+{
+    //Die Variable kaufStatus auf 0 initialisieren
+    uint8_t kaufStatus = 0;
+    //Wenn auf dem Feld ein Hotel steht
+    if ((spielfeld[feldNummer].anzahlHaeuser == 5) && (spielfeld[feldNummer].anzahlHaeuser > 0))
+    {
+        //Die Variable haeuserImSpiel um 4 vergrössern
+        haeuserImSpiel += 4;
+        //Die Variable hotelsImSpiel um 1 verkleinern
+        hotelsImSpiel -= 1;
+        //Die Haus LEDs setzen
+        setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser - 1);
+        //Neue Anzahl Häuser speichern
+        spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser - 1;
+        //Den Wert für ein Hotel an den Spieler überweisen
+        kaufStatus = geldUeberweisen(0,spielerAmZug,spielfeld[feldNummer].kostenHaus / 2);
+        //Den Wert 1 zurückgeben um zu Signalisieren, dass der Abbau erfolgreich war
+        return 1;
+    }
+    //Wenn auf dem Feld mindestens 1 Haus steht
+    else if (spielfeld[feldNummer].anzahlHaeuser > 0)
+    {
+        //Die Variable haeuserImSpiel um 1 verkleinern
+        haeuserImSpiel -= 1;
+        //Die Haus LEDs setzen
+        setHaus(spielfeld[feldNummer].hausnummer,spielfeld[feldNummer].anzahlHaeuser - 1);
+        //Neue Anzahl Häuser speichern
+        spielfeld[feldNummer].anzahlHaeuser = spielfeld[feldNummer].anzahlHaeuser - 1;
+        //Den Wert für ein Haus an den Spieler überweisen
+        kaufStatus = geldUeberweisen(0,spielerAmZug,spielfeld[feldNummer].kostenHaus / 2);
+        //Den Wert 1 zurückgeben um zu Signalisieren, dass der Abbau erfolgreich war
+        return 1;
+    }
+    else
+    {
+        //Den Wert 0 zurückgeben um zu Signalisieren, dass nichts abgebaut wurde
+        return 0;
+    }
+    
 }
