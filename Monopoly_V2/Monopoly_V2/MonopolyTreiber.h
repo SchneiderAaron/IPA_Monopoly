@@ -137,7 +137,7 @@ typedef struct
     uint8_t freikarte;//in freikarte wird gespeichert ob eine Freikarte gehandelt wird
 }handelInventar;
 
-
+typedef enum {INVENTAR_PRUEFEN, HAEUSER_J_N, HAEUSER, BELASTEN_J_N, BELASTEN, GENUG_GELD, PLEITE, GROSSVERSTEIGERUNG, FELDER_ABGEBEN, ENDE_VERSTEIGERUNG, ENDE_FELDER_ABGEBEN}pleite_t;
 //typedef enum geldBeschaffen{HAEUSER, FELDER, PLEITE, MITSPIELER, BANK}pleite_t;
 /*--- Globale Konstanten (extern) --------------------------------------------*/
 /*--- Globale Variablen (extern) ---------------------------------------------*/

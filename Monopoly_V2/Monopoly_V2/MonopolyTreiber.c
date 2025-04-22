@@ -108,7 +108,7 @@
 //#define SIEBENSEGMENT_OFF 0
 /*--- Datentypen (typedef) --------------------------------------------------*/
 rgb_color leds[LED_COUNT];
-typedef enum {INVENTAR_PRUEFEN, HAEUSER_J_N, HAEUSER, BELASTEN_J_N, BELASTEN, GENUG_GELD, PLEITE, GROSSVERSTEIGERUNG, FELDER_ABGEBEN, ENDE_VERSTEIGERUNG, ENDE_FELDER_ABGEBEN}pleite_t;
+
 /*--- Globale Konstanten ----------------------------------------------------*/
 /*--- Globale Variablen -----------------------------------------------------*/
 /*--- Modullokale Konstanten ------------------------------------------------*/
@@ -1114,13 +1114,13 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[6].mieten[4] = 400;   //Feld mit 4 Häuser
     spielfeld[6].mieten[5] = 550;   //Feld mit 5 Häuser
     spielfeld[6].mieten[6] = 12;    //Feld mit Farbgruppe
-    spielfeld[6].besitzer = 0;
+    spielfeld[6].besitzer = 2;
     spielfeld[6].farbGruppe = HELLBLAU;
     spielfeld[6].farbgruppenFelder[0] = 6;
     spielfeld[6].farbgruppenFelder[1] = 8;
     spielfeld[6].farbgruppenFelder[2] = 9;
     spielfeld[6].hausnummer = 2;
-    spielfeld[6].anzahlHaeuser = 0;
+    spielfeld[6].anzahlHaeuser = 5;
     spielfeld[6].kostenHaus = 50;
     spielfeld[6].rgbNummer = 3;
     spielfeld[6].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -1141,13 +1141,13 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[8].mieten[4] = 400;   //Feld mit 4 Häuser
     spielfeld[8].mieten[5] = 550;   //Feld mit 5 Häuser
     spielfeld[8].mieten[6] = 12;    //Feld mit Farbgruppe
-    spielfeld[8].besitzer = 0;
+    spielfeld[8].besitzer = 2;
     spielfeld[8].farbGruppe = HELLBLAU;
     spielfeld[8].farbgruppenFelder[0] = 6;
     spielfeld[8].farbgruppenFelder[1] = 8;
     spielfeld[8].farbgruppenFelder[2] = 9;
     spielfeld[8].hausnummer = 3;
-    spielfeld[8].anzahlHaeuser = 0;
+    spielfeld[8].anzahlHaeuser = 5;
     spielfeld[8].kostenHaus = 50;
     spielfeld[8].rgbNummer = 4;
     spielfeld[8].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -1165,13 +1165,13 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[9].mieten[4] = 450;   //Feld mit 4 Häuser
     spielfeld[9].mieten[5] = 600;   //Feld mit 5 Häuser
     spielfeld[9].mieten[6] = 16;    //Feld mit Farbgruppe
-    spielfeld[9].besitzer = 0;
+    spielfeld[9].besitzer = 2;
     spielfeld[9].farbGruppe = HELLBLAU;
     spielfeld[9].farbgruppenFelder[0] = 6;
     spielfeld[9].farbgruppenFelder[1] = 8;
     spielfeld[9].farbgruppenFelder[2] = 9;
     spielfeld[9].hausnummer = 4;
-    spielfeld[9].anzahlHaeuser = 0;
+    spielfeld[9].anzahlHaeuser = 5;
     spielfeld[9].kostenHaus = 50;
     spielfeld[9].rgbNummer = 5;
     spielfeld[9].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -1194,13 +1194,13 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[11].mieten[4] = 625;  //Feld mit 4 Häuser
     spielfeld[11].mieten[5] = 750;  //Feld mit 5 Häuser
     spielfeld[11].mieten[6] = 20;   //Feld mit Farbgruppe
-    spielfeld[11].besitzer = 0;
+    spielfeld[11].besitzer = 2;
     spielfeld[11].farbGruppe = ROSA;
     spielfeld[11].farbgruppenFelder[0] = 11;
     spielfeld[11].farbgruppenFelder[1] = 13;
     spielfeld[11].farbgruppenFelder[2] = 14;
     spielfeld[11].hausnummer = 5;
-    spielfeld[11].anzahlHaeuser = 0;
+    spielfeld[11].anzahlHaeuser = 5;
     spielfeld[11].kostenHaus = 100;
     spielfeld[11].rgbNummer = 6;
     spielfeld[11].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -1225,13 +1225,13 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[13].mieten[4] = 625;  //Feld mit 4 Häuser
     spielfeld[13].mieten[5] = 750;  //Feld mit 5 Häuser
     spielfeld[13].mieten[6] = 20;   //Feld mit Farbgruppe
-    spielfeld[13].besitzer = 0;
+    spielfeld[13].besitzer = 2;
     spielfeld[13].farbGruppe = ROSA;
     spielfeld[13].farbgruppenFelder[0] = 11;
     spielfeld[13].farbgruppenFelder[1] = 13;
     spielfeld[13].farbgruppenFelder[2] = 14;
     spielfeld[13].hausnummer = 6;
-    spielfeld[13].anzahlHaeuser = 0;
+    spielfeld[13].anzahlHaeuser = 5;
     spielfeld[13].kostenHaus = 100;
     spielfeld[13].rgbNummer = 8;
     spielfeld[13].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -1247,13 +1247,13 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[14].mieten[4] = 700;  //Feld mit 4 Häuser
     spielfeld[14].mieten[5] = 900;  //Feld mit 5 Häuser
     spielfeld[14].mieten[6] = 24;   //Feld mit Farbgruppe
-    spielfeld[14].besitzer = 0;
+    spielfeld[14].besitzer = 2;
     spielfeld[14].farbGruppe = ROSA;
     spielfeld[14].farbgruppenFelder[0] = 11;
     spielfeld[14].farbgruppenFelder[1] = 13;
     spielfeld[14].farbgruppenFelder[2] = 14;
     spielfeld[14].hausnummer = 7;
-    spielfeld[14].anzahlHaeuser = 0;
+    spielfeld[14].anzahlHaeuser = 5;
     spielfeld[14].kostenHaus = 100;
     spielfeld[14].rgbNummer = 9;
     spielfeld[14].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -2181,7 +2181,7 @@ uint8_t geldUeberweisen(uint8_t zahler, uint8_t empfaenger, uint16_t betrag)
         }
         return 1; //zahlung erfolgreich
     }
-    return 0;
+    //return 0;
 }
 
 /******************************************************************************\
@@ -2325,6 +2325,7 @@ void geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetrag)
                         anzahlFelderBelastbar += 1; //anzahlFelderBelastbar um 1 erhöhen
                         //flagBelastbar auf 1 Setzen um zu signalisieren, dass Felder belastet werden können
                         flagBelastbar = 1; 
+                    }                    
                 }
             }
             //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~nächsten Zustand bestimmen~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3050,7 +3051,6 @@ void geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetrag)
             break;
             default:
             break;
-            }
         }
     }
 }
