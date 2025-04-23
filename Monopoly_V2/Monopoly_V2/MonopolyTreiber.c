@@ -670,7 +670,7 @@ uint8_t zufallsGenerator(void)
 * Rückgabewert: Keine Rückgabe (void)
 *
 \******************************************************************************/
-void wuerfel(void)
+void wuerfelAlt(void)
 {
     //char buffer[16];
     uint8_t zufallszahl1 = 0;
@@ -718,7 +718,7 @@ void wuerfel(void)
 }
 
 /******************************************************************************\
-* wuerfelAB
+* wuerfel
 *
 * Diese Funktion simuliert das Würfeln mit zwei Würfeln und zeigt die Ergebnisse
 * auf Siebensegment-Anzeigen an.
@@ -731,7 +731,7 @@ void wuerfel(void)
 * Rückgabewert: keiner
 *
 \******************************************************************************/
-void wuerfelAB(uint8_t wuerfelNummer, uint8_t flagWuerfel1, uint8_t flagWuerfel2)
+void wuerfel(uint8_t wuerfelNummer, uint8_t flagWuerfel1, uint8_t flagWuerfel2)
 {
     //Variabeln für zufallszahl 1 und zufallszahl 2 initialisieren
     uint8_t zufallszahl1 = 10;
@@ -809,6 +809,42 @@ void wuerfelAB(uint8_t wuerfelNummer, uint8_t flagWuerfel1, uint8_t flagWuerfel2
         wuerfelArray[1] = zufallszahl2;
     }
 }
+
+
+/******************************************************************************\
+* wuerfel
+*
+* Diese Funktion simuliert das Würfeln mit zwei Würfeln und zeigt die Ergebnisse
+* auf Siebensegment-Anzeigen an.
+*
+* Parameter:
+* wuerfelNummer = Nummer des Würfels (1 = A, 2 = B)
+* flagWuerfel1  = Statusflag, ob Würfel A bereits gewürfelt wurde
+* flagWuerfel2  = Statusflag, ob Würfel B bereits gewürfelt wurde
+*
+* Rückgabewert: keiner
+*
+\******************************************************************************/
+void wuerfelAB(void)
+{
+    //Variabeln für zufallszahl 1 und zufallszahl 2 initialisieren
+    uint8_t zufallszahl1 = 10;
+    uint8_t zufallszahl2 = 10;
+    for (uint8_t i = 0; i < 50; i = i + 1)
+    {
+        //zufällige Zahl generieren und als zufallszahl2 speichern
+        zufallszahl1 = zufallsGenerator(); //Zufallszahl für Würfel A
+        zufallszahl2 = zufallsGenerator(); //Zufallszahl für Würfel B
+        //Zufallszahlen auf Siebensegmenten ausgeben
+        //auf Siebensegment des Würfels A nichts anzeigen
+        wuerfelTransmit(zufallszahl1, zufallszahl2);
+        //Verzögert den nächsten Durchgang
+        _delay_ms(15 + i * 2);
+    }
+    wuerfelArray[0] = zufallszahl1;
+    wuerfelArray[1] = zufallszahl2;
+}
+
 
 /******************************************************************************\
 * wuerfelTransmit
@@ -1114,13 +1150,13 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[6].mieten[4] = 400;   //Feld mit 4 Häuser
     spielfeld[6].mieten[5] = 550;   //Feld mit 5 Häuser
     spielfeld[6].mieten[6] = 12;    //Feld mit Farbgruppe
-    spielfeld[6].besitzer = 2;
+    spielfeld[6].besitzer = 0;
     spielfeld[6].farbGruppe = HELLBLAU;
     spielfeld[6].farbgruppenFelder[0] = 6;
     spielfeld[6].farbgruppenFelder[1] = 8;
     spielfeld[6].farbgruppenFelder[2] = 9;
     spielfeld[6].hausnummer = 2;
-    spielfeld[6].anzahlHaeuser = 5;
+    spielfeld[6].anzahlHaeuser = 0;
     spielfeld[6].kostenHaus = 50;
     spielfeld[6].rgbNummer = 3;
     spielfeld[6].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -1141,13 +1177,13 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[8].mieten[4] = 400;   //Feld mit 4 Häuser
     spielfeld[8].mieten[5] = 550;   //Feld mit 5 Häuser
     spielfeld[8].mieten[6] = 12;    //Feld mit Farbgruppe
-    spielfeld[8].besitzer = 2;
+    spielfeld[8].besitzer = 0;
     spielfeld[8].farbGruppe = HELLBLAU;
     spielfeld[8].farbgruppenFelder[0] = 6;
     spielfeld[8].farbgruppenFelder[1] = 8;
     spielfeld[8].farbgruppenFelder[2] = 9;
     spielfeld[8].hausnummer = 3;
-    spielfeld[8].anzahlHaeuser = 5;
+    spielfeld[8].anzahlHaeuser = 0;
     spielfeld[8].kostenHaus = 50;
     spielfeld[8].rgbNummer = 4;
     spielfeld[8].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -1165,13 +1201,13 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[9].mieten[4] = 450;   //Feld mit 4 Häuser
     spielfeld[9].mieten[5] = 600;   //Feld mit 5 Häuser
     spielfeld[9].mieten[6] = 16;    //Feld mit Farbgruppe
-    spielfeld[9].besitzer = 2;
+    spielfeld[9].besitzer = 0;
     spielfeld[9].farbGruppe = HELLBLAU;
     spielfeld[9].farbgruppenFelder[0] = 6;
     spielfeld[9].farbgruppenFelder[1] = 8;
     spielfeld[9].farbgruppenFelder[2] = 9;
     spielfeld[9].hausnummer = 4;
-    spielfeld[9].anzahlHaeuser = 5;
+    spielfeld[9].anzahlHaeuser = 0;
     spielfeld[9].kostenHaus = 50;
     spielfeld[9].rgbNummer = 5;
     spielfeld[9].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -1194,13 +1230,13 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[11].mieten[4] = 625;  //Feld mit 4 Häuser
     spielfeld[11].mieten[5] = 750;  //Feld mit 5 Häuser
     spielfeld[11].mieten[6] = 20;   //Feld mit Farbgruppe
-    spielfeld[11].besitzer = 2;
+    spielfeld[11].besitzer = 0;
     spielfeld[11].farbGruppe = ROSA;
     spielfeld[11].farbgruppenFelder[0] = 11;
     spielfeld[11].farbgruppenFelder[1] = 13;
     spielfeld[11].farbgruppenFelder[2] = 14;
     spielfeld[11].hausnummer = 5;
-    spielfeld[11].anzahlHaeuser = 5;
+    spielfeld[11].anzahlHaeuser = 0;
     spielfeld[11].kostenHaus = 100;
     spielfeld[11].rgbNummer = 6;
     spielfeld[11].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -1225,13 +1261,13 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[13].mieten[4] = 625;  //Feld mit 4 Häuser
     spielfeld[13].mieten[5] = 750;  //Feld mit 5 Häuser
     spielfeld[13].mieten[6] = 20;   //Feld mit Farbgruppe
-    spielfeld[13].besitzer = 2;
+    spielfeld[13].besitzer = 0;
     spielfeld[13].farbGruppe = ROSA;
     spielfeld[13].farbgruppenFelder[0] = 11;
     spielfeld[13].farbgruppenFelder[1] = 13;
     spielfeld[13].farbgruppenFelder[2] = 14;
     spielfeld[13].hausnummer = 6;
-    spielfeld[13].anzahlHaeuser = 5;
+    spielfeld[13].anzahlHaeuser = 0;
     spielfeld[13].kostenHaus = 100;
     spielfeld[13].rgbNummer = 8;
     spielfeld[13].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -1247,13 +1283,13 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[14].mieten[4] = 700;  //Feld mit 4 Häuser
     spielfeld[14].mieten[5] = 900;  //Feld mit 5 Häuser
     spielfeld[14].mieten[6] = 24;   //Feld mit Farbgruppe
-    spielfeld[14].besitzer = 2;
+    spielfeld[14].besitzer = 0;
     spielfeld[14].farbGruppe = ROSA;
     spielfeld[14].farbgruppenFelder[0] = 11;
     spielfeld[14].farbgruppenFelder[1] = 13;
     spielfeld[14].farbgruppenFelder[2] = 14;
     spielfeld[14].hausnummer = 7;
-    spielfeld[14].anzahlHaeuser = 5;
+    spielfeld[14].anzahlHaeuser = 0;
     spielfeld[14].kostenHaus = 100;
     spielfeld[14].rgbNummer = 9;
     spielfeld[14].feldBelastet = 0;  //wenn das Feld belastet ist = 1
@@ -3412,6 +3448,11 @@ uint8_t bauen(uint8_t feldNummer, uint8_t spielerAmZug)
         //Wenn auf dem Feld bereits 4 Häuser gebaut wurden und es noch genug Hotels im Spiel hat
         if ((spielfeld[feldNummer].anzahlHaeuser == 4) && hotelsImSpiel < MAX_ANZAHL_HOTELS_IM_SPIEL)
         {
+            //Anzahl Häuser um 4 verringern
+            spielerInfo[spielerAmZug].haeuser -= 4;
+            //Anzahl Hotels um 1 vergrössern
+            spielerInfo[spielerAmZug].hotels += 1;
+            
             //Die Variable haeuserImSpiel um 4 verkleinern
             haeuserImSpiel -= 4;
             //Die Variable hotelsImSpiel um 1 vergrössern
@@ -3428,6 +3469,11 @@ uint8_t bauen(uint8_t feldNummer, uint8_t spielerAmZug)
         //wenn es noch Häuser im Spiel hat
         else if (haeuserImSpiel < MAX_ANZAHL_HAEUSER_IM_SPIEL)
         {
+            
+            //Anzahl Häuser erhöhen
+            spielerInfo[spielerAmZug].haeuser += 1;
+            
+            
             //häuser im spiel erhöhen
             //Die Variable haeuserImSpiel um 1 vergrössern
             haeuserImSpiel += 1;
@@ -3469,6 +3515,11 @@ uint8_t abBauen(uint8_t feldNummer, uint8_t spielerAmZug)
     //Wenn auf dem Feld ein Hotel steht
     if ((spielfeld[feldNummer].anzahlHaeuser == 5) && (spielfeld[feldNummer].anzahlHaeuser > 0))
     {
+        //Anzahl Häuser um 4 vergrössern
+        spielerInfo[spielerAmZug].haeuser += 4;
+        //Anzahl Hotels um 1 verringern
+        spielerInfo[spielerAmZug].hotels -= 1;
+        
         //Die Variable haeuserImSpiel um 4 vergrössern
         haeuserImSpiel += 4;
         //Die Variable hotelsImSpiel um 1 verkleinern
@@ -3485,6 +3536,9 @@ uint8_t abBauen(uint8_t feldNummer, uint8_t spielerAmZug)
     //Wenn auf dem Feld mindestens 1 Haus steht
     else if (spielfeld[feldNummer].anzahlHaeuser > 0)
     {
+        //Anzahl Häuser verringern
+        spielerInfo[spielerAmZug].haeuser -= 1;
+        
         //Die Variable haeuserImSpiel um 1 verkleinern
         haeuserImSpiel -= 1;
         //Die Haus LEDs setzen

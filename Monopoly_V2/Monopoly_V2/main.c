@@ -45,6 +45,7 @@
 #include <stdio.h>
 #include <avr/pgmspace.h>
 
+#include <avr/interrupt.h>
 
 #include "SPI.h"
 #include "MonopolyTreiber.h"
@@ -172,6 +173,7 @@ uint8_t spielerImGefaengnis[5] = {0};
 uint16_t tasteAlt       = 0; //Variabeln Flankenerkennung
 uint16_t tasteNeu       = 0;
 uint16_t positiveFlanke = 0;
+uint16_t negativeFlanke = 0;
 
 zustand_t zustand = SPIELERAUSWAHL;//Spielzustand auf SPIELERAUSWAHL setzen
 workshopZustand_t workshopZustand = PASCH_J_N;//Workshopzustand auf PASH_J_N setzen
@@ -191,6 +193,14 @@ uint8_t hotelsImSpiel = 0;
 uint8_t flagWuerfel1 = 0;
 uint8_t flagWuerfel2 = 0;
 uint8_t flagGeldBeschaffen = 0;
+
+uint32_t getSystemzeit(void);
+
+volatile uint32_t millis;
+
+uint32_t startZeit = 0;
+uint32_t systemZeit = 0;
+
 extern const char kartenArray[][200];
 void initSpieler(Spieler spielerInfo[])
 {
@@ -254,9 +264,16 @@ uint8_t xTasten[4] = {TASTE_X1, TASTE_X2, TASTE_X3, TASTE_X4};
 uint8_t yTasten[4] = {TASTE_Y1, TASTE_Y2, TASTE_Y3, TASTE_Y4};
 
 
+#define TIMER1_PRESCALER 1024
+
+
+
+
+
+
 int main(void)
 {
-
+    
     //zufallsgeneratorAuswertung();
     //char buffer[200];  // Buffer im RAM
     
@@ -379,6 +396,12 @@ int main(void)
     //random Seed setzen
     //ADC initialisieren
     adm_ADC_init();//ADC Initialisieren während vorbereitung erstellt!!
+    //Configuration of Timer1
+    OCR1A = 999;
+    TCCR1B |= (1 << WGM12);
+    TCCR1B |= (1 << CS11);
+    TIMSK1 |= (1 << OCIE1A);
+    sei();
     
     //Random Seed generieren
     //Es werden 3 adcwerte eingelesen und miteinander verknüpft um einen Seed zu erstellen
@@ -419,6 +442,7 @@ int main(void)
         tasteNeu = (PINL << 8) | PINK;
         positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
         
+        
         /*if (positiveFlanke & TASTE_O)//Wenn Taste runter gedrückt wird => Bauen
         {
             zustand = BAUEN;
@@ -447,6 +471,7 @@ int main(void)
             writeText(0,0,"      seed      ");
             sprintf(lcdBuffer,"%lu",seed);
             writeText(1,3,lcdBuffer);
+            startZeit = getSystemzeit();
 
         }
         //Prüft ob der Spieler am zug pleite ist
@@ -548,13 +573,13 @@ int main(void)
                     //Wenn Taste A betätigt wurde und noch nicht mit Würfel A gewürfelt wurde
                     if ((positiveFlanke & TASTE_A) && !flagWuerfel1)
                     {
-                        wuerfelAB(WUERFEL_A,flagWuerfel1,flagWuerfel2);//Würfel A würfeln
+                        wuerfel(WUERFEL_A,flagWuerfel1,flagWuerfel2);//Würfel A würfeln
                         flagWuerfel1 = 1;//Flag setzen um erneutes würfeln mit Würfel A zu blockieren
                     }
                     //Wenn Taste B betätigt wurde und noch nicht mit Würfel B gewürfelt wurde
                     else if ((positiveFlanke & TASTE_B) && !flagWuerfel2)
                     {
-                        wuerfelAB(WUERFEL_B,flagWuerfel1,flagWuerfel2);//Würfel B würfeln
+                        wuerfel(WUERFEL_B,flagWuerfel1,flagWuerfel2);//Würfel B würfeln
                         flagWuerfel2 = 1;//Flag setzen um erneutes würfeln mit Würfel B zu blockieren
                     }
                     
@@ -2436,14 +2461,19 @@ uint8_t feldKaufen(uint8_t feldNummer, Feld spielfeld[40], uint8_t spielerAmZug)
 \******************************************************************************/
 void warteBisGewuerfelt(void)
 {
+    uint16_t flagA   = 0;
+    uint16_t flagB   = 0;
+    uint8_t flagAB  = 0;
+    
     //wartet bis mit beiden Würfel gewürfelt wurde
-    while (!(flagWuerfel1 && flagWuerfel2))
+    /*while (!(flagWuerfel1 && flagWuerfel2))
     {
         //flankenerkennung
         tasteAlt = tasteNeu;
         tasteNeu = 0;
         tasteNeu = (PINL << 8) | PINK;
         positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
+        negativeFlanke = (tasteAlt ^ tasteNeu) & tasteAlt;
         //würfelt würfel 1 nur wenn taste9 betätigt wurde
         //und würfel 1 noch nicht gewürfelt wurde
         if ((positiveFlanke & TASTE_A) && !flagWuerfel1)
@@ -2461,8 +2491,69 @@ void warteBisGewuerfelt(void)
             flagWuerfel2 = 1;
             
         }
+    }*/
+    //wartet bis mit beiden Würfel gewürfelt wurde
+    while (!(flagWuerfel1 && flagWuerfel2))
+    {
+        //flankenerkennung
+        tasteAlt = tasteNeu;
+        tasteNeu = 0;
+        tasteNeu = (PINL << 8) | PINK;
+        positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
+        negativeFlanke = (tasteAlt ^ tasteNeu) & tasteAlt;
+        
+        //Beim ersten Tastendruck startzeit Speichern
+        if (((positiveFlanke & TASTE_A) || (positiveFlanke & TASTE_B)) && (!flagA && !flagB))
+        {
+            flagA = (positiveFlanke & TASTE_A);
+            flagB = (positiveFlanke & TASTE_B);
+            startZeit = getSystemzeit();
+        }
+        
+        //nach 100ms einzeln würfeln wenn flag AB nicht gesetzt ist
+        if (((startZeit + 400) < getSystemzeit()) && !flagAB)
+        {
+            //würfelt würfel 1 nur wenn taste9 betätigt wurde
+            //und würfel 1 noch nicht gewürfelt wurde
+            if (((positiveFlanke & TASTE_A) || flagA) && !flagWuerfel1)
+            {
+                //mit 1. würfel würfeln
+                wuerfel(1,flagWuerfel1,flagWuerfel2);
+                flagWuerfel1 = 1;
+            }
+            //würfelt würfel 2 nur wenn taste9 betätigt wurde
+            //und würfel 2 noch nicht gewürfelt wurde
+            else if (((positiveFlanke & TASTE_B) || flagB) && !flagWuerfel2)
+            {
+                //mit 2. würfel würfeln
+                wuerfel(2,flagWuerfel1,flagWuerfel2);
+                flagWuerfel2 = 1;
+                
+            }
+        }
+        else
+        {
+            if (flagA && (positiveFlanke & TASTE_B))
+            {
+                flagAB = 1;
+            }
+            else if (flagB && (positiveFlanke & TASTE_A))
+            {
+                flagAB = 1;
+            }
+        }
+        
+        //wenn mit beiden Würfeln gleichzeitig gewürfelt wird
+        if (flagAB)
+        {
+            wuerfelAB();
+            flagWuerfel1 = 1;
+            flagWuerfel2 = 1;
+        }
+         
     }
 }
+
 
 /******************************************************************************\
 * handelWareAuswaehlen
@@ -2860,4 +2951,20 @@ uint8_t auswahlBestaetigen(uint8_t haendlerNr)
     globalUpdateLCD = 0;
     //flagBestaetigt zurückgeben
     return flagBestaetigt;
+}
+
+
+// ISR: Wird alle 1 ms aufgerufen
+ISR(TIMER1_COMPA_vect)
+{
+    millis++;
+}
+
+uint32_t getSystemzeit(void) 
+{
+    uint32_t ms;
+    cli();           // Interrupts deaktivieren
+    ms = millis;
+    sei();           // Interrupts wieder aktivieren
+    return ms;
 }

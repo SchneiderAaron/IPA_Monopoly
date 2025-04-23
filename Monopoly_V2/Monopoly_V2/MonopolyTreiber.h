@@ -182,9 +182,11 @@ void updateKontostand(uint8_t anzahlSpieler, Spieler spielerInfo[5], uint8_t spi
 
 uint8_t zufallsGenerator(void);
 //in der Vorbereitung erstellt
-void wuerfel(void);
+void wuerfelAlt(void);
 //in der Vorbereitung erstellt
-void wuerfelAB(uint8_t wuerfelNummer, uint8_t flagWuerfel1, uint8_t flagWuerfel2);
+void wuerfel(uint8_t wuerfelNummer, uint8_t flagWuerfel1, uint8_t flagWuerfel2);
+
+void wuerfelAB(void);
 //in der Vorbereitung erstellt
 void wuerfelTransmit(uint8_t zahl1, uint8_t zahl2);
 //in der Vorbereitung erstellt
