@@ -137,7 +137,7 @@ typedef struct
     uint8_t freikarte;//in freikarte wird gespeichert ob eine Freikarte gehandelt wird
 }handelInventar;
 
-typedef enum {INVENTAR_PRUEFEN, HAEUSER_J_N, HAEUSER, BELASTEN_J_N, BELASTEN, GENUG_GELD, PLEITE, GROSSVERSTEIGERUNG, FELDER_ABGEBEN, ENDE_VERSTEIGERUNG, ENDE_FELDER_ABGEBEN}pleite_t;
+typedef enum {INVENTAR_PRUEFEN, HAEUSER_J_N, HAEUSER, BELASTEN_J_N, BELASTEN, GENUG_GELD, PLEITE, GROSSVERSTEIGERUNG, FELDER_ABGEBEN, ENDE_VERSTEIGERUNG, ENDE_FELDER_ABGEBEN, SPIEL_BEENDET}pleite_t;
 //typedef enum geldBeschaffen{HAEUSER, FELDER, PLEITE, MITSPIELER, BANK}pleite_t;
 /*--- Globale Konstanten (extern) --------------------------------------------*/
 /*--- Globale Variablen (extern) ---------------------------------------------*/
@@ -161,6 +161,9 @@ extern uint8_t flagGeldBeschaffen;
 
 extern uint8_t xTasten[4];
 extern uint8_t yTasten[4];
+
+extern uint8_t flagFertigGewuerfelt;
+extern uint8_t flagSpielerPleite;
 /*--- Prototypen globaler Funktionen -----------------------------------------*/
 
 void resetMonopoly(void);
@@ -169,10 +172,18 @@ void resetMonopoly(void);
 void writeHaus(uint8_t data[14]);
 //in der Vorbereitung erstellt
 void setHaus(uint8_t FeldNr, uint8_t anzahlHaus);
+
+void setHausAnimation(uint8_t FeldNr, uint8_t anzahlHaus, uint8_t ausgabe);
+
 //in der Vorbereitung erstellt
 void setPropertyRgb(uint8_t FeldNummer, uint8_t spielerNr);
 //in der Vorbereitung erstellt
 void setzeSpielerPosition(uint8_t feld, uint8_t spielerNummer);
+uint8_t pruefeSpielerPosition(uint8_t feld, uint8_t spielerNummer);
+void setzeSpielerPositionAnimation(uint8_t feld, uint8_t spielerNummer, uint8_t onOff, uint8_t ausgabe);
+uint8_t animationAbbrechen(uint8_t status);
+
+void spielfeldBlinken(uint8_t spielerNr);
 //in der Vorbereitung erstellt
 int8_t spielerPosFehlerAusgleich(uint8_t spielerNummer);
 //in der Vorbereitung erstellt
@@ -203,6 +214,7 @@ void PortInitialisierung(void);
 void startGeldAnimation(uint8_t anzahlSpieler);
 
 void initialisiereSpielfeld(Feld spielfeld[]);
+void initialisiereSpielfeldTest(Feld spielfeld[]);
 void initialisiereKarten(Karte chanceKanzlei[]);
 void read_string(char *buf, size_t i);
 uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uint8_t flagWeiter, Karte chanceKanzlei[]);
@@ -213,4 +225,7 @@ void geldBeschaffen(uint8_t spielerNr, uint8_t schuldenBei, uint16_t mindestBetr
 void hausKaufenVerkaufen(uint8_t spielerAmZug);
 uint8_t bauen(uint8_t feldNummer, uint8_t spielerAmZug);
 uint8_t abBauen(uint8_t feldNummer, uint8_t spielerAmZug);
+
+void animationSpielerPleite(uint8_t spielernummer);
+void animationSpielerGewonnen(uint8_t spielernummer);
 #endif /* MONOPOLYTREIBER_H_ */

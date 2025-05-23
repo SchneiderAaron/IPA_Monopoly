@@ -115,6 +115,7 @@ rgb_color leds[LED_COUNT];
 /*--- Modullokale Variablen -------------------------------------------------*/
 pleite_t pleiteZustand = GENUG_GELD; 
 uint8_t zufallsNummer = 0;
+uint8_t anzahlPleiteSpieler = 0;
 /*--- Prototypen modullokaler Funktionen ------------------------------------*/
 /*--- Funktionsdefinitionen -------------------------------------------------*/
  
@@ -166,7 +167,11 @@ void resetMonopoly(void)
 \******************************************************************************/
 void setHaus(uint8_t FeldNr, uint8_t anzahlHaus)
 {
-    uint8_t anzahlLeds, startRegister, startLed, hausWert = 0;
+    uint8_t anzahlLeds = 0;
+    uint8_t startRegister = 0;
+    uint8_t startLed = 0;
+    uint8_t hausWert= 0;
+    
     //Berechnet die Anzahl der LEDs für das angegebene Feld
     anzahlLeds = FeldNr * 5;
     //Berechnet das Schieberegister, über das die LEDs angesteuert werden
@@ -213,6 +218,65 @@ void setHaus(uint8_t FeldNr, uint8_t anzahlHaus)
     //Gibt das aktualisierte Haus-Register aus
     writeHaus(hausRegister);
 }
+
+
+void setHausAnimation(uint8_t FeldNr, uint8_t anzahlHaus, uint8_t ausgabe)
+{
+    uint8_t anzahlLeds = 0;
+    uint8_t startRegister = 0;
+    uint8_t startLed = 0;
+    uint8_t hausWert= 0;
+    if (!ausgabe)
+    {
+        //Berechnet die Anzahl der LEDs für das angegebene Feld
+        anzahlLeds = FeldNr * 5;
+        //Berechnet das Schieberegister, über das die LEDs angesteuert werden
+        startRegister = anzahlLeds / 8;
+        //Berechnet die Position des ersten Haus-Bits im Schieberegister
+        startLed = (anzahlLeds % 8);
+        
+        if (anzahlHaus == 6)//Feld verpfändet
+        {
+            hausWert = 0x1F;
+        }
+        //Wenn 5 Häuser gesetzt sind, wird nur das Hotel aktiviert
+        if (anzahlHaus == 5)
+        {
+            hausWert = 0x10;
+        }
+        else
+        {
+            //Berechnet den Hauswert für weniger als 5 Häuser
+            hausWert = ~(0xFFE0 >> (MAX_ANZAHL_HAEUSER - anzahlHaus));
+        }
+
+        //Überprüft, ob der Hauswert in das nächste Schieberegister überlappt
+        if (startLed > 3)
+        {
+            //Setzt die 5 Bits im aktuellen Register auf 0
+            hausRegister[startRegister] &= (~(0x1F << startLed));
+            //Setzt die 5 Bits im nächsten Register auf 0
+            hausRegister[startRegister + 1] &= ~0x1F >> (8 - startLed);
+            
+            //Füllt das erste Register mit den Hausbits
+            hausRegister[startRegister] |= (uint8_t)(hausWert << startLed);
+            //Füllt das nächste Register mit den verbleibenden Hausbits
+            hausRegister[startRegister + 1] |= (uint8_t)(hausWert >> (8 - startLed));
+        }
+        else
+        {
+            //Setzt die 5 Bits im aktuellen Register auf 0
+            hausRegister[startRegister] &= (~(0x1F << startLed));
+            //Setzt die gewünschten Hausbits im aktuellen Register
+            hausRegister[startRegister] |= (uint8_t)(hausWert << startLed);
+        }
+    }
+    else
+    {
+        writeHaus(hausRegister);
+    }
+}
+
 /******************************************************************************\
 * writeHaus
 *
@@ -361,7 +425,117 @@ void setzeSpielerPosition(uint8_t feld, uint8_t spielerNummer)
     PORTB = PORTB |  SPIELER_POSITION_LATCH_PIN;
     PORTB = PORTB & ~SPIELER_POSITION_LATCH_PIN;
 }
+uint8_t pruefeSpielerPosition(uint8_t feld, uint8_t spielerNummer)
+{
+    uint8_t spielerRegister = 0;
+    uint8_t startLed = 0;
+    int8_t fehlerausgleich = 0;
+    uint8_t transmitdata = 0;
 
+   //Aktualisiert die Spielerposition im Array
+   spielerPos[spielerNummer - 1] = feld;
+
+   //Aktiviert die LED der neuen Position des Spielers
+   spielerRegister = (feld * 4) / 8;
+   startLed = (feld * 4) % 8;
+   fehlerausgleich = spielerPosFehlerAusgleich(spielerNummer);
+   return (spieler[spielerRegister][startLed + (spielerNummer - 1) + fehlerausgleich]);
+}   
+void setzeSpielerPositionAnimation(uint8_t feld, uint8_t spielerNummer, uint8_t onOff, uint8_t ausgabe)
+{
+    uint8_t spielerRegister = 0;
+    uint8_t startLed = 0;
+    //uint8_t spielerPositionAlt = 0;
+    int8_t fehlerausgleich = 0;
+    uint8_t transmitdata = 0;
+    //Deaktiviert die LED der alten Position des Spielers
+   /* spielerRegister = (spielerPos[spielerNummer - 1] * 4) / 8;
+    startLed = (spielerPos[spielerNummer - 1] * 4) % 8;
+    fehlerausgleich = spielerPosFehlerAusgleich(spielerNummer);
+    spieler[spielerRegister][startLed + (spielerNummer - 1) + fehlerausgleich] = 0;
+    */
+   if (!ausgabe)
+   {
+       //Aktualisiert die Spielerposition im Array
+       spielerPos[spielerNummer - 1] = feld;
+
+       //Aktiviert die LED der neuen Position des Spielers
+       spielerRegister = (feld * 4) / 8;
+       startLed = (feld * 4) % 8;
+       fehlerausgleich = spielerPosFehlerAusgleich(spielerNummer);
+       spieler[spielerRegister][startLed + (spielerNummer - 1) + fehlerausgleich] = onOff;
+   }
+   else
+   {
+       //Sendet die Position des Spielers über SPI, 8 Bits pro Durchgang
+       for (uint8_t i = 0; i < 21; i = i + 1)
+       {
+           transmitdata = 0;
+           for (uint8_t j = 0; j < 8; j = j + 1)
+           {
+               transmitdata = transmitdata << 1;
+               transmitdata = (transmitdata | spieler[20 - i][7 - j]);
+           }
+           //Überträgt die Daten über SPI
+           Send2SPI(transmitdata);
+           //Kurze Verzögerung für SPI-Übertragung
+           _delay_us(500);
+       }
+
+       //Latch, um die Position auf der Anzeige zu fixieren
+       PORTB = PORTB |  SPIELER_POSITION_LATCH_PIN;
+       PORTB = PORTB & ~SPIELER_POSITION_LATCH_PIN;
+   }
+}
+
+uint8_t animationAbbrechen(uint8_t status)
+{
+    //Flankenerkennung
+    if (!status)
+    {
+        tasteAlt = tasteNeu;
+        tasteNeu = 0;
+        tasteNeu = (PINL << 8) | PINK;
+        positiveFlanke = (tasteAlt ^ tasteNeu) & tasteNeu;
+        if (positiveFlanke)
+        {
+            return(1);
+        }
+        return(0);
+    }
+    else
+    {
+        return(1);
+    }
+}
+
+void spielfeldBlinken(uint8_t spielerNr)
+{
+    uint8_t transmitdata = 0;
+    //Sendet die Position des Spielers über SPI, 8 Bits pro Durchgang
+    for(uint8_t h = 0; h < 6; h = h + 1)
+    {
+        for (uint8_t i = 0; i < 21; i = i + 1)
+        {
+            transmitdata = 0;
+            for (uint8_t j = 0; j < 8; j = j + 1)
+            {
+                transmitdata = transmitdata << 1;
+                transmitdata = (transmitdata | spieler[20 - i][7 - j]);
+                transmitdata = transmitdata * ((h + 2) % 2);
+            }
+            //Überträgt die Daten über SPI
+            Send2SPI(transmitdata);
+            //Kurze Verzögerung für SPI-Übertragung
+            _delay_us(500);
+        }
+        //Latch, um die Position auf der Anzeige zu fixieren
+        PORTB = PORTB |  SPIELER_POSITION_LATCH_PIN;
+        PORTB = PORTB & ~SPIELER_POSITION_LATCH_PIN;
+        _delay_ms(250);
+    }
+    
+}
 
 /******************************************************************************\
 * spielerPosFehlerAusgleich
@@ -1693,6 +1867,641 @@ void initialisiereSpielfeld(Feld spielfeld[])
     spielfeld[39].feldBelastet = 0;  //wenn das Feld belastet ist = 1
 }
 
+
+void initialisiereSpielfeldTest(Feld spielfeld[])
+{
+    //Eigenschaften des Feldes: Los
+    strcpy(spielfeld[0].name, "Los");
+    spielfeld[0].typ = FREIPARKEN;
+
+
+
+    //Eigenschaften des Feldes: Eingangshalle
+    strcpy(spielfeld[1].name, "Eingangshalle");
+    spielfeld[1].typ = STRASSE;
+    spielfeld[1].preis = 60;
+    spielfeld[1].mieten[0] = 2;     //Feld einzeln
+    spielfeld[1].mieten[1] = 10;    //Feld mit 1 Haus
+    spielfeld[1].mieten[2] = 30;    //Feld mit 2 Häuser
+    spielfeld[1].mieten[3] = 90;    //Feld mit 3 Häuser
+    spielfeld[1].mieten[4] = 160;   //Feld mit 4 Häuser
+    spielfeld[1].mieten[5] = 250;   //Feld mit 1 Hotel
+    spielfeld[1].mieten[6] = 4;     //Feld mit Farbgrupp
+    spielfeld[1].besitzer = 0;
+    spielfeld[1].farbGruppe = BRAUN;
+    spielfeld[1].farbgruppenFelder[0] = 1;
+    spielfeld[1].farbgruppenFelder[1] = 3;
+    spielfeld[1].farbgruppenFelder[2] = 0;
+    spielfeld[1].hausnummer = 0;
+    spielfeld[1].anzahlHaeuser = 0;
+    spielfeld[1].kostenHaus = 50;
+    spielfeld[1].rgbNummer = 0;
+    spielfeld[1].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+    
+    //Eigenschaften des Feldes: Kanzlei
+    strcpy(spielfeld[2].name, "Kanzlei1");
+    spielfeld[2].typ = EREIGNISFELD;
+    
+    //Eigenschaften des Feldes: Velokeller
+    strcpy(spielfeld[3].name, "Velokeller");
+    spielfeld[3].typ = STRASSE;
+    spielfeld[3].preis = 60;
+    spielfeld[3].preis = 60;
+    spielfeld[3].mieten[0] = 4;     //Feld einzeln
+    spielfeld[3].mieten[1] = 20;    //Feld mit 1 Haus
+    spielfeld[3].mieten[2] = 60;    //Feld mit 2 Häuser
+    spielfeld[3].mieten[3] = 180;   //Feld mit 3 Häuser
+    spielfeld[3].mieten[4] = 320;   //Feld mit 4 Häuser
+    spielfeld[3].mieten[5] = 450;   //Feld mit 1 Hotel
+    spielfeld[3].mieten[6] = 4;     //Feld mit Farbgruppe
+    spielfeld[3].besitzer = 2;
+    spielfeld[3].farbGruppe = BRAUN;
+    spielfeld[3].farbgruppenFelder[0] = 1;
+    spielfeld[3].farbgruppenFelder[1] = 3;
+    spielfeld[3].farbgruppenFelder[2] = 0;
+    spielfeld[3].hausnummer = 1;
+    spielfeld[3].anzahlHaeuser = 0;
+    spielfeld[3].kostenHaus = 50;
+    spielfeld[3].rgbNummer = 1;
+    spielfeld[3].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+    
+    
+    //Eigenschaften des Feldes: Laptopgebühr
+    strcpy(spielfeld[4].name, "Laptopgeb"UE"hr");
+    spielfeld[4].typ = STEUERFELD;
+    spielfeld[4].preis = 200;
+    
+    //Eigenschaften des Feldes: Zeughausstrasse
+    strcpy(spielfeld[5].name, "Zeughausstrasse");
+    spielfeld[5].typ = HALTESTELLE;
+    spielfeld[5].preis = 200;
+    spielfeld[5].mieten[0] = 25;    //wenn man 1 Bahn besitzt
+    spielfeld[5].mieten[1] = 50;    //wenn man 2 Bahnen besitzt
+    spielfeld[5].mieten[2] = 100;   //wenn man 3 Bahnen besitzt
+    spielfeld[5].mieten[3] = 200;   //wenn man 4 Bahnen besitzt
+    spielfeld[5].besitzer = 1;
+    spielfeld[5].farbGruppe = FARBLOS;
+    spielfeld[5].farbgruppenFelder[0] = 5;
+    spielfeld[5].farbgruppenFelder[1] = 15;
+    spielfeld[5].farbgruppenFelder[2] = 25;
+    spielfeld[5].farbgruppenFelder[3] = 35;
+    spielfeld[5].rgbNummer = 2;
+    spielfeld[5].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+
+    
+    //Eigenschaften des Feldes: Raucherzelt
+    strcpy(spielfeld[6].name, "Raucherzelt");
+    spielfeld[6].typ = STRASSE;
+    spielfeld[6].preis = 100;
+    spielfeld[6].mieten[0] = 6;     //Feld einzeln
+    spielfeld[6].mieten[1] = 30;    //Feld mit 1 Haus
+    spielfeld[6].mieten[2] = 90;    //Feld mit 2 Häuser
+    spielfeld[6].mieten[3] = 270;   //Feld mit 3 Häuser
+    spielfeld[6].mieten[4] = 400;   //Feld mit 4 Häuser
+    spielfeld[6].mieten[5] = 550;   //Feld mit 5 Häuser
+    spielfeld[6].mieten[6] = 12;    //Feld mit Farbgruppe
+    spielfeld[6].besitzer = 2;
+    spielfeld[6].farbGruppe = HELLBLAU;
+    spielfeld[6].farbgruppenFelder[0] = 6;
+    spielfeld[6].farbgruppenFelder[1] = 8;
+    spielfeld[6].farbgruppenFelder[2] = 9;
+    spielfeld[6].hausnummer = 2;
+    spielfeld[6].anzahlHaeuser = 5;
+    spielfeld[6].kostenHaus = 50;
+    spielfeld[6].rgbNummer = 3;
+    spielfeld[6].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+    
+    
+    //Eigenschaften des Feldes: Chance
+    strcpy(spielfeld[7].name, "Chance");
+    spielfeld[7].typ = EREIGNISFELD;
+    
+    //Eigenschaften des Feldes: Pausenraum
+    strcpy(spielfeld[8].name, "Pausenraum");
+    spielfeld[8].typ = STRASSE;
+    spielfeld[8].preis = 100;
+    spielfeld[8].mieten[0] = 6;     //Feld einzeln
+    spielfeld[8].mieten[1] = 30;    //Feld mit 1 Haus
+    spielfeld[8].mieten[2] = 90;    //Feld mit 2 Häuser
+    spielfeld[8].mieten[3] = 270;   //Feld mit 3 Häuser
+    spielfeld[8].mieten[4] = 400;   //Feld mit 4 Häuser
+    spielfeld[8].mieten[5] = 550;   //Feld mit 5 Häuser
+    spielfeld[8].mieten[6] = 12;    //Feld mit Farbgruppe
+    spielfeld[8].besitzer = 2;
+    spielfeld[8].farbGruppe = HELLBLAU;
+    spielfeld[8].farbgruppenFelder[0] = 6;
+    spielfeld[8].farbgruppenFelder[1] = 8;
+    spielfeld[8].farbgruppenFelder[2] = 9;
+    spielfeld[8].hausnummer = 3;
+    spielfeld[8].anzahlHaeuser = 5;
+    spielfeld[8].kostenHaus = 50;
+    spielfeld[8].rgbNummer = 4;
+    spielfeld[8].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+    
+
+    
+    //Eigenschaften des Feldes: Garderobe
+    strcpy(spielfeld[9].name, "Garderobe");
+    spielfeld[9].typ = STRASSE;
+    spielfeld[9].preis = 120;
+    spielfeld[9].mieten[0] = 8;     //Feld einzeln
+    spielfeld[9].mieten[1] = 40;    //Feld mit 1 Haus
+    spielfeld[9].mieten[2] = 100;   //Feld mit 2 Häuser
+    spielfeld[9].mieten[3] = 300;   //Feld mit 3 Häuser
+    spielfeld[9].mieten[4] = 450;   //Feld mit 4 Häuser
+    spielfeld[9].mieten[5] = 600;   //Feld mit 5 Häuser
+    spielfeld[9].mieten[6] = 16;    //Feld mit Farbgruppe
+    spielfeld[9].besitzer = 2;
+    spielfeld[9].farbGruppe = HELLBLAU;
+    spielfeld[9].farbgruppenFelder[0] = 6;
+    spielfeld[9].farbgruppenFelder[1] = 8;
+    spielfeld[9].farbgruppenFelder[2] = 9;
+    spielfeld[9].hausnummer = 4;
+    spielfeld[9].anzahlHaeuser = 5;
+    spielfeld[9].kostenHaus = 50;
+    spielfeld[9].rgbNummer = 5;
+    spielfeld[9].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+    
+    //Eigenschaften des Feldes: Gefängnis
+    strcpy(spielfeld[10].name, "Gef"AE"ngnis");
+    spielfeld[10].typ = GEFAENGNIS;
+    
+    
+    
+    
+    //Eigenschaften des Feldes: Herren Wc
+    strcpy(spielfeld[11].name, "Herren WC");
+    spielfeld[11].typ = STRASSE;
+    spielfeld[11].preis = 140;
+    spielfeld[11].mieten[0] = 10;   //Feld einzeln
+    spielfeld[11].mieten[1] = 50;   //Feld mit 1 Haus
+    spielfeld[11].mieten[2] = 150;  //Feld mit 2 Häuser
+    spielfeld[11].mieten[3] = 450;  //Feld mit 3 Häuser
+    spielfeld[11].mieten[4] = 625;  //Feld mit 4 Häuser
+    spielfeld[11].mieten[5] = 750;  //Feld mit 5 Häuser
+    spielfeld[11].mieten[6] = 20;   //Feld mit Farbgruppe
+    spielfeld[11].besitzer = 1;
+    spielfeld[11].farbGruppe = ROSA;
+    spielfeld[11].farbgruppenFelder[0] = 11;
+    spielfeld[11].farbgruppenFelder[1] = 13;
+    spielfeld[11].farbgruppenFelder[2] = 14;
+    spielfeld[11].hausnummer = 5;
+    spielfeld[11].anzahlHaeuser = 2;
+    spielfeld[11].kostenHaus = 100;
+    spielfeld[11].rgbNummer = 6;
+    spielfeld[11].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+    
+    //Eigenschaften des Feldes: Informatikdienst
+    strcpy(spielfeld[12].name, "Informatikdienst");
+    spielfeld[12].typ = WERK;
+    spielfeld[12].preis = 150;
+    spielfeld[12].besitzer = 3;
+    spielfeld[12].farbGruppe = FARBLOS;
+    spielfeld[12].rgbNummer = 7;
+    spielfeld[12].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+    
+    //Eigenschaften des Feldes: Frauen WC
+    strcpy(spielfeld[13].name, "Frauen WC");
+    spielfeld[13].typ = STRASSE;
+    spielfeld[13].preis = 140;
+    spielfeld[13].mieten[0] = 10;   //Feld einzeln
+    spielfeld[13].mieten[1] = 50;   //Feld mit 1 Haus
+    spielfeld[13].mieten[2] = 150;  //Feld mit 2 Häuser
+    spielfeld[13].mieten[3] = 450;  //Feld mit 3 Häuser
+    spielfeld[13].mieten[4] = 625;  //Feld mit 4 Häuser
+    spielfeld[13].mieten[5] = 750;  //Feld mit 5 Häuser
+    spielfeld[13].mieten[6] = 20;   //Feld mit Farbgruppe
+    spielfeld[13].besitzer = 1;
+    spielfeld[13].farbGruppe = ROSA;
+    spielfeld[13].farbgruppenFelder[0] = 11;
+    spielfeld[13].farbgruppenFelder[1] = 13;
+    spielfeld[13].farbgruppenFelder[2] = 14;
+    spielfeld[13].hausnummer = 6;
+    spielfeld[13].anzahlHaeuser = 2;
+    spielfeld[13].kostenHaus = 100;
+    spielfeld[13].rgbNummer = 8;
+    spielfeld[13].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+    
+    //Eigenschaften des Feldes: Lehrer WC
+    strcpy(spielfeld[14].name, "Lehrer WC");
+    spielfeld[14].typ = STRASSE;
+    spielfeld[14].preis = 160;
+    spielfeld[14].mieten[0] = 12;   //Feld einzeln
+    spielfeld[14].mieten[1] = 60;   //Feld mit 1 Haus
+    spielfeld[14].mieten[2] = 180;  //Feld mit 2 Häuser
+    spielfeld[14].mieten[3] = 500;  //Feld mit 3 Häuser
+    spielfeld[14].mieten[4] = 700;  //Feld mit 4 Häuser
+    spielfeld[14].mieten[5] = 900;  //Feld mit 5 Häuser
+    spielfeld[14].mieten[6] = 24;   //Feld mit Farbgruppe
+    spielfeld[14].besitzer = 1;
+    spielfeld[14].farbGruppe = ROSA;
+    spielfeld[14].farbgruppenFelder[0] = 11;
+    spielfeld[14].farbgruppenFelder[1] = 13;
+    spielfeld[14].farbgruppenFelder[2] = 14;
+    spielfeld[14].hausnummer = 7;
+    spielfeld[14].anzahlHaeuser = 2;
+    spielfeld[14].kostenHaus = 100;
+    spielfeld[14].rgbNummer = 9;
+    spielfeld[14].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+    
+    //Eigenschaften des Feldes: Fotozentrum
+    strcpy(spielfeld[15].name, "Fotozentrum");
+    spielfeld[15].typ = HALTESTELLE;
+    spielfeld[15].preis = 200;
+    spielfeld[15].mieten[0] = 25;   //wenn man 1 Bahn besitzt
+    spielfeld[15].mieten[1] = 50;   //wenn man 2 Bahnen besitzt
+    spielfeld[15].mieten[2] = 100;  //wenn man 3 Bahnen besitzt
+    spielfeld[15].mieten[3] = 200;  //wenn man 4 Bahnen besitzt
+    spielfeld[15].besitzer = 2;
+    spielfeld[15].farbGruppe = FARBLOS;
+    spielfeld[15].farbgruppenFelder[0] = 5;
+    spielfeld[15].farbgruppenFelder[1] = 15;
+    spielfeld[15].farbgruppenFelder[2] = 25;
+    spielfeld[15].farbgruppenFelder[3] = 35;
+    spielfeld[15].rgbNummer = 10;
+    spielfeld[15].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+    
+    //Eigenschaften des Feldes: BFS Polimechaniker
+    strcpy(spielfeld[16].name, "BFS PM");
+    spielfeld[16].typ = STRASSE;
+    spielfeld[16].preis = 180;
+    spielfeld[16].mieten[0] = 14;   //Feld einzeln
+    spielfeld[16].mieten[1] = 70;   //Feld mit 1 Haus
+    spielfeld[16].mieten[2] = 200;  //Feld mit 2 Häuser
+    spielfeld[16].mieten[3] = 550;  //Feld mit 3 Häuser
+    spielfeld[16].mieten[4] = 750;  //Feld mit 4 Häuser
+    spielfeld[16].mieten[5] = 950;  //Feld mit 5 Häuser
+    spielfeld[16].mieten[6] = 28;   //Feld mit Farbgruppe
+    spielfeld[16].besitzer = 4;
+    spielfeld[16].farbGruppe = ORANGE;
+    spielfeld[16].farbgruppenFelder[0] = 16;
+    spielfeld[16].farbgruppenFelder[1] = 18;
+    spielfeld[16].farbgruppenFelder[2] = 19;
+    spielfeld[16].hausnummer = 8;
+    spielfeld[16].anzahlHaeuser = 0;
+    spielfeld[16].kostenHaus = 100;
+    spielfeld[16].rgbNummer = 11;
+    spielfeld[16].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+    
+    //Eigenschaften des Feldes: Kanzlei
+    strcpy(spielfeld[17].name, "Kanzlei");
+    spielfeld[17].typ = EREIGNISFELD;
+    
+    //Eigenschaften des Feldes: BFS Automatiker
+    strcpy(spielfeld[18].name, "BFS AU");
+    spielfeld[18].typ = STRASSE;
+    spielfeld[18].preis = 180;
+    spielfeld[18].mieten[0] = 14;   //Feld einzeln
+    spielfeld[18].mieten[1] = 70;   //Feld mit 1 Haus
+    spielfeld[18].mieten[2] = 200;  //Feld mit 2 Häuser
+    spielfeld[18].mieten[3] = 550;  //Feld mit 3 Häuser
+    spielfeld[18].mieten[4] = 750;  //Feld mit 4 Häuser
+    spielfeld[18].mieten[5] = 950;  //Feld mit 5 Häuser
+    spielfeld[18].mieten[6] = 28;   //Feld mit Farbgruppe
+    spielfeld[18].besitzer = 2;
+    spielfeld[18].farbGruppe = ORANGE;
+    spielfeld[18].farbgruppenFelder[0] = 16;
+    spielfeld[18].farbgruppenFelder[1] = 18;
+    spielfeld[18].farbgruppenFelder[2] = 19;
+    spielfeld[18].hausnummer = 9;
+    spielfeld[18].anzahlHaeuser = 0;
+    spielfeld[18].kostenHaus = 100;
+    spielfeld[18].rgbNummer = 12;
+    spielfeld[18].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+    
+    //Eigenschaften des Feldes: BFS Elektroniker
+    strcpy(spielfeld[19].name, "BFS EK");
+    spielfeld[19].typ = STRASSE;
+    spielfeld[19].preis = 200;
+    spielfeld[19].mieten[0] = 16;   //Feld einzeln
+    spielfeld[19].mieten[1] = 80;   //Feld mit 1 Haus
+    spielfeld[19].mieten[2] = 220;  //Feld mit 2 Häuser
+    spielfeld[19].mieten[3] = 600;  //Feld mit 3 Häuser
+    spielfeld[19].mieten[4] = 800;  //Feld mit 4 Häuser
+    spielfeld[19].mieten[5] = 1000; //Feld mit 5 Häuser
+    spielfeld[19].mieten[6] = 32;   //Feld mit Farbgruppe
+    spielfeld[19].besitzer = 2;
+    spielfeld[19].farbGruppe = ORANGE;
+    spielfeld[19].farbgruppenFelder[0] = 16;
+    spielfeld[19].farbgruppenFelder[1] = 18;
+    spielfeld[19].farbgruppenFelder[2] = 19;
+    spielfeld[19].hausnummer = 10;
+    spielfeld[19].anzahlHaeuser = 0;
+    spielfeld[19].kostenHaus = 100;
+    spielfeld[19].rgbNummer = 13;
+    spielfeld[19].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+    
+    //Eigenschaften des Feldes: Freiparken
+    strcpy(spielfeld[20].name, "Freiparken");
+    spielfeld[20].typ = FREIPARKEN;
+    
+    //Eigenschaften des Feldes: Grundausbildung Automatiker
+    strcpy(spielfeld[21].name, "GA AU");
+    spielfeld[21].typ = STRASSE;
+    spielfeld[21].preis = 220;
+    spielfeld[21].mieten[0] = 18;   //Feld einzeln
+    spielfeld[21].mieten[1] = 90;   //Feld mit 1 Haus
+    spielfeld[21].mieten[2] = 250;  //Feld mit 2 Häuser
+    spielfeld[21].mieten[3] = 700;  //Feld mit 3 Häuser
+    spielfeld[21].mieten[4] = 875;  //Feld mit 4 Häuser
+    spielfeld[21].mieten[5] = 1050; //Feld mit 5 Häuser
+    spielfeld[21].mieten[6] = 36;   //Feld mit Farbgruppe
+    spielfeld[21].besitzer = 3;
+    spielfeld[21].farbGruppe = ROT;
+    spielfeld[21].farbgruppenFelder[0] = 21;
+    spielfeld[21].farbgruppenFelder[1] = 23;
+    spielfeld[21].farbgruppenFelder[2] = 24;
+    spielfeld[21].hausnummer = 11;
+    spielfeld[21].anzahlHaeuser = 0;
+    spielfeld[21].kostenHaus = 150;
+    spielfeld[21].rgbNummer = 14;
+    spielfeld[21].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+    
+    //Eigenschaften des Feldes: Chance
+    strcpy(spielfeld[22].name, "Chance");
+    spielfeld[22].typ = EREIGNISFELD;
+    
+    //Eigenschaften des Feldes: Produkton Automatiker
+    strcpy(spielfeld[23].name, "Produktion AU");
+    spielfeld[23].typ = STRASSE;
+    spielfeld[23].preis = 220;
+    spielfeld[23].mieten[0] = 18;   //Feld einzeln
+    spielfeld[23].mieten[1] = 90;   //Feld mit 1 Haus
+    spielfeld[23].mieten[2] = 250;  //Feld mit 2 Häuser
+    spielfeld[23].mieten[3] = 700;  //Feld mit 3 Häuser
+    spielfeld[23].mieten[4] = 875;  //Feld mit 4 Häuser
+    spielfeld[23].mieten[5] = 1050; //Feld mit 5 Häuser
+    spielfeld[23].mieten[6] = 36;   //Feld mit Farbgruppe
+    spielfeld[23].besitzer = 3;
+    spielfeld[23].farbGruppe = ROT;
+    spielfeld[23].farbgruppenFelder[0] = 21;
+    spielfeld[23].farbgruppenFelder[1] = 23;
+    spielfeld[23].farbgruppenFelder[2] = 24;
+    spielfeld[23].hausnummer = 12;
+    spielfeld[23].anzahlHaeuser = 0;
+    spielfeld[23].kostenHaus = 150;
+    spielfeld[23].rgbNummer = 15;
+    spielfeld[23].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+    
+    //Eigenschaften des Feldes: Mechatronik Labor
+    strcpy(spielfeld[24].name, "Mechatr. Labor");
+    spielfeld[24].typ = STRASSE;
+    spielfeld[24].preis = 240;
+    spielfeld[24].mieten[0] = 20;   //Feld einzeln
+    spielfeld[24].mieten[1] = 100;  //Feld mit 1 Haus
+    spielfeld[24].mieten[2] = 300;  //Feld mit 2 Häuser
+    spielfeld[24].mieten[3] = 750;  //Feld mit 3 Häuser
+    spielfeld[24].mieten[4] = 925;  //Feld mit 4 Häuser
+    spielfeld[24].mieten[5] = 1100; //Feld mit 5 Häuser
+    spielfeld[24].mieten[6] = 40;   //Feld mit Farbgruppe
+    spielfeld[24].besitzer = 3;
+    spielfeld[24].farbGruppe = ROT;
+    spielfeld[24].farbgruppenFelder[0] = 21;
+    spielfeld[24].farbgruppenFelder[1] = 23;
+    spielfeld[24].farbgruppenFelder[2] = 24;
+    spielfeld[24].hausnummer = 13;
+    spielfeld[24].anzahlHaeuser = 0;
+    spielfeld[24].kostenHaus = 150;
+    spielfeld[24].rgbNummer = 16;
+    spielfeld[24].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+    
+    //Eigenschaften des Feldes: Technikum
+    strcpy(spielfeld[25].name, "Technikum");
+    spielfeld[25].typ = HALTESTELLE;
+    spielfeld[25].preis = 200;
+    spielfeld[25].mieten[0] = 25;   //wenn man 1 Bahn besitzt
+    spielfeld[25].mieten[1] = 50;   //wenn man 2 Bahnen besitzt
+    spielfeld[25].mieten[2] = 100;  //wenn man 3 Bahnen besitzt
+    spielfeld[25].mieten[3] = 200;  //wenn man 4 Bahnen besitzt
+    spielfeld[25].besitzer = 1;
+    spielfeld[25].farbGruppe = FARBLOS;
+    spielfeld[25].farbgruppenFelder[0] = 5;
+    spielfeld[25].farbgruppenFelder[1] = 15;
+    spielfeld[25].farbgruppenFelder[2] = 25;
+    spielfeld[25].farbgruppenFelder[3] = 35;
+    spielfeld[25].rgbNummer = 17;
+    spielfeld[25].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+    
+    //Eigenschaften des Feldes: Lager Polymechaniker
+    strcpy(spielfeld[26].name, "Lager PM");
+    spielfeld[26].typ = STRASSE;
+    spielfeld[26].preis = 260;
+    spielfeld[26].mieten[0] = 22;   //Feld einzeln
+    spielfeld[26].mieten[1] = 110;  //Feld mit 1 Haus
+    spielfeld[26].mieten[2] = 330;  //Feld mit 2 Häuser
+    spielfeld[26].mieten[3] = 800;  //Feld mit 3 Häuser
+    spielfeld[26].mieten[4] = 975;  //Feld mit 4 Häuser
+    spielfeld[26].mieten[5] = 1150; //Feld mit 5 Häuser
+    spielfeld[26].mieten[6] = 44;   //Feld mit Farbgruppe
+    spielfeld[26].besitzer = 4;
+    spielfeld[26].farbGruppe = GELB;
+    spielfeld[26].farbgruppenFelder[0] = 26;
+    spielfeld[26].farbgruppenFelder[1] = 27;
+    spielfeld[26].farbgruppenFelder[2] = 29;
+    spielfeld[26].hausnummer = 14;
+    spielfeld[26].anzahlHaeuser = 1;
+    spielfeld[26].kostenHaus = 150;
+    spielfeld[26].rgbNummer = 18;
+    spielfeld[26].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+    
+    //Eigenschaften des Feldes: Lager Automatiker
+    strcpy(spielfeld[27].name, "Lager AU");
+    spielfeld[27].typ = STRASSE;
+    spielfeld[27].preis = 260;
+    spielfeld[27].mieten[0] = 22;   //Feld einzeln
+    spielfeld[27].mieten[1] = 110;  //Feld mit 1 Haus
+    spielfeld[27].mieten[2] = 330;  //Feld mit 2 Häuser
+    spielfeld[27].mieten[3] = 800;  //Feld mit 3 Häuser
+    spielfeld[27].mieten[4] = 975;  //Feld mit 4 Häuser
+    spielfeld[27].mieten[5] = 1150; //Feld mit 5 Häuser
+    spielfeld[27].mieten[6] = 44;   //Feld mit Farbgruppe
+    spielfeld[27].besitzer = 4;
+    spielfeld[27].farbGruppe = GELB;
+    spielfeld[27].farbgruppenFelder[0] = 26;
+    spielfeld[27].farbgruppenFelder[1] = 27;
+    spielfeld[27].farbgruppenFelder[2] = 29;
+    spielfeld[27].hausnummer = 15;
+    spielfeld[27].anzahlHaeuser = 1;
+    spielfeld[27].kostenHaus = 150;
+    spielfeld[27].rgbNummer = 19;
+    spielfeld[27].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+    
+    //Eigenschaften des Feldes: Putzdienst
+    strcpy(spielfeld[28].name, "Putzdienst");
+    spielfeld[28].typ = WERK;
+    spielfeld[28].preis = 150;
+    spielfeld[28].besitzer = 3;
+    spielfeld[28].farbGruppe = FARBLOS;
+    spielfeld[28].rgbNummer = 20;
+    spielfeld[28].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+    
+    //Eigenschaften des Feldes: Lager Elektroniker
+    strcpy(spielfeld[29].name, "Lager EK");
+    spielfeld[29].typ = STRASSE;
+    spielfeld[29].preis = 280;
+    spielfeld[29].mieten[0] = 24;   //Feld einzeln
+    spielfeld[29].mieten[1] = 120;  //Feld mit 1 Haus
+    spielfeld[29].mieten[2] = 360;  //Feld mit 2 Häuser
+    spielfeld[29].mieten[3] = 850;  //Feld mit 3 Häuser
+    spielfeld[29].mieten[4] = 1025; //Feld mit 4 Häuser
+    spielfeld[29].mieten[5] = 1200; //Feld mit 5 Häuser
+    spielfeld[29].mieten[6] = 48;   //Feld mit Farbgruppe
+    spielfeld[29].besitzer = 4;
+    spielfeld[29].farbGruppe = GELB;
+    spielfeld[29].farbgruppenFelder[0] = 26;
+    spielfeld[29].farbgruppenFelder[1] = 27;
+    spielfeld[29].farbgruppenFelder[2] = 29;
+    spielfeld[29].hausnummer = 16;
+    spielfeld[29].anzahlHaeuser = 1;
+    spielfeld[29].kostenHaus = 150;
+    spielfeld[29].rgbNummer = 21;
+    spielfeld[29].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+    
+    //Eigenschaften des Feldes: Geh ins Gefängnis
+    strcpy(spielfeld[30].name, "Geh ins Gefaengnis");
+    spielfeld[30].typ = GEH_INS_GEFAENGNIS;
+    
+    //Eigenschaften des Feldes: Grundausbildung Elektroniker
+    strcpy(spielfeld[31].name, "GA EK");
+    spielfeld[31].typ = STRASSE;
+    spielfeld[31].preis = 300;
+    spielfeld[31].mieten[0] = 26;   //Feld einzeln
+    spielfeld[31].mieten[1] = 130;  //Feld mit 1 Haus
+    spielfeld[31].mieten[2] = 390;  //Feld mit 2 Häuser
+    spielfeld[31].mieten[3] = 900;  //Feld mit 3 Häuser
+    spielfeld[31].mieten[4] = 1100; //Feld mit 4 Häuser
+    spielfeld[31].mieten[5] = 1275; //Feld mit 5 Häuser
+    spielfeld[31].mieten[6] = 52;   //Feld mit Farbgruppe
+    spielfeld[31].besitzer = 1;
+    spielfeld[31].farbGruppe = GRUEN;
+    spielfeld[31].farbgruppenFelder[0] = 31;
+    spielfeld[31].farbgruppenFelder[1] = 32;
+    spielfeld[31].farbgruppenFelder[2] = 34;
+    spielfeld[31].hausnummer = 17;
+    spielfeld[31].anzahlHaeuser = 0;
+    spielfeld[31].kostenHaus = 200;
+    spielfeld[31].rgbNummer = 22;
+    spielfeld[31].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+    
+    //Eigenschaften des Feldes: Produktion Elektroniker
+    strcpy(spielfeld[32].name, "Produktion EK");
+    spielfeld[32].typ = STRASSE;
+    spielfeld[32].preis = 300;
+    spielfeld[32].mieten[0] = 26;   //Feld einzeln
+    spielfeld[32].mieten[1] = 130;  //Feld mit 1 Haus
+    spielfeld[32].mieten[2] = 390;  //Feld mit 2 Häuser
+    spielfeld[32].mieten[3] = 900;  //Feld mit 3 Häuser
+    spielfeld[32].mieten[4] = 1100; //Feld mit 4 Häuser
+    spielfeld[32].mieten[5] = 1275; //Feld mit 5 Häuser
+    spielfeld[32].mieten[6] = 52;   //Feld mit Farbgruppe
+    spielfeld[32].besitzer = 1;
+    spielfeld[32].farbGruppe = GRUEN;
+    spielfeld[32].farbgruppenFelder[0] = 31;
+    spielfeld[32].farbgruppenFelder[1] = 32;
+    spielfeld[32].farbgruppenFelder[2] = 34;
+    spielfeld[32].hausnummer = 18;
+    spielfeld[32].anzahlHaeuser = 0;
+    spielfeld[32].kostenHaus = 200;
+    spielfeld[32].rgbNummer = 23;
+    spielfeld[32].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+    
+    //Eigenschaften des Feldes: Kanzlei
+    strcpy(spielfeld[33].name, "Kanzlei");
+    spielfeld[33].typ = EREIGNISFELD;
+    
+    //Eigenschaften des Feldes: Entwicklung Elektroniker
+    strcpy(spielfeld[34].name, "Entwicklung EK");
+    spielfeld[34].typ = STRASSE;
+    spielfeld[34].preis = 320;
+    spielfeld[34].mieten[0] = 28;   //Feld einzeln
+    spielfeld[34].mieten[1] = 150;  //Feld mit 1 Haus
+    spielfeld[34].mieten[2] = 450;  //Feld mit 2 Häuser
+    spielfeld[34].mieten[3] = 1000; //Feld mit 3 Häuser
+    spielfeld[34].mieten[4] = 1200; //Feld mit 4 Häuser
+    spielfeld[34].mieten[5] = 1400; //Feld mit 5 Häuser
+    spielfeld[34].mieten[6] = 56;   //Feld mit Farbgruppe
+    spielfeld[34].besitzer = 1;
+    spielfeld[34].farbGruppe = GRUEN;
+    spielfeld[34].farbgruppenFelder[0] = 31;
+    spielfeld[34].farbgruppenFelder[1] = 32;
+    spielfeld[34].farbgruppenFelder[2] = 34;
+    spielfeld[34].hausnummer = 19;
+    spielfeld[34].anzahlHaeuser = 0;
+    spielfeld[34].kostenHaus = 200;
+    spielfeld[34].rgbNummer = 24;
+    spielfeld[34].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+    
+    //Eigenschaften des Feldes: Gewerbeschule
+    strcpy(spielfeld[35].name, "Gewerbeschule");
+    spielfeld[35].typ = HALTESTELLE;
+    spielfeld[35].preis = 200;
+    spielfeld[35].mieten[0] = 25;   //wenn man 1 Bahn besitzt
+    spielfeld[35].mieten[1] = 50;   //wenn man 2 Bahnen besitzt
+    spielfeld[35].mieten[2] = 100;  //wenn man 3 Bahnen besitzt
+    spielfeld[35].mieten[3] = 200;  //wenn man 4 Bahnen besitzt
+    spielfeld[35].besitzer = 2;
+    spielfeld[35].farbGruppe = FARBLOS;
+    spielfeld[35].farbgruppenFelder[0] = 5;
+    spielfeld[35].farbgruppenFelder[1] = 15;
+    spielfeld[35].farbgruppenFelder[2] = 25;
+    spielfeld[35].farbgruppenFelder[3] = 35;
+    spielfeld[35].rgbNummer = 25;
+    spielfeld[35].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+    
+    //Eigenschaften des Feldes: Chance
+    strcpy(spielfeld[36].name, "Chance");
+    spielfeld[36].typ = EREIGNISFELD;
+    
+    //Eigenschaften des Feldes: Grundausbildung Polymechaniker
+    strcpy(spielfeld[37].name, "GA PM");
+    spielfeld[37].typ = STRASSE;
+    spielfeld[37].preis = 350;
+    spielfeld[37].mieten[0] = 35;   //Feld einzeln
+    spielfeld[37].mieten[1] = 175;  //Feld mit 1 Haus
+    spielfeld[37].mieten[2] = 500;  //Feld mit 2 Häuser
+    spielfeld[37].mieten[3] = 1100; //Feld mit 3 Häuser
+    spielfeld[37].mieten[4] = 1300; //Feld mit 4 Häuser
+    spielfeld[37].mieten[5] = 1500; //Feld mit 5 Häuser
+    spielfeld[37].mieten[6] = 70;   //Feld mit Farbgruppe
+    spielfeld[37].besitzer = 3;
+    spielfeld[37].farbGruppe = BLAU;
+    spielfeld[37].farbgruppenFelder[0] = 37;
+    spielfeld[37].farbgruppenFelder[1] = 39;
+    spielfeld[37].farbgruppenFelder[2] = 0;
+    spielfeld[37].hausnummer = 20;
+    spielfeld[37].anzahlHaeuser = 0;
+    spielfeld[37].kostenHaus = 200;
+    spielfeld[37].rgbNummer = 26;
+    spielfeld[37].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+    
+    //Eigenschaften des Feldes: Schulmaterialkosten
+    strcpy(spielfeld[38].name, "Schulmaterial");
+    spielfeld[38].typ = STEUERFELD;
+    spielfeld[38].preis = 100;
+    
+    //Eigenschaften des Feldes: Produktion Polymechaniker
+    strcpy(spielfeld[39].name, "Produktion PM");
+    spielfeld[39].typ = STRASSE;
+    spielfeld[39].preis = 400;
+    spielfeld[39].mieten[0] = 50;   //Feld einzeln
+    spielfeld[39].mieten[1] = 200;  //Feld mit 1 Haus
+    spielfeld[39].mieten[2] = 600;  //Feld mit 2 Häuser
+    spielfeld[39].mieten[3] = 1400; //Feld mit 3 Häuser
+    spielfeld[39].mieten[4] = 1700; //Feld mit 4 Häuser
+    spielfeld[39].mieten[5] = 2000; //Feld mit 5 Häuser
+    spielfeld[39].mieten[6] = 100;   //Feld mit Farbgruppe
+    spielfeld[39].besitzer = 3;
+    spielfeld[39].farbGruppe = BLAU;
+    spielfeld[39].farbgruppenFelder[0] = 37;
+    spielfeld[39].farbgruppenFelder[1] = 37;
+    spielfeld[39].farbgruppenFelder[2] = 37;
+    spielfeld[39].farbgruppenFelder[3] = 39;
+    spielfeld[39].hausnummer = 21;
+    spielfeld[39].anzahlHaeuser = 0;
+    spielfeld[39].kostenHaus = 200;
+    spielfeld[39].rgbNummer = 27;
+    spielfeld[39].feldBelastet = 0;  //wenn das Feld belastet ist = 1
+}
 /******************************************************************************\
 * initialisiereKarten
 *
@@ -1839,17 +2648,17 @@ const char kartenArray[][200] PROGMEM =
     "Du renovierst   deine  H"AE"user   Zahle f"UE"r jedes Haus 40 und f"UE"r jedes Hotel 115",
     "In der          Versetzung ist  dir ein Fr"AE"ser  zerbrochen.     Zahle 100",
     "Du g"OE"nnst dir   etwas beim      Snackautomat    zahle 50",
-    "Ihr macht eine 	Exkursion       zahle 50",
+    "Ihr macht eine     Exkursion       zahle 50",
     "Du hast die     Abschlussreise  organisiert,    jeder Spieler   zahlt dir 10",
     "Elektroniker    des Monats      Du erh"AE"ltst 100",
-    "Du hilfst deinemMitschüler beim lernen.         Du erh"AE"ltst 10",
+    "Du hilfst deinemMitsch"UE"ler beim lernen.         Du erh"AE"ltst 10",
     "Du erh"AE"lst 50",
     "Du erh"AE"lst 100",
     "Du erh"AE"lst 25",
     "Du erh"AE"lst 20",
     "Du erh"AE"lst 100",
     "Du erh"AE"lst 100", 
-    "Du bist         Weltmeister.    Rücke vor bis   Start ziehe den doppelten       Betrag ein",
+    "Du bist         Weltmeister.    R"UE"cke vor bis   Start ziehe den doppelten       Betrag ein",
     "Du hast gegen   die Handyregel  verstossen.     R"UE"cke vor bis   Produktion      Elektroniker" 
 };
 
@@ -1946,7 +2755,7 @@ uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uin
             hausBetrag = spielerInfo[spielerAmZug].haeuser * chanceKanzlei[zufallsNummer].geld;
             //Anzahl Hotels die der Spieler Besitzt auslesen und mit dem Betrag pro Hotel
             //multiplizieren
-            hausBetrag = spielerInfo[spielerAmZug].hotels * chanceKanzlei[zufallsNummer].geld2;
+            hotelBetrag = spielerInfo[spielerAmZug].hotels * chanceKanzlei[zufallsNummer].geld2;
             //Die Summe beider Beträge vom Kontostand abziehen
             geldUeberweisen(spielerAmZug,0,(hausBetrag + hotelBetrag));
             break;
@@ -1997,7 +2806,7 @@ uint8_t ereignisFeld(uint8_t kanzlei, uint8_t spielerAmZug, uint8_t schritt, uin
             else
             {
                 ausgangsPosition = spielerInfo[spielerAmZug].position;
-                for (uint8_t i = ausgangsPosition; !(chanceKanzlei[zufallsNummer].zielFeldTyp == spielfeld[i].typ); i = i + 1)
+                for (uint8_t i = ausgangsPosition; !(chanceKanzlei[zufallsNummer].zielFeldTyp == spielfeld[i % 40].typ); i = i + 1)
                 {
                     //Die Variable anzahlFelder auf "i" setzen
                     anzahlFelder = i;
@@ -2298,6 +3107,7 @@ void geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetrag)
     uint8_t zahlungErfolgreich = 0;
     uint8_t flagZuWenigGeld = 0;
     uint8_t flagMussHypBehalten = 0;
+    uint8_t gewinner = 0;
     
     //uint8_t farbgruppenErstesFeld[8] = {1,6,11,16,21,26,31,37};
     char lcdBuffer[16];
@@ -2615,15 +3425,39 @@ void geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetrag)
             //writeText(1,0," CRAZY  BLINKEN ");
             //"Du bist PLEITE" am LCD ausgeben
             writeText(2,0," Du bist PLEITE ");
+            animationSpielerPleite(zahler);
             //Den Spieler am Zug als pleite markieren, um ihn aus dem Spiel auschliessen zu können
             spielerInfo[zahler].pleite = 1;
+            
+            flagFertigGewuerfelt = 1;
+            flagSpielerPleite = 1;
+            
+            anzahlPleiteSpieler += 1;
+            if ((anzahlSpieler - 1) == anzahlPleiteSpieler)
+            {
+                for (uint8_t i = 1; i <= anzahlSpieler; i = i + 1)
+                {
+                    if (!(spielerInfo[i].pleite))
+                    {
+                        gewinner = i;
+                    }
+                }
+                writeText(0,0,"   Spieler      ");
+                sprintf(lcdBuffer,"%u",gewinner);
+                writeText(0,11,lcdBuffer);          //lcdBuffer am LCD ausgeben
+                writeText(1,0,"  HAT GEWONNEN  ");
+                writeText(2,0,"----------------");
+
+                pleiteZustand = SPIEL_BEENDET;
+                break;
+            }
             //Die Position des Spielers auf ein unsichtbares Feld setzen
             spielerInfo[zahler].position = UNSICHTBARES_FELD;
             //setGeld(0,zahler,0);//Siebensegment ausschalten
             //Die Spielfigur des Spielers auf das unsichtbare Feld stellen
             setzeSpielerPosition(UNSICHTBARES_FELD,zahler);//entfernt die Spielfigur vom Spielfeld
             //Programm für 5 Sekunden blokieren, damit die Spieler Zeit haben das LCD zu lesen
-            _delay_ms(5000);
+            _delay_ms(500);
             
             
             //Sucht alle Felder nach Feldern ab, die dem Spieler gehörten
@@ -2688,6 +3522,17 @@ void geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetrag)
                 geldUeberweisen(zahler,empfaenger,spielerInfo[zahler].geld);
                 //Zum pleiteZustand FELDER_ABGEBEN wechseln
                 pleiteZustand = FELDER_ABGEBEN;
+            }
+            break;
+            case SPIEL_BEENDET:
+            writeText(0,0,"   Spieler      ");
+            sprintf(lcdBuffer,"%u",gewinner);     //spielerAmZug in den lcdBuffer laden
+            writeText(0,11,lcdBuffer);          //lcdBuffer am LCD ausgeben
+            writeText(1,0,"  HAT GEWONNEN  ");
+            writeText(2,0,"----------------");
+            while (1)
+            {
+                animationSpielerGewonnen(gewinner);
             }
             break;
             //Zustand in dem alle Felder des Spielers versteigert werden
@@ -2814,6 +3659,8 @@ void geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetrag)
             flagGeldBeschaffen = 0;
             //pleiteZustand auf GENUG_GELD zurücksetzen
             pleiteZustand = GENUG_GELD;
+            
+            
             break;
             //Zustand in dem alle Felder an einen anderen Spieler übertragen werden
             case FELDER_ABGEBEN:
@@ -3014,6 +3861,10 @@ void geldBeschaffen(uint8_t zahler, uint8_t empfaenger, uint16_t mindestBetrag)
                                     {
                                         //Feld RGB LED auf die Farbe des neuen Besitzers setzen
                                         setPropertyRgb(spielfeld[feldNummer].rgbNummer,empfaenger);
+                                    }
+                                    else
+                                    {
+                                        setPropertyRgb(spielfeld[feldNummer].rgbNummer,5);
                                     }
                                 }
                                 //flagFeldBelastet auf 0 setzen um dem Programm zu signalisieren,
@@ -3556,4 +4407,80 @@ uint8_t abBauen(uint8_t feldNummer, uint8_t spielerAmZug)
         return 0;
     }
     
+}
+
+
+
+void animationSpielerPleite(uint8_t spielernummer)
+{
+        //for schleife setzt die RGB auf jedem spielfeld
+        for (uint8_t i = 0; i < ANZAHL_FELDER; i = i + 1)
+        {
+            if (spielfeld[i].rgbNummer)
+            {
+                setPropertyRgb(spielfeld[i].rgbNummer,0);
+            }
+            if (spielfeld[i].hausnummer)
+            {
+                setHaus(spielfeld[i].hausnummer,0);
+            }
+            setzeSpielerPositionAnimation(i,spielernummer,1,0);
+            setzeSpielerPositionAnimation(i,spielernummer,1,1);
+        }
+        _delay_ms(100);
+        spielfeldBlinken(0);
+        for (uint8_t i = ANZAHL_FELDER; i > 0; i = i - 1)
+        {
+            if (spielfeld[i].rgbNummer)
+            {
+                //setPropertyRgb(spielfeld[i].rgbNummer,0);
+            }
+            if (spielfeld[i].hausnummer)
+            {
+                setHaus(spielfeld[i].hausnummer,0);
+            }
+            setzeSpielerPositionAnimation(i,spielernummer,0,0);
+            setzeSpielerPositionAnimation(i,spielernummer,0,1);
+        }
+        setzeSpielerPosition(40,4);
+        for (uint8_t i = 0; i < ANZAHL_FELDER; i = i + 1)
+        {
+            if (spielfeld[i].besitzer)
+            {
+                setPropertyRgb(spielfeld[i].rgbNummer,spielfeld[i].besitzer);
+                setHaus(spielfeld[i].hausnummer,spielfeld[i].anzahlHaeuser);
+            }
+            if (spielfeld[i].feldBelastet)
+            {
+                setHaus(spielfeld[i].hausnummer,6);
+            }
+        }
+        spielerInfo[4].position = 0;
+        setzeSpielerPosition(0,spielernummer);
+        spielerInfo[4].position = 40;
+        setzeSpielerPosition(40,spielernummer);
+        for(uint8_t i = 1; i <= 4; i = i + 1)
+        {
+            setzeSpielerPosition(spielerInfo[i].position,i);
+        }
+        
+}
+
+void animationSpielerGewonnen(uint8_t spielernummer)
+{
+    
+    for (uint8_t i = 0; i < 255; i = i + 1)
+    {
+        for (uint8_t j = 1; j <= 4; j = j + 1)
+        {
+            setGeld((rand() % 10000),j,1);
+        }
+        for (uint8_t j = 0; j < 2; j = j + 1)
+        {
+            wuerfelTransmit((rand() % 6) + 1, (rand() % 6) + 1);
+        }
+        _delay_ms(10);
+        
+    }
+
 }

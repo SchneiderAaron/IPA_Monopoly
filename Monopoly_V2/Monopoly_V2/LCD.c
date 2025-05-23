@@ -203,6 +203,7 @@ void lcdReInit(void)
     initDisplay(); // Danach normal initialisieren
     clear();
     home();
+    defineCustomCharacters();
     displayOnOff(1,0,0);
 }
 

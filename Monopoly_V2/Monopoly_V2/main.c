@@ -268,8 +268,10 @@ uint8_t yTasten[4] = {TASTE_Y1, TASTE_Y2, TASTE_Y3, TASTE_Y4};
 
 
 
+uint8_t flagSpielerPleite = 0;
+uint8_t flagFertigGewuerfelt = 0;
 
-
+uint8_t letzterWuerfel = 0;
 
 int main(void)
 {
@@ -298,8 +300,8 @@ int main(void)
     
     uint8_t spielerSetup = 0;
     
-    uint8_t flagFertigGewuerfelt = 0;
-    uint8_t letzterWuerfel = 0;
+    
+    
     //uint8_t flagSchulden = 0;
     
     //uint8_t flagVersteigert = 0;
@@ -358,7 +360,7 @@ int main(void)
     uint8_t flagGefaengnis = 0;
     uint8_t flagGefaengnisLCD = 0;
     uint8_t flagGefaengnisWeiter = 0;
-    uint8_t flagSpielerPleite = 0;
+    
     
     uint8_t spielerInventar[28] = {0};
     uint8_t flagKeineHaeuser = 0;
@@ -387,6 +389,7 @@ int main(void)
     //Initialisierung
     PortInitialisierung();//ports initialisieren während vorbereitung erstellt!!
     lcdInitAll();//lcd Initialisieren während vorbereitung erstellt!!
+    //initialisiereSpielfeld(spielfeld);//spielfelder Initialisieren
     initialisiereSpielfeld(spielfeld);//spielfelder Initialisieren
     initSpieler(spielerInfo);
     initialisiereKarten(chanceKanzlei);
@@ -426,14 +429,331 @@ int main(void)
         if (spielfeld[i].besitzer)
         {
             setPropertyRgb(spielfeld[i].rgbNummer,spielfeld[i].besitzer);
+            setHaus(spielfeld[i].hausnummer,spielfeld[i].anzahlHaeuser);
         }
     }
-    
-    
     //uint8_t textCounter = 0;
     //uint8_t stringCounter = 0;
     //uint8_t flagEreignisfeld = 0;
     //_delay_ms(1000);
+    uint8_t startFlag = 0;
+    uint8_t zufallsSpieler = 0;
+    uint8_t zufallsFeld = 0;
+    writeText(0,0,"      MSW       ");
+    writeText(1,0,"    MONOPOLY    ");
+    writeText(2,0,"Taste A = Start ");
+    while(1)
+    {
+        /*for (uint8_t i = 1; i <= 4; i = i + 1)
+        {
+            for(uint8_t j = 0; j < 40; j = j + 1)
+            {
+                //setPropertyRgb(spielfeld[j].rgbNummer,i);
+                wuerfelTransmit((rand() % 6) + 1, (rand() % 6) + 1);
+                setzeSpielerPositionAnimation(j,i,1,0);
+                setzeSpielerPositionAnimation(j,i,1,1);
+                for (uint8_t k = 1; k <= 4; k = k + 1)
+                {
+                    setGeld((rand() % 10000),k,1);
+                    startFlag = animationAbbrechen(startFlag);
+                    if (startFlag)
+                    {
+                        break;
+                    }
+                }
+                startFlag = animationAbbrechen(startFlag);
+                if (startFlag)
+                {
+                    break;
+                }
+            }
+            startFlag = animationAbbrechen(startFlag);
+            if (startFlag)
+            {
+                break;
+            }
+        }*/
+        for (uint8_t i = 0; i < 160; i = i + 1)
+        {
+            //wenn die LED auf dem feld noch nicht leuchtet
+            zufallsFeld = rand() % 40;
+            zufallsSpieler = (rand() % 4) + 1;
+            if (!pruefeSpielerPosition(zufallsFeld,zufallsSpieler))
+            {
+                setzeSpielerPositionAnimation(zufallsFeld,zufallsSpieler,1,0);
+                setzeSpielerPositionAnimation(0,0,0,1);
+                //_delay_ms(5);
+                wuerfelTransmit(zufallsSpieler,zufallsSpieler);
+                for (uint8_t j = 1; j <= 4; j = j + 1)
+                {
+                    setGeld(i,j,1);
+                    startFlag = animationAbbrechen(startFlag);
+                    if (startFlag)
+                    {
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                i -= 1;
+            }
+            startFlag = animationAbbrechen(startFlag);
+            if (startFlag)
+            {
+                break;
+            }
+        }
+        for (uint8_t i = 0; i < 160; i = i + 1)
+        {
+            //wenn die LED auf dem feld noch nicht leuchtet
+            zufallsFeld = rand() % 40;
+            zufallsSpieler = (rand() % 4) + 1;
+            if (pruefeSpielerPosition(zufallsFeld,zufallsSpieler))
+            {
+                setzeSpielerPositionAnimation(zufallsFeld,zufallsSpieler,0,0);
+                setzeSpielerPositionAnimation(0,0,0,1);
+                //_delay_ms(5);
+                wuerfelTransmit(zufallsSpieler,zufallsSpieler);
+                for (uint8_t j = 1; j <= 4; j = j + 1)
+                {
+                    setGeld(160 - i,j,1);
+                    startFlag = animationAbbrechen(startFlag);
+                    if (startFlag)
+                    {
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                i -= 1;
+            }
+            startFlag = animationAbbrechen(startFlag);
+            if (startFlag)
+            {
+                break;
+            }
+        }
+        startFlag = animationAbbrechen(startFlag);
+        if (startFlag)
+        {
+            break;
+        }
+        wuerfelTransmit(10,10);
+        setGeld(0,1,0);
+        setGeld(0,2,0);
+        setGeld(0,3,0);
+        setGeld(0,4,0);
+        /*for (uint8_t i = 1; i <= 4; i = i + 1)
+        {
+            for (uint8_t j = 0; j <= 40; j = j + 1)
+            {
+                setzeSpielerPositionAnimation(40 - j,i,0,0);
+                setzeSpielerPositionAnimation(0,0,0,1);
+                startFlag = animationAbbrechen(startFlag);
+                if (startFlag)
+                {
+                    break;
+                }
+            }
+            startFlag = animationAbbrechen(startFlag);
+            if (startFlag)
+            {
+                break;
+            }
+        }*/
+        for(uint8_t h = 1; h <= 4; h = h + 1)
+        {
+            if (h % 2)
+            {
+                for (uint8_t i = 1; i <= 5; i = i + 1)
+                {
+                    for (uint8_t j = 0; j < 40; j = j + 1)
+                    {
+                        setHausAnimation(spielfeld[j].hausnummer,i,0);
+                        startFlag = animationAbbrechen(startFlag);
+                        if (startFlag)
+                        {
+                            break;
+                        }
+                    }
+                    setHausAnimation(0,0,1);
+                    _delay_ms(30);
+                    startFlag = animationAbbrechen(startFlag);
+                    if (startFlag)
+                    {
+                        break;
+                    }
+                }
+                _delay_ms(50);
+                startFlag = animationAbbrechen(startFlag);
+                if (startFlag)
+                {
+                    break;
+                }
+            }
+            else
+            {
+                for (uint8_t i = 1; i <= 5; i = i + 1)
+                {
+                    for (uint8_t j = 0; j < 40; j = j + 1)
+                    {
+                        setHausAnimation(spielfeld[j].hausnummer,5 - i,0);
+                        startFlag = animationAbbrechen(startFlag);
+                        if (startFlag)
+                        {
+                            break;
+                        }
+                    }
+                    setHausAnimation(0,0,1);
+                    _delay_ms(30);
+                    startFlag = animationAbbrechen(startFlag);
+                    if (startFlag)
+                    {
+                        break;
+                    }
+                }
+                _delay_ms(50);
+            }
+            
+        }
+        for (uint8_t i = 0; i <= 20; i = i + 1)
+        {
+            for(uint8_t j = 1; j <= 4; j = j + 1)
+            {
+                setGeld(i,j,1);
+                startFlag = animationAbbrechen(startFlag);
+                if (startFlag)
+                {
+                    break;
+                }
+            }
+            for (uint8_t j = 0; j <= 20 - i; j = j + 1)
+            {
+                if (j > 0)
+                {
+                    //neue Position wieder zurücksetzen
+                    //Rot, Blau
+                    setzeSpielerPositionAnimation(j - 1,1,0,0);
+                    setzeSpielerPositionAnimation((40 - j) + 1,4,0,0);
+                    //Grün, Gelb
+                    setzeSpielerPositionAnimation((20 - j) + 1,2,0,0);
+                    setzeSpielerPositionAnimation((20 + j) - 1,3,0,0);
+                }
+                //neue Position setzen
+                //Rot, Blau
+                setzeSpielerPositionAnimation(j,1,1,0);
+                if (!j)
+                {
+                    setzeSpielerPositionAnimation(0,4,1,0);
+                }
+                else
+                {
+                    setzeSpielerPositionAnimation(40 - j,4,1,0);
+                }
+                if(j == 1)
+                {
+                    setzeSpielerPositionAnimation(0,4,0,0);
+                }
+                
+                
+                //Grün, Gelb
+                setzeSpielerPositionAnimation(20 - j,2,1,0);
+                setzeSpielerPositionAnimation(20 + j,3,1,0);
+                
+                if(!j)
+                {
+                    //Korrektur Gelb auf Feld 0
+                    setzeSpielerPositionAnimation(0,3,1,0);
+                }
+                if (i == 20)
+                {
+                    //Korrektur Blau auf Feld 0
+                    setzeSpielerPositionAnimation(0,4,1,0);
+                }
+                
+                //Spielerposition ausgeben
+                setzeSpielerPositionAnimation(0,0,1,1);
+                _delay_ms(10);
+                startFlag = animationAbbrechen(startFlag);
+                if (startFlag)
+                {
+                    break;
+                }
+            
+            }
+            _delay_ms(25);
+            startFlag = animationAbbrechen(startFlag);
+            if (startFlag)
+            {
+                break;
+            }
+        }
+        
+        for (uint8_t j = 0; j <= 20; j = j + 1)
+        {
+            for(uint8_t k = 1; k <= 4; k = k + 1)
+            {
+                setGeld(20 - j,k,1);
+                startFlag = animationAbbrechen(startFlag);
+                if (startFlag)
+                {
+                    break;
+                }
+            }
+            //neue Position setzen
+            //Grün, Gelb
+            setzeSpielerPositionAnimation(j,2,0,0);
+            setzeSpielerPositionAnimation(40 - j,3,0,0);
+            
+            //Rot, Blau
+            setzeSpielerPositionAnimation(20 - j,1,0,0);
+            setzeSpielerPositionAnimation(20 + j,4,0,0);
+            
+            if (!j)
+            {
+                //Gelb ausschalten Feld 0
+                setzeSpielerPositionAnimation(0,3,0,0);
+            }
+            if (j == 20)
+            {
+                //Blau ausschalten Feld 0
+                setzeSpielerPositionAnimation(0,4,0,0);
+            }
+            //Spielerposition ausgeben
+            setzeSpielerPositionAnimation(0,0,1,1);
+            _delay_ms(35);
+            startFlag = animationAbbrechen(startFlag);
+            if (startFlag)
+            {
+                break;
+            }
+            
+        }
+        _delay_ms(100);
+        startFlag = animationAbbrechen(startFlag);
+        if (startFlag)
+        {
+            break;
+        }
+        
+    }
+
+    for (uint8_t i = 0; i < ANZAHL_FELDER; i = i + 1)
+    {
+        for (uint8_t j = 1; j <= 4; j = j + 1)
+        {
+            setHausAnimation(spielfeld[i].hausnummer,0,0);
+            setzeSpielerPositionAnimation(i,j,0,0);
+        }
+        setHausAnimation(0,0,1);
+        setzeSpielerPositionAnimation(0,0,0,1); 
+    }
+    wuerfelTransmit(10,10);
+    writeText(0,0,"                ");
+    writeText(1,0,"                ");
+    writeText(2,0,"                ");
     while (1) 
     {
         //Flankenerkennung
@@ -561,8 +881,10 @@ int main(void)
                 writeText(1,0,"    w"UE"rfelt    ");
                 writeText(2,0," w"UE"rfeln A / B ");
                 
+                //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                
                 //solange noch nicht mit beiden Würfel gewürfelt wurde 
-                while (!(flagWuerfel1 && flagWuerfel2)) 
+                /*while (!(flagWuerfel1 && flagWuerfel2)) 
                 {
                     //Tasten einlesen und positive Flanken bestimmen
                     tasteAlt = tasteNeu;
@@ -597,8 +919,10 @@ int main(void)
                         //Speichert Würfel A als den Würfel der als zweites gewürfelt wird
                         letzterWuerfel = WUERFEL_A;
                     }
-                }
+                }*/
+                warteBisGewuerfelt();
                 
+                //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 //Würfelsumme  wird als Geld gespeichert,
                 //da es so mit der Funktion updateKontostand ausgegeben werden kann
                 
@@ -648,7 +972,7 @@ int main(void)
             
             //Warte eine Sekunde, um es den Spielern zu ermöglichen festzustellen, wer die höchste Würfelsumme hat
             _delay_ms(1000);//eine Sekunde Warten
-
+            wuerfelTransmit(10,10); 
             //erhöhe i um 1 solange i <= anzahlSpieler ist. Starte mit i = 1
             for (uint8_t i = 1; i <= anzahlSpieler; i = i + 1)
             {
@@ -664,6 +988,11 @@ int main(void)
             writeText(0,11,lcdBuffer);//lcdBuffer Ausgeben
             writeText(1,0," w"UE"rfeln A / B ");
             writeText(2,0,"weiter C  mehr S");
+            
+            
+            
+
+            
             
             //Wechselt zum Zustand in dem das hauptspiel statt findet
             //Zum Zustand SPIEL wechseln
@@ -713,8 +1042,11 @@ int main(void)
                 wuerfelTransmit(SIEBENSEGMENT_OFF,SIEBENSEGMENT_OFF);
                 //spielerAmZug auf den nächsten Spieler setzen
                 spielerAmZug = (spielerAmZug % anzahlSpieler) + 1;
-                //Kontostand und Spieler am zug ausgeben
-                updateKontostand(anzahlSpieler,spielerInfo,spielerAmZug);
+                if (!spielerInfo[spielerAmZug].pleite)
+                {
+                    //Kontostand und Spieler am zug ausgeben
+                    updateKontostand(anzahlSpieler,spielerInfo,spielerAmZug);
+                }
                 //Spieler am Zug am LCD ausgeben
                 writeText(0,0,"   Spieler      ");
                 //lädt die Variabel "spielerAmZug" in den lcdBuffer
@@ -765,6 +1097,8 @@ int main(void)
                     //aktuellesFeld auf FREIPARKEN setzen um sicherzustellen, dass keine Aktion ausgelöst wird
                     aktuellesFeld = FREIPARKEN;
                 }
+                //Wenn der aktuelle Spieler nicht pleite ist wird kontostand und spieler am zug ausgegeben
+                
             }
             //ermöglicht es dem spieler bei Pasch zu kaufen
             //Wenn die Tatse C betätigt wurde und flagWeiter nicht gesetzt ist und flagZahlungAbgeschlossen und
@@ -1203,7 +1537,7 @@ int main(void)
                     }
                 }
                 break;
-                //Wenn das Atuelle Feld das GEfängnis ist
+                //Wenn das Atuelle Feld das Gefängnis ist
                 case GEFAENGNIS:
                 //Wenn flagGefaengnis gesetzt ist
                 if (flagGefaengnis)
@@ -1663,22 +1997,32 @@ int main(void)
                 {
                     //aktuelles Gebot um 1 erhöhen
                     aktuellesGebot = aktuellesGebot + 1; //aktuelles Gebot erhöhen
+                    bieter[5] = i + 1;
                     //Erhöhe j um 1, solange j <= als anzahlSpieler ist. Starte mit j = 1
                     //Siebensegment aller spieler ausschalten
                     for (uint8_t j = 1; j <= anzahlSpieler; j = j + 1)
                     {
                         //Konto Siebensegment des Spielers "j" ausschalten
-                        setGeld(0,j,0); //Geld Siebensegmente ausschalten
+                        //Wenn der Spieler noch am bieten ist und nicht der Höchstbieter ist
+                        if (!bieter[j - 1] && !(bieter[5] == j))
+                        {
+                            //wenn der Spieler kein Gebot abgegeben hat aber
+                            //noch mitbietet siebensegmente abschalten
+                            setGeld(0,j,0);//Das Konto Siebensegment ausschalten
+                        }
+                        //setGeld(0,j,0); //Geld Siebensegmente ausschalten
                     }
                     //Aktuelles Gebot am Siebensegment des Höchstbieters anzeigen
                     setGeld(aktuellesGebot,i + 1,1); 
                     //Die Spielernummer des Höchstbieters speichern
-                    bieter[HOECHSTBIETER] = i + 1; //Speichert Spieler Nummer vom Höchstbieter 
+                    //bieter[HOECHSTBIETER] = i + 1; //Speichert Spieler Nummer vom Höchstbieter 
                 }
                 //wenn ein spieler die Taste Y betätigt bietet er nicht mehr mit
                 //Wenn der Spieler "i" seine Taste Y betätigt hat und er noch nicht zurückgetreten ist
-                if ((positiveFlanke & yTasten[i]) && !bieter[i])
+                if ((positiveFlanke & yTasten[i]) && !bieter[i] && !(positiveFlanke & yTasten[bieter[5] - 1]))
                 {
+                    setGeld(0,i + 1,2);//---- am Siebensegment anzeigen
+                    
                     //Den Spieler "j" als zurückgetreten markieren
                     bieter[i] = 1; //schliesst spieler aus auktion aus
                     //Die anzahl zurückgetretenen Spieler um 1 erhöhen
@@ -1686,7 +2030,7 @@ int main(void)
                 }
             }
             //Wenn alle Spieler zurückgetreten sind
-            if (bieter[ANZAHL_ZURUECKGETRETENE_SPIELER] == anzahlSpieler)
+            if ((bieter[ANZAHL_ZURUECKGETRETENE_SPIELER] == anzahlSpieler - 1))
             {
                 if (!(bieter[HOECHSTBIETER] == 0)) //wenn jemand die Auktion gewonnen hat
                 {
@@ -2520,6 +2864,11 @@ void warteBisGewuerfelt(void)
                 //mit 1. würfel würfeln
                 wuerfel(1,flagWuerfel1,flagWuerfel2);
                 flagWuerfel1 = 1;
+                
+                if (!flagB)
+                {
+                    letzterWuerfel = WUERFEL_B;
+                }
             }
             //würfelt würfel 2 nur wenn taste9 betätigt wurde
             //und würfel 2 noch nicht gewürfelt wurde
@@ -2528,7 +2877,10 @@ void warteBisGewuerfelt(void)
                 //mit 2. würfel würfeln
                 wuerfel(2,flagWuerfel1,flagWuerfel2);
                 flagWuerfel2 = 1;
-                
+                if (!flagA)
+                {
+                    letzterWuerfel = WUERFEL_A;
+                }
             }
         }
         else
@@ -2549,6 +2901,7 @@ void warteBisGewuerfelt(void)
             wuerfelAB();
             flagWuerfel1 = 1;
             flagWuerfel2 = 1;
+            letzterWuerfel = WUERFEL_B;
         }
          
     }
@@ -2722,6 +3075,7 @@ uint8_t handelWareAuswaehlen(uint8_t haendlerNr)
             handelware = FREIKARTEN;//zustandswechsel
             //"Freikarte" am LCD ausgeben
             writeText(0,0,"   Freikarte    ");
+            writeText(2,0,"                ");
             //globalUpdateLCD auf 0 setzen
             globalUpdateLCD = 0;
         }
@@ -2742,6 +3096,7 @@ uint8_t handelWareAuswaehlen(uint8_t haendlerNr)
         case FREIKARTEN:
         if (positiveFlanke & TASTE_S)
         {
+            handel[haendlerNr].freikarte = 1;
             handelware = AUSWAHL_BEENDEN;
             globalUpdateLCD = 0;
         }
