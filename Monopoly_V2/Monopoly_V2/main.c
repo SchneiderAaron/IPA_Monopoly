@@ -473,74 +473,113 @@ int main(void)
                 break;
             }
         }*/
+        
+        //~~~~~~~~~~~~~~~~~~~~~~~~~~~~START ANIMATION~~~~~~~~~~~~~~~~~~~~~~
+        //~~~~~~~~~~~~~~~~~~~~~~~~~~~~START ANIMATION~~~~~~~~~~~~~~~~~~~~~~
+        //~~~~~~~~~~~~~~~~~~~~~~~~~~~~START ANIMATION~~~~~~~~~~~~~~~~~~~~~~
+        //Schleife um alle Spieler Position LEDs ein zu schalten
+        //4 Farben x 40 Felder = 160
         for (uint8_t i = 0; i < 160; i = i + 1)
         {
-            //wenn die LED auf dem feld noch nicht leuchtet
+            //Zufälliges Feld wählen
             zufallsFeld = rand() % 40;
+            //Zufällige Spielernummer Wählen
             zufallsSpieler = (rand() % 4) + 1;
+            //wenn die LED auf dem feld noch nicht leuchtet
             if (!pruefeSpielerPosition(zufallsFeld,zufallsSpieler))
             {
+                //LED auf zufälligem Feld auf 1 setzen
                 setzeSpielerPositionAnimation(zufallsFeld,zufallsSpieler,1,0);
+                //Ausgabe tätigen
                 setzeSpielerPositionAnimation(0,0,0,1);
                 //_delay_ms(5);
+                //Zufällige Spielernummer auf dem Würfel Siebensegmenten anzeigen
                 wuerfelTransmit(zufallsSpieler,zufallsSpieler);
+                //Alle Konto Siebensegmente durchlaufen
                 for (uint8_t j = 1; j <= 4; j = j + 1)
                 {
+                    //Anzahl gesetzte LEDs auf Konto SIebensegmenten anzeigen
                     setGeld(i,j,1);
+                    //startFlag setzen, wenn eine Taste betätigt wurde
                     startFlag = animationAbbrechen(startFlag);
+                    //Wenn Startflag gesetzt ist, dann Schleife verlassen
                     if (startFlag)
                     {
                         break;
                     }
                 }
             }
+            //Wenn die Zufällig gewählte LED bereits gesetzt ist
+            //wird i um 1 verkleinert und somit der Schritt wiederholt
             else
             {
+                //i um 1 verkleinern
                 i -= 1;
             }
+            //startFlag setzen, wenn eine Taste betätigt wurde
             startFlag = animationAbbrechen(startFlag);
+            //Wenn Startflag gesetzt ist, dann Schleife verlassen
             if (startFlag)
             {
                 break;
             }
         }
+        //Schleife um alle Spieler Position LEDs aus zu schalten
+        //4 Farben x 40 Felder = 160
         for (uint8_t i = 0; i < 160; i = i + 1)
         {
-            //wenn die LED auf dem feld noch nicht leuchtet
+            //Zufälliges Feld wählen
             zufallsFeld = rand() % 40;
+            //Zufällige Spielernummer Wählen
             zufallsSpieler = (rand() % 4) + 1;
+            //Wenn Zufällige LED gesetzt ist
             if (pruefeSpielerPosition(zufallsFeld,zufallsSpieler))
             {
+                //Zufällige LED auf 0 Setzen
                 setzeSpielerPositionAnimation(zufallsFeld,zufallsSpieler,0,0);
+                //Ausgabe tätigen
                 setzeSpielerPositionAnimation(0,0,0,1);
                 //_delay_ms(5);
                 wuerfelTransmit(zufallsSpieler,zufallsSpieler);
+                //Alle Konto Siebensegmente durchlaufen
                 for (uint8_t j = 1; j <= 4; j = j + 1)
                 {
+                    //Anzahl leuchtende LEDs an Konto Siebensegmenten anzeigen
                     setGeld(160 - i,j,1);
+                    //startFlag setzen, wenn eine Taste betätigt wurde
                     startFlag = animationAbbrechen(startFlag);
+                    //Wenn startFlag gesetzt ist, dann Schleife verlassen
                     if (startFlag)
                     {
                         break;
                     }
                 }
             }
+            //Wenn die Zufällige LED bereits ausgeschaltet wurde
+            //i um 1 verkleinern. Somit wird der Schritt wiederholt
             else
             {
                 i -= 1;
             }
+            //startFlag setzen, wenn eine Taste betätigt wurde
             startFlag = animationAbbrechen(startFlag);
+            //Wenn startFlag gesetzt ist, dann Schleife verlassen
             if (startFlag)
             {
                 break;
             }
         }
+        //startFlag setzen, wenn eine Taste betätigt wurde
         startFlag = animationAbbrechen(startFlag);
+        //Wenn startFlag gesetzt ist, dann Schleife verlassen
         if (startFlag)
         {
             break;
         }
+        //Würfel Siebensegmente ausschalten
         wuerfelTransmit(10,10);
+        
+        //Alle Konto Siebensegmente ausschalten
         setGeld(0,1,0);
         setGeld(0,2,0);
         setGeld(0,3,0);
@@ -563,67 +602,97 @@ int main(void)
                 break;
             }
         }*/
+        //vier mal durchlaufen
         for(uint8_t h = 1; h <= 4; h = h + 1)
         {
+            //Wenn "h"ungerade ist soll eingeschalten werden
             if (h % 2)
             {
+                //alle Häuser durchlaufen
                 for (uint8_t i = 1; i <= 5; i = i + 1)
                 {
+                    //Alle Felder durchlaufen
                     for (uint8_t j = 0; j < 40; j = j + 1)
                     {
+                        //Häuser auf dem Aktuellen Feld auf den wert i setzen
                         setHausAnimation(spielfeld[j].hausnummer,i,0);
+                        //startFlag setzen, wenn eine Taste betätigt wurde
                         startFlag = animationAbbrechen(startFlag);
+                        //Wenn startFlag gesetzt ist, dann Schleife verlassen
                         if (startFlag)
                         {
                             break;
                         }
                     }
+                    //Häuser ausgeben
                     setHausAnimation(0,0,1);
+                    //30ms Delay
                     _delay_ms(30);
+                    //startFlag setzen, wenn eine Taste betätigt wurde
                     startFlag = animationAbbrechen(startFlag);
+                    //Wenn startFlag gesetzt ist, dann Schleife verlassen
                     if (startFlag)
                     {
                         break;
                     }
                 }
+                //50ms Delay
                 _delay_ms(50);
+                //startFlag setzen, wenn eine Taste betätigt wurde
                 startFlag = animationAbbrechen(startFlag);
+                //Wenn startFlag gesetzt ist, dann Schleife verlassen
                 if (startFlag)
                 {
                     break;
                 }
             }
+            //bei geradem "h" soll ausgeschalten werden
             else
             {
+                //Alle Häuser durchlaufen
                 for (uint8_t i = 1; i <= 5; i = i + 1)
                 {
+                    //alle Felder durchlaufen
                     for (uint8_t j = 0; j < 40; j = j + 1)
                     {
+                        //Anzahl Häuser auf feld i um 1 verkleinern
                         setHausAnimation(spielfeld[j].hausnummer,5 - i,0);
+                        //startFlag setzen, wenn eine Taste betätigt wurde
                         startFlag = animationAbbrechen(startFlag);
+                        //Wenn startFlag gesetzt ist, dann Schleife verlassen
                         if (startFlag)
                         {
                             break;
                         }
                     }
+                    //Häuser ausgeben
                     setHausAnimation(0,0,1);
+                    //30ms delay
                     _delay_ms(30);
+                    //startFlag setzen, wenn eine Taste betätigt wurde
                     startFlag = animationAbbrechen(startFlag);
+                    //Wenn startFlag gesetzt ist, dann Schleife verlassen
                     if (startFlag)
                     {
                         break;
                     }
                 }
+                //50ms delay
                 _delay_ms(50);
             }
             
         }
+        //Hälfte der Spielfelder durchlaufen
         for (uint8_t i = 0; i <= 20; i = i + 1)
         {
+            //Alle Spieler durchlaufen
             for(uint8_t j = 1; j <= 4; j = j + 1)
             {
+                //die gesetzten Felder auf Kontosiebensegmenten anzeigen
                 setGeld(i,j,1);
+                //startFlag setzen, wenn eine Taste betätigt wurde
                 startFlag = animationAbbrechen(startFlag);
+                //Wenn startFlag gesetzt ist, dann Schleife verlassen
                 if (startFlag)
                 {
                     break;
@@ -631,9 +700,10 @@ int main(void)
             }
             for (uint8_t j = 0; j <= 20 - i; j = j + 1)
             {
+                //letzte Position löschen
                 if (j > 0)
                 {
-                    //neue Position wieder zurücksetzen
+                    //letzte Position wieder zurücksetzen
                     //Rot, Blau
                     setzeSpielerPositionAnimation(j - 1,1,0,0);
                     setzeSpielerPositionAnimation((40 - j) + 1,4,0,0);
@@ -641,7 +711,7 @@ int main(void)
                     setzeSpielerPositionAnimation((20 - j) + 1,2,0,0);
                     setzeSpielerPositionAnimation((20 + j) - 1,3,0,0);
                 }
-                //neue Position setzen
+                //Neue Position setzen
                 //Rot, Blau
                 setzeSpielerPositionAnimation(j,1,1,0);
                 if (!j)
@@ -675,28 +745,38 @@ int main(void)
                 
                 //Spielerposition ausgeben
                 setzeSpielerPositionAnimation(0,0,1,1);
+                //10ms Delay
                 _delay_ms(10);
+                //startFlag setzen, wenn eine Taste betätigt wurde
                 startFlag = animationAbbrechen(startFlag);
+                //Wenn startFlag gesetzt ist, dann Schleife verlassen
                 if (startFlag)
                 {
                     break;
                 }
             
             }
+            //25ms delay
             _delay_ms(25);
+            //startFlag setzen, wenn eine Taste betätigt wurde
             startFlag = animationAbbrechen(startFlag);
+            //Wenn startFlag gesetzt ist, dann Schleife verlassen
             if (startFlag)
             {
                 break;
             }
         }
-        
+        //Hälfte der Spielfelder durchlaufen
         for (uint8_t j = 0; j <= 20; j = j + 1)
         {
+            //Alle Spieler durchlaufen
             for(uint8_t k = 1; k <= 4; k = k + 1)
             {
+                //Die gesetzten Felder auf Kontosiebensegmenten anzeigen
                 setGeld(20 - j,k,1);
+                //startFlag setzen, wenn eine Taste betätigt wurde
                 startFlag = animationAbbrechen(startFlag);
+                //Wenn startFlag gesetzt ist, dann Schleife verlassen
                 if (startFlag)
                 {
                     break;
@@ -713,47 +793,67 @@ int main(void)
             
             if (!j)
             {
-                //Gelb ausschalten Feld 0
+                //Gelb ausschalten bei Feld 0
                 setzeSpielerPositionAnimation(0,3,0,0);
             }
             if (j == 20)
             {
-                //Blau ausschalten Feld 0
+                //Blau ausschalten bei Feld 0
                 setzeSpielerPositionAnimation(0,4,0,0);
             }
             //Spielerposition ausgeben
             setzeSpielerPositionAnimation(0,0,1,1);
+            //35ms delay
             _delay_ms(35);
+            //startFlag setzen, wenn eine Taste betätigt wurde
             startFlag = animationAbbrechen(startFlag);
+            //Wenn startFlag gesetzt ist, dann Schleife verlassen
             if (startFlag)
             {
                 break;
             }
             
         }
+        //100ms delay
         _delay_ms(100);
+        //startFlag setzen, wenn eine Taste betätigt wurde
         startFlag = animationAbbrechen(startFlag);
+        //Wenn startFlag gesetzt ist, dann Schleife verlassen
         if (startFlag)
         {
             break;
         }
         
     }
-
+    //alle Felder durchlaufen
     for (uint8_t i = 0; i < ANZAHL_FELDER; i = i + 1)
     {
+        //Alle Spieler durchlaufen
         for (uint8_t j = 1; j <= 4; j = j + 1)
         {
+            //alle Häuser ausschalten
             setHausAnimation(spielfeld[i].hausnummer,0,0);
+            //Alle Spieler positionen ausschalten
             setzeSpielerPositionAnimation(i,j,0,0);
         }
+        //Häuser ausgeben
         setHausAnimation(0,0,1);
+        //Spieler position ausgeben
         setzeSpielerPositionAnimation(0,0,0,1); 
     }
+    //Würfel Siebensegmente ausschalten
     wuerfelTransmit(10,10);
+    //LCD Leeren
     writeText(0,0,"                ");
     writeText(1,0,"                ");
     writeText(2,0,"                ");
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~START ANIMATION~~~~~~~~~~~~~~~~~~~~~~
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~START ANIMATION~~~~~~~~~~~~~~~~~~~~~~
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~START ANIMATION~~~~~~~~~~~~~~~~~~~~~~
+    
+    
+    
+    //Spiel Starten
     while (1) 
     {
         //Flankenerkennung
